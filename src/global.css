@@ -226,8 +226,8 @@ body {
 .form-actions .btn-primary { width: auto; padding: 10px 20px; margin-top: 0; }
 
 .bot-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 16px;
 }
 
@@ -279,3 +279,95 @@ body {
 .bot-card-actions .btn-ghost { flex: 1; }
 .btn-ghost.danger { color: var(--bear); border-color: rgba(255,98,89,.3); }
 .btn-ghost.danger:hover { border-color: var(--bear); }
+
+
+/* Trades panel (inside an expanded bot card) */
+.bot-card-trades {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+.trades-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 14px;
+}
+.trades-summary b { color: var(--text); }
+.trades-subhead {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tape);
+  margin: 18px 0 8px;
+}
+.muted-text.small { font-size: 12.5px; }
+
+.week-block { margin-bottom: 18px; }
+.week-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.week-stats i { font-style: normal; }
+
+.table-wrap { overflow-x: auto; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+th {
+  text-align: left;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 8px 9px;
+  background: rgba(255,255,255,0.02);
+  border-bottom: 1px solid var(--border);
+}
+td {
+  padding: 8px 9px;
+  border-bottom: 1px solid rgba(34,43,56,.5);
+  font-family: var(--mono);
+}
+tr:last-child td { border-bottom: none; }
+td.confluences {
+  text-align: left;
+  white-space: normal;
+  min-width: 200px;
+  max-width: 340px;
+  color: var(--muted);
+  font-size: 10.5px;
+  line-height: 1.5;
+}
+
+.badge.pending { background: rgba(232,166,60,.12); color: var(--tape); }
+.badge.filled { background: rgba(47,216,166,.12); color: var(--bull); }
+.badge.win { background: rgba(47,216,166,.12); color: var(--bull); }
+.badge.partial { background: rgba(232,166,60,.12); color: var(--tape); }
+.badge.loss { background: rgba(255,98,89,.12); color: var(--bear); }
+.badge.riskfree {
+  background: rgba(47,216,166,.18);
+  color: var(--bull);
+  border: 1px solid rgba(47,216,166,.4);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  margin-left: 6px;
+}
