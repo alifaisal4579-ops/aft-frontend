@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import * as api from './client';
+import TradesPanel from './TradesPanel';
 
 const BOT_TYPE_LABELS = {
   scalp_market: 'Scalp -- Market',
@@ -17,6 +18,7 @@ function fmtTime(iso) {
 
 export default function BotCard({ bot, onChanged }) {
   const [busy, setBusy] = useState(false);
+  const [showTrades, setShowTrades] = useState(false);
 
   async function toggleStatus() {
     setBusy(true);
@@ -63,10 +65,19 @@ export default function BotCard({ bot, onChanged }) {
         <button className="btn-ghost" onClick={toggleStatus} disabled={busy}>
           {bot.status === 'running' ? 'Pause' : 'Start'}
         </button>
+        <button className="btn-ghost" onClick={() => setShowTrades((v) => !v)}>
+          {showTrades ? 'Hide trades' : 'View trades'}
+        </button>
         <button className="btn-ghost danger" onClick={handleDelete} disabled={busy}>
           Delete
         </button>
       </div>
+
+      {showTrades && (
+        <div className="bot-card-trades">
+          <TradesPanel botId={bot.id} />
+        </div>
+      )}
     </div>
   );
 }
