@@ -1,9 +1,9 @@
 import { Routes, Route, Navigate, Link } from 'react-router-dom';
-import { useAuth } from './context/AuthContext';
-import ProtectedRoute from './components/ProtectedRoute';
-import Login from './pages/Login';
-import Signup from './pages/Signup';
-import Dashboard from './pages/Dashboard';
+import { useAuth } from './AuthContext';
+import ProtectedRoute from './ProtectedRoute';
+import Login from './Login';
+import Signup from './Signup';
+import Dashboard from './Dashboard';
 
 function Topbar() {
   const { user, logout } = useAuth();
