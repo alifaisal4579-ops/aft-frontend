@@ -3,7 +3,7 @@
 // refresh cookie so a page refresh doesn't force the user to log in again,
 // without ever touching localStorage.
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import * as api from '../api/client';
+import * as api from './client';
 
 const AuthContext = createContext(null);
 
