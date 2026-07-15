@@ -107,7 +107,19 @@ async function getBotTrades(id) {
   return apiFetch(`/api/bots/${id}/trades`);
 }
 
+// ---- Exchange key vault (Phase 4a) ----
+async function listExchangeKeys() {
+  return apiFetch('/api/exchange-keys');
+}
+async function saveExchangeKey(data) {
+  return apiFetch('/api/exchange-keys', { method: 'POST', body: JSON.stringify(data) });
+}
+async function deleteExchangeKey(exchange) {
+  return apiFetch(`/api/exchange-keys/${exchange}`, { method: 'DELETE' });
+}
+
 export {
   apiFetch, signup, login, logout, fetchMe, trySilentLogin, getAccessToken,
   listBots, createBot, updateBot, deleteBot, getBotTrades,
+  listExchangeKeys, saveExchangeKey, deleteExchangeKey,
 };
