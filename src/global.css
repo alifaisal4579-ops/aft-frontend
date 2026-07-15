@@ -371,3 +371,24 @@ td.confluences {
   letter-spacing: 0.05em;
   margin-left: 6px;
 }
+
+
+/* Exchange keys section */
+.section-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 32px 0;
+}
+.exchange-keys-section .form-note { margin-top: 4px; }
+.key-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.key-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 16px;
+}
+.key-exchange { font-weight: 700; font-size: 14px; }
+.key-label { color: var(--muted); font-size: 13px; }
