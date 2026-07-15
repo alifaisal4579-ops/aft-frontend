@@ -3,7 +3,9 @@ import { useAuth } from './AuthContext';
 import ProtectedRoute from './ProtectedRoute';
 import Login from './Login';
 import Signup from './Signup';
-import Dashboard from './Dashboard';
+import ModeSelect from './ModeSelect';
+import SimulatedDashboard from './SimulatedDashboard';
+import RealDashboard from './RealDashboard';
 
 function Topbar() {
   const { user, logout } = useAuth();
@@ -42,7 +44,23 @@ export default function App() {
                   path="/dashboard"
                   element={
                     <ProtectedRoute>
-                      <Dashboard />
+                      <ModeSelect />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard/simulated"
+                  element={
+                    <ProtectedRoute>
+                      <SimulatedDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard/real"
+                  element={
+                    <ProtectedRoute>
+                      <RealDashboard />
                     </ProtectedRoute>
                   }
                 />
