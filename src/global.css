@@ -392,3 +392,70 @@ td.confluences {
 }
 .key-exchange { font-weight: 700; font-size: 14px; }
 .key-label { color: var(--muted); font-size: 13px; }
+
+
+/* Mode select (post-login landing) */
+.mode-select-greeting { margin: 0 0 4px; font-size: 22px; }
+.mode-select-sub { color: var(--muted); font-size: 14px; margin: 0 0 28px; }
+
+.mode-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+.mode-card {
+  text-align: left;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 24px;
+  cursor: pointer;
+  color: var(--text);
+  font-family: var(--display);
+  transition: border-color .15s ease, transform .15s ease;
+}
+.mode-card:hover { border-color: var(--tape); transform: translateY(-2px); }
+.mode-card h3 { margin: 14px 0 8px; font-size: 18px; }
+.mode-card p { margin: 0 0 18px; color: var(--muted); font-size: 13.5px; line-height: 1.5; }
+.mode-card-cta { color: var(--tape); font-family: var(--mono); font-size: 12.5px; font-weight: 700; }
+.mode-card-icon { display: flex; align-items: center; }
+.mode-card-real .mode-card-cta { color: var(--bear); }
+.mode-card-real:hover { border-color: var(--bear); }
+.mode-card-badge {
+  display: inline-block;
+  background: rgba(255,98,89,.12);
+  color: var(--bear);
+  border: 1px solid rgba(255,98,89,.35);
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+/* Shared sub-page bits */
+.back-link {
+  display: inline-block;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+.back-link:hover { color: var(--tape); }
+.mode-page-sub { color: var(--muted); font-size: 13.5px; margin: -8px 0 20px; }
+
+.coming-soon-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: rgba(255,98,89,.06);
+  border: 1px solid rgba(255,98,89,.25);
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 24px;
+}
+.coming-soon-banner b { color: var(--bear); }
