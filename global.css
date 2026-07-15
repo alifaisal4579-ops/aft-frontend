@@ -1,0 +1,163 @@
+/* global.css -- same brand palette as the AFT Tools site
+   (--bg:#080B10, --tape:#E8A63C, --bull:#2FD8A6, --bear:#FF6259) */
+:root {
+  --bg: #080B10;
+  --surface: #0E131B;
+  --surface-2: #151C27;
+  --border: #222B38;
+  --text: #E8ECF1;
+  --muted: #7C8998;
+  --tape: #E8A63C;
+  --bull: #2FD8A6;
+  --bear: #FF6259;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+  --display: 'Space Grotesk', -apple-system, sans-serif;
+}
+
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--display);
+  -webkit-font-smoothing: antialiased;
+}
+
+.auth-shell {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 380px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 32px 28px;
+}
+
+.auth-brand {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--tape);
+  margin-bottom: 6px;
+}
+
+.auth-card h1 {
+  font-size: 22px;
+  margin: 0 0 20px;
+}
+
+.field {
+  margin-bottom: 16px;
+}
+
+.field label {
+  display: block;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.field input {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--text);
+  font-family: var(--display);
+  font-size: 14px;
+}
+.field input:focus {
+  outline: none;
+  border-color: var(--tape);
+}
+
+.btn-primary {
+  width: 100%;
+  background: var(--tape);
+  color: #14100a;
+  border: none;
+  border-radius: 8px;
+  padding: 11px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  margin-top: 4px;
+}
+.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-primary:hover:not(:disabled) { filter: brightness(1.08); }
+
+.auth-error {
+  background: rgba(255, 98, 89, 0.1);
+  border: 1px solid rgba(255, 98, 89, 0.35);
+  color: var(--bear);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.auth-switch {
+  text-align: center;
+  margin-top: 18px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.auth-switch a { color: var(--tape); text-decoration: none; }
+.auth-switch a:hover { text-decoration: underline; }
+
+.app-shell {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+}
+.topbar .brand { font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; color: var(--tape); text-transform: uppercase; }
+.topbar .user-email { color: var(--muted); font-size: 13px; margin-right: 14px; }
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.btn-ghost:hover { color: var(--text); border-color: var(--tape); }
+
+.main-content {
+  flex: 1;
+  padding: 32px 24px;
+  max-width: 980px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.center-loading {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 13px;
+}
