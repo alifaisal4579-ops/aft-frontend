@@ -14,10 +14,12 @@ export default function ExchangeKeys() {
   const [busy, setBusy] = useState(false);
 
   function loadKeys() {
-    api.listExchangeKeys().then(({ ok, body }) => {
-      if (ok) setKeys(body.keys);
-      else setError(body.error || 'Could not load your exchange keys.');
-    });
+    api.listExchangeKeys()
+      .then(({ ok, body }) => {
+        if (ok) setKeys(body.keys);
+        else setError(body.error || 'Could not load your exchange keys.');
+      })
+      .catch(() => setError('Could not reach the server. Please refresh and try again.'));
   }
 
   useEffect(() => { loadKeys(); }, []);
@@ -26,16 +28,21 @@ export default function ExchangeKeys() {
     e.preventDefault();
     setError(null);
     setBusy(true);
-    const { ok, body } = await api.saveExchangeKey({
-      exchange: 'blofin', apiKey, apiSecret, passphrase, label: label || undefined,
-    });
-    setBusy(false);
-    if (ok) {
-      setApiKey(''); setApiSecret(''); setPassphrase(''); setLabel('');
-      setShowForm(false);
-      loadKeys();
-    } else {
-      setError(body.error || 'Something went wrong.');
+    try {
+      const { ok, body } = await api.saveExchangeKey({
+        exchange: 'blofin', apiKey, apiSecret, passphrase, label: label || undefined,
+      });
+      if (ok) {
+        setApiKey(''); setApiSecret(''); setPassphrase(''); setLabel('');
+        setShowForm(false);
+        loadKeys();
+      } else {
+        setError(body.error || 'Something went wrong.');
+      }
+    } catch (err) {
+      setError('Could not reach the server. Please try again.');
+    } finally {
+      setBusy(false);
     }
   }
 
