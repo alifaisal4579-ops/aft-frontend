@@ -3,6 +3,7 @@ import * as api from './client';
 import { useAuth } from './AuthContext';
 import CreateBotForm from './CreateBotForm';
 import BotCard from './BotCard';
+import ExchangeKeys from './ExchangeKeys';
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -66,6 +67,9 @@ export default function Dashboard() {
           <BotCard key={bot.id} bot={bot} onChanged={handleChanged} />
         ))}
       </div>
+
+      <hr className="section-divider" />
+      <ExchangeKeys />
     </div>
   );
 }
