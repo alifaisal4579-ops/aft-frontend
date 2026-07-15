@@ -90,4 +90,24 @@ async function trySilentLogin() {
   return ok ? body.user : null;
 }
 
-export { apiFetch, signup, login, logout, fetchMe, trySilentLogin, getAccessToken };
+// ---- Bot config API (Phase 3) ----
+async function listBots() {
+  return apiFetch('/api/bots');
+}
+async function createBot(config) {
+  return apiFetch('/api/bots', { method: 'POST', body: JSON.stringify(config) });
+}
+async function updateBot(id, patch) {
+  return apiFetch(`/api/bots/${id}`, { method: 'PATCH', body: JSON.stringify(patch) });
+}
+async function deleteBot(id) {
+  return apiFetch(`/api/bots/${id}`, { method: 'DELETE' });
+}
+async function getBotTrades(id) {
+  return apiFetch(`/api/bots/${id}/trades`);
+}
+
+export {
+  apiFetch, signup, login, logout, fetchMe, trySilentLogin, getAccessToken,
+  listBots, createBot, updateBot, deleteBot, getBotTrades,
+};
