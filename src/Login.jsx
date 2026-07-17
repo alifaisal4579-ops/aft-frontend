@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from './AuthContext';
+import { useAuth } from '../context/AuthContext';
 
 export default function Login() {
   const { login } = useAuth();
@@ -14,10 +14,15 @@ export default function Login() {
     e.preventDefault();
     setError(null);
     setBusy(true);
-    const { ok, error } = await login(email, password);
-    setBusy(false);
-    if (ok) navigate('/dashboard');
-    else setError(error || 'Something went wrong.');
+    try {
+      const { ok, error } = await login(email, password);
+      if (ok) navigate('/dashboard');
+      else setError(error || 'Something went wrong.');
+    } catch (err) {
+      setError('Could not reach the server. Please check your connection and try again.');
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
