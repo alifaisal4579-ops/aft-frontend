@@ -117,9 +117,12 @@ async function saveExchangeKey(data) {
 async function deleteExchangeKey(exchange) {
   return apiFetch(`/api/exchange-keys/${exchange}`, { method: 'DELETE' });
 }
+async function testExchangeConnection(exchange) {
+  return apiFetch(`/api/exchange-keys/${exchange}/test`);
+}
 
 export {
   apiFetch, signup, login, logout, fetchMe, trySilentLogin, getAccessToken,
   listBots, createBot, updateBot, deleteBot, getBotTrades,
-  listExchangeKeys, saveExchangeKey, deleteExchangeKey,
+  listExchangeKeys, saveExchangeKey, deleteExchangeKey, testExchangeConnection,
 };
