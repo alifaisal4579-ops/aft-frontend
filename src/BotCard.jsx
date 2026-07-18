@@ -41,6 +41,7 @@ export default function BotCard({ bot, onChanged }) {
       <div className="bot-card-head">
         <span className={`status-dot ${bot.status}`} />
         <span className="bot-type">{BOT_TYPE_LABELS[bot.bot_type] || bot.bot_type}</span>
+        {bot.mode === 'real' && <span className="badge real-money-badge">REAL MONEY</span>}
         <span className={`badge ${bot.status}`}>{bot.status}</span>
       </div>
 
@@ -54,7 +55,11 @@ export default function BotCard({ bot, onChanged }) {
       </div>
       <div className="bot-card-row">
         <span className="bot-card-label">Risk</span>
-        <span>{bot.risk_percent}% / trade (capped ${bot.max_loss_usd}) &middot; ${bot.paper_balance} paper balance</span>
+        {bot.mode === 'real' ? (
+          <span>${bot.risk_per_trade_usd} per trade (real BloFin funds)</span>
+        ) : (
+          <span>{bot.risk_percent}% / trade (capped ${bot.max_loss_usd}) &middot; ${bot.paper_balance} paper balance</span>
+        )}
       </div>
       <div className="bot-card-row">
         <span className="bot-card-label">Last check</span>
