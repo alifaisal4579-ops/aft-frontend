@@ -121,6 +121,22 @@ async function testExchangeConnection(exchange) {
   return apiFetch(`/api/exchange-keys/${exchange}/test`);
 }
 
+// TEMPORARY debug helper for the manual BloFin test-trade verification --
+// exposes a console-callable function that goes through the app's real
+// authenticated apiFetch (a raw console fetch() can't include the access
+// token, since it lives only in this module's memory by design). Safe to
+// remove once Phase 4b is fully verified.
+if (typeof window !== 'undefined') {
+  window.testBlofinTrade = async (symbol, side, riskAmount) => {
+    const { ok, body } = await apiFetch('/api/exchange-keys/blofin/test-trade', {
+      method: 'POST',
+      body: JSON.stringify({ symbol, side, riskAmount, confirmRealMoney: true }),
+    });
+    console.log('Result:', { ok, ...body });
+    return body;
+  };
+}
+
 export {
   apiFetch, signup, login, logout, fetchMe, trySilentLogin, getAccessToken,
   listBots, createBot, updateBot, deleteBot, getBotTrades,
