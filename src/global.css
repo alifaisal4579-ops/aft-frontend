@@ -470,3 +470,29 @@ td.confluences {
 }
 .key-test-result.ok { background: rgba(47,216,166,.1); color: var(--bull); border: 1px solid rgba(47,216,166,.3); }
 .key-test-result.error { background: rgba(255,98,89,.1); color: var(--bear); border: 1px solid rgba(255,98,89,.3); }
+
+
+/* Real-money bot creation */
+.btn-danger { background: var(--bear) !important; color: #1a0605 !important; }
+.btn-danger:hover:not(:disabled) { filter: brightness(1.1); }
+.btn-danger:disabled { opacity: 0.5; }
+
+.real-money-warning {
+  background: rgba(255,98,89,.08);
+  border: 1px solid rgba(255,98,89,.3);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin: 4px 0 16px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text);
+}
+.real-money-warning label { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; }
+.real-money-warning input[type="checkbox"] { margin-top: 3px; flex-shrink: 0; }
+
+.real-money-badge {
+  background: rgba(255,98,89,.15);
+  color: var(--bear);
+  border: 1px solid rgba(255,98,89,.4);
+  font-weight: 700;
+}
