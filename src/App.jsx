@@ -78,7 +78,7 @@ export default function App() {
                   }
                 />
                 <Route
-                  path="/tools/rsi-screener"
+                  path="/rsi-screener"
                   element={
                     <ProtectedRoute>
                       <RsiScreenerPage />
@@ -86,7 +86,7 @@ export default function App() {
                   }
                 />
                 <Route
-                  path="/tools/order-flow"
+                  path="/order-flow"
                   element={
                     <ProtectedRoute>
                       <OrderFlowPage />
