@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import * as api from '../api/client';
+import * as api from './client';
 
 const BOT_TYPE_OPTIONS = [
   { value: 'scalp_market', label: 'Scalp -- Market entry' },
