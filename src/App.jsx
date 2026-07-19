@@ -7,6 +7,8 @@ import Signup from './Signup';
 import ModeSelect from './ModeSelect';
 import SimulatedDashboard from './SimulatedDashboard';
 import RealDashboard from './RealDashboard';
+import ToolsHub from './ToolsHub';
+import RsiScreenerPage from './RsiScreenerPage';
 
 function Topbar() {
   const { user, logout } = useAuth();
@@ -63,6 +65,22 @@ export default function App() {
                   element={
                     <ProtectedRoute>
                       <RealDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/tools"
+                  element={
+                    <ProtectedRoute>
+                      <ToolsHub />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/tools/rsi-screener"
+                  element={
+                    <ProtectedRoute>
+                      <RsiScreenerPage />
                     </ProtectedRoute>
                   }
                 />
