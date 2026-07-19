@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import * as api from '../api/client';
+import * as api from './client';
 
 function n(v) { return v === null || v === undefined ? null : Number(v); }
 function fmtPrice(v) {
