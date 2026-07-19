@@ -2,15 +2,6 @@ import { useEffect } from 'react';
 import LiveOrderFlow from './LiveOrderFlow';
 import LiveRsiScreener from './LiveRsiScreener';
 
-// Marketing homepage for alifaisal.trade. Most of the page has no
-// interactive state, so it's rendered as a static HTML blob via
-// dangerouslySetInnerHTML (our own content) to avoid a full HTML->JSX
-// conversion -- EXCEPT the two tool preview sections (Order Flow, RSI
-// Screener), which are real, live React components fetching real data
-// directly from Bybit's public API, so they can't live inside a static
-// blob. The page is split into three pieces: everything before the live
-// sections, the live sections themselves as real JSX, then everything
-// after.
 const HOMEPAGE_CSS = `
   :root{
     --bg:#080B10; --surface:#0E131B; --surface-2:#151C27; --surface-3:#1A2230;
@@ -56,7 +47,15 @@ const HOMEPAGE_CSS = `
     transition:filter .15s ease;
   }
   .nav-cta:hover{filter:brightness(1.08);}
-  @media (max-width:760px){ .nav-links{display:none;} }
+  .nav-cta-group{display:flex;align-items:center;gap:10px;}
+  .nav-telegram{
+    font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.01em;
+    color:var(--muted);border:1px solid var(--border);padding:8px 14px;border-radius:8px;
+    display:flex;align-items:center;gap:6px;transition:border-color .15s ease,color .15s ease;
+  }
+  .nav-telegram:hover{border-color:#2FA5D8;color:#5FC2EF;}
+  .nav-telegram svg{width:14px !important;height:14px !important;flex-shrink:0;}
+  @media (max-width:760px){ .nav-links{display:none;} .nav-telegram span{display:none;} }
 
   /* ---- hero ---- */
   .hero{padding:76px 0 40px;}
@@ -136,7 +135,7 @@ const HOMEPAGE_CSS = `
   @media (prefers-reduced-motion: reduce){ .ticker-track{animation:none;} }
 
   /* ---- section shell ---- */
-  section{padding:88px 0;}
+  section{padding:88px 0;scroll-margin-top:64px;}
   .section-head{max-width:640px;margin-bottom:48px;}
   .section-head.center{margin-left:auto;margin-right:auto;text-align:center;}
   h2{font-size:clamp(24px,3vw,32px);font-weight:700;letter-spacing:-.01em;line-height:1.18;margin-bottom:12px;}
@@ -160,7 +159,7 @@ const HOMEPAGE_CSS = `
   .process-step p{font-size:12.5px;color:var(--muted);line-height:1.6;}
 
   /* ---- deep dive with mockups ---- */
-  .deepdive{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center;margin-bottom:90px;}
+  .deepdive{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center;margin-bottom:90px;scroll-margin-top:80px;}
   .deepdive.reverse{grid-template-columns:1fr 1fr;}
   .deepdive.reverse .dd-visual{order:2;}
   .deepdive.reverse .dd-text{order:1;}
@@ -228,15 +227,12 @@ const PART1_BEFORE = `
   <div class="nav-inner">
     <span class="logo">AFT <b>Tools</b></span>
     <div class="nav-links">
-      <a href="#suite">Tools</a>
       <a href="#orderflow">Order Flow</a>
       <a href="#rsiscreener">RSI Screener</a>
-      <a href="#confluence">How it works</a>
-      <a href="#faq">FAQ</a>
     </div>
     <div class="nav-cta-group">
       <a class="nav-telegram" href="https://t.me/alifaisaltrades" target="_blank" rel="noopener">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71l-4.14-3.05-2 1.92c-.23.23-.42.42-.82.42z"/></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px;min-width:14px;max-width:14px;"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71l-4.14-3.05-2 1.92c-.23.23-.42.42-.82.42z"/></svg>
         <span>Join Telegram</span>
       </a>
       <a class="nav-cta" href="/login">Open Terminal &rarr;</a>
