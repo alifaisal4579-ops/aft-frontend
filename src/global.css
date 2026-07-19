@@ -5,6 +5,7 @@
   --surface: #0E131B;
   --surface-2: #151C27;
   --border: #222B38;
+  --border-soft: rgba(34,43,56,.6);
   --text: #E8ECF1;
   --muted: #7C8998;
   --tape: #E8A63C;
@@ -231,72 +232,191 @@ body {
   gap: 16px;
 }
 
+/* ==== Bot card -- redesigned ====
+   Signature move: a slow "heartbeat" pulse on the status dot for running
+   bots -- a live bot is quite literally ticking on a schedule, so a subtle
+   pulse communicates "this is actively working" at a glance, which matters
+   most on the real-money cards. Everything else stays quiet and disciplined
+   so that signal doesn't get lost in decoration. */
 .bot-card {
-  background: var(--surface);
+  position: relative;
+  background: linear-gradient(165deg, var(--surface-2) 0%, var(--surface) 55%);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 16px 18px;
+  border-radius: 16px;
+  padding: 20px 22px 18px;
+  overflow: hidden;
+  transition: border-color .18s ease;
 }
+.bot-card::before {
+  content: '';
+  position: absolute; inset: 0 0 auto 0; height: 2px;
+  background: var(--muted);
+  opacity: .5;
+}
+.bot-card:has(.status-dot.running)::before {
+  background: linear-gradient(90deg, var(--bull), transparent 85%);
+  opacity: 1;
+}
+.bot-card:has(.real-money-badge)::before {
+  background: linear-gradient(90deg, var(--bear), var(--tape) 60%, transparent 95%);
+  opacity: 1;
+}
+
 .bot-card-head {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: 10px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
 }
-.bot-type { font-weight: 700; font-size: 14px; flex: 1; }
-.status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
-.status-dot.running { background: var(--bull); box-shadow: 0 0 0 3px rgba(47,216,166,.15); }
+.bot-type {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 15.5px;
+  letter-spacing: -.01em;
+  flex: 1;
+  min-width: 0;
+}
+
+.status-dot {
+  position: relative;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--muted);
+  flex-shrink: 0;
+}
 .status-dot.paused { background: var(--tape); }
+.status-dot.running {
+  background: var(--bull);
+  box-shadow: 0 0 0 3px rgba(47,216,166,.15);
+}
+.status-dot.running::after {
+  content: '';
+  position: absolute; inset: -5px;
+  border-radius: 50%;
+  border: 1.5px solid var(--bull);
+  animation: pulse-ring 2.4s cubic-bezier(.4,0,.3,1) infinite;
+}
+@keyframes pulse-ring {
+  0%   { transform: scale(.6); opacity: .55; }
+  70%  { transform: scale(1.6); opacity: 0; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .status-dot.running::after { animation: none; display: none; }
+}
 
 .badge {
   font-size: 10px;
-  padding: 3px 8px;
+  padding: 4px 9px;
   border-radius: 20px;
   font-family: var(--mono);
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
+  border: 1px solid transparent;
+  white-space: nowrap;
 }
-.badge.running { background: rgba(47,216,166,.12); color: var(--bull); }
-.badge.paused { background: rgba(232,166,60,.12); color: var(--tape); }
+.badge.running { background: rgba(47,216,166,.12); color: var(--bull); border-color: rgba(47,216,166,.25); }
+.badge.paused { background: rgba(232,166,60,.1); color: var(--tape); border-color: rgba(232,166,60,.22); }
 
-.bot-card-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  font-size: 12.5px;
-  padding: 5px 0;
-  border-bottom: 1px solid rgba(34,43,56,.5);
+.bot-card-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border-soft, rgba(34,43,56,.6));
+  border: 1px solid var(--border-soft, rgba(34,43,56,.6));
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 16px;
 }
-.bot-card-row:last-of-type { border-bottom: none; }
-.bot-card-label { color: var(--muted); flex-shrink: 0; }
-.bot-card-row span:last-child { text-align: right; color: var(--text); }
+.bot-card-stat {
+  background: rgba(8,11,16,.35);
+  padding: 10px 12px;
+  min-width: 0;
+}
+.bot-card-stat.full { grid-column: 1 / -1; }
+.bot-card-stat-label {
+  display: block;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.bot-card-stat-value {
+  display: block;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bot-card-stat-value.wrap { white-space: normal; line-height: 1.4; }
 
 .bot-card-actions {
   display: flex;
   gap: 8px;
-  margin-top: 14px;
+  margin-top: 4px;
 }
 .bot-card-actions .btn-ghost { flex: 1; }
-.btn-ghost.danger { color: var(--bear); border-color: rgba(255,98,89,.3); }
-.btn-ghost.danger:hover { border-color: var(--bear); }
+.btn-ghost.danger {
+  flex: 0 0 auto;
+  color: var(--muted);
+  border-color: var(--border);
+}
+.btn-ghost.danger:hover { color: var(--bear); border-color: rgba(255,98,89,.4); background: rgba(255,98,89,.06); }
 
+.real-money-badge {
+  background: rgba(255,98,89,.1);
+  color: var(--bear);
+  border: 1px solid rgba(255,98,89,.35);
+  font-weight: 700;
+  box-shadow: 0 0 0 3px rgba(255,98,89,.05);
+}
 
 /* Trades panel (inside an expanded bot card) */
 .bot-card-trades {
-  margin-top: 16px;
+  margin-top: 18px;
   padding-top: 16px;
-  border-top: 1px solid var(--border);
+  border-top: 1px dashed var(--border);
 }
 .trades-summary {
   display: flex;
+  gap: 1px;
+  background: rgba(34,43,56,.6);
+  border: 1px solid rgba(34,43,56,.6);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 16px;
   flex-wrap: wrap;
-  gap: 14px;
-  font-family: var(--mono);
-  font-size: 12px;
-  color: var(--muted);
-  margin-bottom: 14px;
 }
-.trades-summary b { color: var(--text); }
+.trades-chip {
+  flex: 1;
+  min-width: 78px;
+  background: rgba(8,11,16,.35);
+  padding: 9px 10px;
+  text-align: center;
+}
+.trades-chip-value {
+  display: block;
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+.trades-chip-label {
+  display: block;
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 3px;
+}
 .trades-subhead {
   font-family: var(--mono);
   font-size: 10.5px;
@@ -489,14 +609,6 @@ td.confluences {
 }
 .real-money-warning label { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; }
 .real-money-warning input[type="checkbox"] { margin-top: 3px; flex-shrink: 0; }
-
-.real-money-badge {
-  background: rgba(255,98,89,.15);
-  color: var(--bear);
-  border: 1px solid rgba(255,98,89,.4);
-  font-weight: 700;
-}
-
 
 /* Real bot form: multi-field row (risk / leverage / margin mode) */
 .field-row { display: flex; gap: 12px; }
