@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate, Link } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import ProtectedRoute from './ProtectedRoute';
+import Home from './Home';
 import Login from './Login';
 import Signup from './Signup';
 import ModeSelect from './ModeSelect';
@@ -28,7 +29,8 @@ export default function App() {
 
   return (
     <Routes>
-      {/* Login/signup render full-screen, with no topbar/app-shell around them */}
+      {/* Homepage, login and signup render full-screen, with no topbar/app-shell around them */}
+      <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
 
@@ -64,7 +66,6 @@ export default function App() {
                     </ProtectedRoute>
                   }
                 />
-                <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
               </Routes>
             </div>
