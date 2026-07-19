@@ -227,8 +227,8 @@ const PART1_BEFORE = `
   <div class="nav-inner">
     <span class="logo">AFT <b>Tools</b></span>
     <div class="nav-links">
-      <a href="#orderflow">Order Flow</a>
-      <a href="#rsiscreener">RSI Screener</a>
+      <a href="/tools/order-flow">Order Flow</a>
+      <a href="/tools/rsi-screener">RSI Screener</a>
     </div>
     <div class="nav-cta-group">
       <a class="nav-telegram" href="https://t.me/alifaisaltrades" target="_blank" rel="noopener">
