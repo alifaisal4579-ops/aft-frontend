@@ -15,7 +15,7 @@ const TOOLS = [
   { name: 'Fibonacci Levels', path: null, desc: 'Auto-plotted retracement and extension levels.' },
   { name: 'RSI Checker', path: null, desc: 'Single-symbol RSI check across timeframes.' },
   { name: 'Cipher B Checker', path: null, desc: 'Money-flow / wave-trend signal checker.' },
-  { name: 'Order Flow', path: null, desc: '14-exchange aggregated depth ladder with wall detection.' },
+  { name: 'Order Flow', path: '/tools/order-flow', desc: '13-exchange aggregated depth ladder with wall detection (Phase 1 -- CVD/OI/Funding/Liquidations to follow).' },
   { name: 'Lakhsmi Signals', path: null, desc: 'The core AFT signal-generation engine.' },
   { name: 'Paper Trading', path: null, desc: 'Simulated order tracking against real market data.' },
   { name: 'Position Size Calculator', path: null, desc: 'Risk-based position sizing.' },
