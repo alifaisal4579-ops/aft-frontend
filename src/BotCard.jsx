@@ -61,6 +61,12 @@ export default function BotCard({ bot, onChanged }) {
           <span>{bot.risk_percent}% / trade (capped ${bot.max_loss_usd}) &middot; ${bot.paper_balance} paper balance</span>
         )}
       </div>
+      {bot.mode === 'real' && (
+        <div className="bot-card-row">
+          <span className="bot-card-label">Leverage</span>
+          <span>{bot.leverage}x &middot; {bot.margin_mode === 'isolated' ? 'Isolated' : 'Cross'}</span>
+        </div>
+      )}
       <div className="bot-card-row">
         <span className="bot-card-label">Last check</span>
         <span>{fmtTime(bot.last_check_at)}</span>
