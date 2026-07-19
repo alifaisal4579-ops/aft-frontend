@@ -127,10 +127,10 @@ async function testExchangeConnection(exchange) {
 // token, since it lives only in this module's memory by design). Safe to
 // remove once Phase 4b is fully verified.
 if (typeof window !== 'undefined') {
-  window.testBlofinTrade = async (symbol, side, riskAmount) => {
+  window.testBlofinTrade = async (symbol, side, riskAmount, leverage, marginMode) => {
     const { ok, body } = await apiFetch('/api/exchange-keys/blofin/test-trade', {
       method: 'POST',
-      body: JSON.stringify({ symbol, side, riskAmount, confirmRealMoney: true }),
+      body: JSON.stringify({ symbol, side, riskAmount, leverage, marginMode, confirmRealMoney: true }),
     });
     console.log('Result:', { ok, ...body });
     return body;
