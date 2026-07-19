@@ -36,6 +36,18 @@ export default function ModeSelect() {
           </p>
           <span className="mode-card-cta">Open &rarr;</span>
         </button>
+
+        <button className="mode-card mode-card-sim" onClick={() => navigate('/tools')}>
+          <div className="mode-card-icon">
+            <span className="status-dot paused" />
+          </div>
+          <h3>Tools</h3>
+          <p>
+            RSI Screener, Order Flow, Confluence Dashboard and the rest of
+            the AFT Tools suite -- same live data, same logic as the main site.
+          </p>
+          <span className="mode-card-cta">Open &rarr;</span>
+        </button>
       </div>
     </div>
   );
