@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import * as api from './client';
+import * as api from '../api/client';
 
 function n(v) { return v === null || v === undefined ? null : Number(v); }
 function fmtPrice(v) {
@@ -69,11 +69,11 @@ export default function TradesPanel({ botId }) {
   return (
     <div className="trades-panel">
       <div className="trades-summary">
-        <span><b>{closed.length}</b> closed</span>
-        <span className="bull"><b>{wins}</b>W</span>
-        <span className="bear"><b>{losses}</b>L</span>
-        <span>Win rate <b>{winRate}</b></span>
-        <span className={totalPnl >= 0 ? 'bull' : 'bear'}>P&amp;L <b>{fmtUsd(totalPnl)}</b></span>
+        <div className="trades-chip"><span className="trades-chip-value">{closed.length}</span><span className="trades-chip-label">Closed</span></div>
+        <div className="trades-chip"><span className="trades-chip-value bull">{wins}</span><span className="trades-chip-label">Wins</span></div>
+        <div className="trades-chip"><span className="trades-chip-value bear">{losses}</span><span className="trades-chip-label">Losses</span></div>
+        <div className="trades-chip"><span className="trades-chip-value">{winRate}</span><span className="trades-chip-label">Win rate</span></div>
+        <div className="trades-chip"><span className={`trades-chip-value ${totalPnl >= 0 ? 'bull' : 'bear'}`}>{fmtUsd(totalPnl)}</span><span className="trades-chip-label">P&amp;L</span></div>
       </div>
 
       <div className="trades-subhead">Open / Pending ({open.length})</div>
