@@ -16,6 +16,8 @@ export default function CreateRealBotForm({ hasKey, onCreated, onCancel }) {
   const [symbolsText, setSymbolsText] = useState('BTCUSDT, ETHUSDT');
   const [sessions, setSessions] = useState(['8PM']);
   const [riskPerTrade, setRiskPerTrade] = useState(1.6);
+  const [leverage, setLeverage] = useState(20);
+  const [marginMode, setMarginMode] = useState('cross');
   const [confirmed, setConfirmed] = useState(false);
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -35,6 +37,7 @@ export default function CreateRealBotForm({ hasKey, onCreated, onCancel }) {
     if (!symbols.length) { setError('Enter at least one symbol.'); return; }
     if (!sessions.length) { setError('Pick at least one session.'); return; }
     if (!(Number(riskPerTrade) > 0)) { setError('Risk per trade must be a positive number.'); return; }
+    if (!(Number(leverage) >= 1 && Number(leverage) <= 125)) { setError('Leverage must be between 1x and 125x.'); return; }
 
     setBusy(true);
     try {
@@ -42,6 +45,8 @@ export default function CreateRealBotForm({ hasKey, onCreated, onCancel }) {
         bot_type: botType, symbols, sessions,
         mode: 'real', exchange: 'blofin',
         risk_per_trade_usd: Number(riskPerTrade),
+        leverage: Number(leverage),
+        margin_mode: marginMode,
       });
       if (ok) onCreated(body.bot);
       else setError(body.error || 'Something went wrong.');
@@ -83,17 +88,38 @@ export default function CreateRealBotForm({ hasKey, onCreated, onCancel }) {
         </div>
       </div>
 
-      <div className="field">
-        <label htmlFor="riskPerTrade">Minimum per trade ($)</label>
-        <input id="riskPerTrade" type="number" step="0.1" min="0.1"
-          value={riskPerTrade} onChange={(e) => setRiskPerTrade(e.target.value)} />
+      <div className="field-row">
+        <div className="field">
+          <label htmlFor="riskPerTrade">Minimum per trade ($)</label>
+          <input id="riskPerTrade" type="number" step="0.1" min="0.1"
+            value={riskPerTrade} onChange={(e) => setRiskPerTrade(e.target.value)} />
+        </div>
+
+        <div className="field">
+          <label htmlFor="leverage">Leverage</label>
+          <input id="leverage" type="number" step="1" min="1" max="125"
+            value={leverage} onChange={(e) => setLeverage(e.target.value)} />
+        </div>
+
+        <div className="field">
+          <label htmlFor="marginMode">Margin mode</label>
+          <select id="marginMode" value={marginMode} onChange={(e) => setMarginMode(e.target.value)}>
+            <option value="cross">Cross</option>
+            <option value="isolated">Isolated</option>
+          </select>
+        </div>
       </div>
+      <p className="field-hint">
+        Position size is always calculated from "Minimum per trade" divided by the stop-loss
+        distance -- leverage only affects how much margin is held against the position, not how
+        much you risk.
+      </p>
 
       <div className="real-money-warning">
         <label>
           <input type="checkbox" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)} />
           I understand this bot will place <b>real orders with real money</b> on my BloFin account,
-          risking approximately ${Number(riskPerTrade || 0).toFixed(2)} per trade.
+          risking approximately ${Number(riskPerTrade || 0).toFixed(2)} per trade at {leverage}x {marginMode} leverage.
         </label>
       </div>
 
