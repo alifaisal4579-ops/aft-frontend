@@ -1,11 +1,16 @@
 import { useEffect } from 'react';
+import LiveOrderFlow from './LiveOrderFlow';
+import LiveRsiScreener from './LiveRsiScreener';
 
-// Marketing homepage for alifaisal.trade -- static content rendered via
-// dangerouslySetInnerHTML (our own content, not user input) to avoid a
-// tedious full HTML->JSX conversion for a page with no interactive state.
-// CTAs link to /login (real routes) via plain <a href> tags -- a full
-// page navigation is fine here since this is the entry point, not an
-// in-app transition.
+// Marketing homepage for alifaisal.trade. Most of the page has no
+// interactive state, so it's rendered as a static HTML blob via
+// dangerouslySetInnerHTML (our own content) to avoid a full HTML->JSX
+// conversion -- EXCEPT the two tool preview sections (Order Flow, RSI
+// Screener), which are real, live React components fetching real data
+// directly from Bybit's public API, so they can't live inside a static
+// blob. The page is split into three pieces: everything before the live
+// sections, the live sections themselves as real JSX, then everything
+// after.
 const HOMEPAGE_CSS = `
   :root{
     --bg:#080B10; --surface:#0E131B; --surface-2:#151C27; --surface-3:#1A2230;
@@ -207,18 +212,35 @@ const HOMEPAGE_CSS = `
   .footer-inner{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;}
   .footer-links{display:flex;gap:20px;font-size:12.5px;color:var(--muted);}
   .footer-note{font-family:var(--mono);font-size:11px;color:var(--muted-2);max-width:560px;line-height:1.6;margin-top:20px;}
+
+  .live-widget-loading,.live-widget-error{
+    font-family:var(--mono);font-size:12.5px;color:var(--muted);padding:30px 10px;text-align:center;
+  }
+  .live-widget-error{color:var(--bear);}
+  .live-widget-foot{
+    margin-top:10px;padding-top:10px;border-top:1px solid var(--border-soft);
+    font-family:var(--mono);font-size:10px;color:var(--muted-2);display:flex;justify-content:space-between;
+  }
 `;
-const HOMEPAGE_BODY = `
+const PART1_BEFORE = `
 
 <nav>
   <div class="nav-inner">
     <span class="logo">AFT <b>Tools</b></span>
     <div class="nav-links">
-      <a href="#suite">Suite</a>
-      <a href="#confluence">Confluence Engine</a>
+      <a href="#suite">Tools</a>
+      <a href="#orderflow">Order Flow</a>
+      <a href="#rsiscreener">RSI Screener</a>
+      <a href="#confluence">How it works</a>
       <a href="#faq">FAQ</a>
     </div>
-    <a class="nav-cta" href="/login">Login &rarr;</a>
+    <div class="nav-cta-group">
+      <a class="nav-telegram" href="https://t.me/alifaisaltrades" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71l-4.14-3.05-2 1.92c-.23.23-.42.42-.82.42z"/></svg>
+        <span>Join Telegram</span>
+      </a>
+      <a class="nav-cta" href="/login">Open Terminal &rarr;</a>
+    </div>
   </div>
 </nav>
 
@@ -233,7 +255,7 @@ const HOMEPAGE_BODY = `
         into one live confluence dashboard so you're not reading eight tabs to make one decision.
       </p>
       <div class="cta-row">
-        <a class="btn-primary" href="/login">Open Toolkit &rarr;</a>
+        <a class="btn-primary" href="#suite">Open Toolkit &rarr;</a>
         <a class="btn-secondary" href="#confluence">See how confluence works</a>
       </div>
       <div class="trust-row">
@@ -389,67 +411,8 @@ const HOMEPAGE_BODY = `
     </div>
   </div>
 </section>
-
-<section>
-  <div class="wrap">
-    <div class="deepdive">
-      <div class="dd-text">
-        <div class="dd-eyebrow">Order Flow</div>
-        <h3>See where size is actually resting, not where a line on a chart guesses it is.</h3>
-        <p>An aggregated depth ladder across 14 exchanges, with local-neighborhood wall detection, distance-from-mid tracking and a live imbalance read.</p>
-        <ul class="dd-list">
-          <li>Wall age tracking &mdash; is this size fresh or stale</li>
-          <li>CVD divergence detector</li>
-          <li>Liquidation cluster binning</li>
-          <li>14-exchange aggregated depth</li>
-        </ul>
-      </div>
-      <div class="dd-visual">
-        <div class="preview-head" style="margin-bottom:16px;">
-          <span class="preview-title">BTCUSDT &middot; Depth Ladder</span>
-          <span class="preview-live">Live</span>
-        </div>
-        <div class="ladder">
-          <div class="ladder-row"><span></span><div class="ladder-bar ask" style="width:70%;"></div><span class="ladder-price">64,712</span></div>
-          <div class="ladder-row"><span></span><div class="ladder-bar ask" style="width:45%;"></div><span class="ladder-price">64,700</span></div>
-          <div class="ladder-row"><span></span><div class="ladder-bar ask" style="width:88%;"></div><span class="ladder-price">64,690<span class="ladder-wall">WALL</span></span></div>
-          <div class="ladder-row"><span></span><span class="ladder-price mid">64,682 &middot; mid</span><span></span></div>
-          <div class="ladder-row"><span class="ladder-price">64,670</span><div class="ladder-bar bid" style="width:52%;"></div><span></span></div>
-          <div class="ladder-row"><span class="ladder-price">64,420<span class="ladder-wall">WALL</span></span><div class="ladder-bar bid" style="width:92%;"></div><span></span></div>
-          <div class="ladder-row"><span class="ladder-price">64,395</span><div class="ladder-bar bid" style="width:38%;"></div><span></span></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="deepdive reverse">
-      <div class="dd-visual">
-        <div class="preview-head" style="margin-bottom:4px;">
-          <span class="preview-title">RSI Screener &middot; 1H</span>
-          <span class="preview-live">Live</span>
-        </div>
-        <table class="mini-table">
-          <thead><tr><th>Symbol</th><th>RSI</th><th>Mkt Cap</th><th>Signal</th></tr></thead>
-          <tbody>
-            <tr><td>SOLUSDT</td><td>24.1</td><td>$84B</td><td><span class="pill bull">Oversold</span></td></tr>
-            <tr><td>AVAXUSDT</td><td>27.6</td><td>$14B</td><td><span class="pill bull">Oversold</span></td></tr>
-            <tr><td>WLDUSDT</td><td>74.2</td><td>$2.1B</td><td><span class="pill bear">Overbought</span></td></tr>
-            <tr><td>NEARUSDT</td><td>76.8</td><td>$5.3B</td><td><span class="pill bear">Overbought</span></td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="dd-text">
-        <div class="dd-eyebrow">RSI Screener</div>
-        <h3>Scan the whole market for extremes in the time it takes to read four rows.</h3>
-        <p>Filtered by a minimum market cap floor, across the timeframes that matter to you, refreshed continuously &mdash; so you spend time deciding, not scrolling.</p>
-        <ul class="dd-list">
-          <li>Overbought / oversold across multiple timeframes</li>
-          <li>Market-cap floor filters out illiquid noise</li>
-          <li>One-click into full confluence view per symbol</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</section>
+`;
+const PART3_AFTER = `
 
 <section id="faq" style="background:var(--surface);border-top:1px solid var(--border-soft);">
   <div class="wrap" style="max-width:820px;">
@@ -483,7 +446,7 @@ const HOMEPAGE_BODY = `
       <h2>Stop reading eight tabs to make one decision.</h2>
       <p>Seven tools, one confluence score, updated live. Free to open, no install.</p>
       <div class="cta-row">
-        <a class="btn-primary" href="/login">Open Toolkit &rarr;</a>
+        <a class="btn-primary" href="#suite">Open Toolkit &rarr;</a>
       </div>
     </div>
   </div>
@@ -516,7 +479,54 @@ export default function Home() {
   return (
     <>
       <style>{HOMEPAGE_CSS}</style>
-      <div dangerouslySetInnerHTML={{ __html: HOMEPAGE_BODY }} />
+      <div dangerouslySetInnerHTML={{ __html: PART1_BEFORE }} />
+
+      <section>
+        <div className="wrap">
+          <div id="orderflow" className="deepdive">
+            <div className="dd-text">
+              <div className="dd-eyebrow">Order Flow</div>
+              <h3>See where size is actually resting, not where a line on a chart guesses it is.</h3>
+              <p>An aggregated depth ladder across 14 exchanges, with local-neighborhood wall detection, distance-from-mid tracking and a live imbalance read.</p>
+              <ul className="dd-list">
+                <li>Wall age tracking &mdash; is this size fresh or stale</li>
+                <li>CVD divergence detector</li>
+                <li>Liquidation cluster binning</li>
+                <li>14-exchange aggregated depth</li>
+              </ul>
+            </div>
+            <div className="dd-visual">
+              <div className="preview-head" style={{ marginBottom: 16 }}>
+                <span className="preview-title">BTCUSDT &middot; Depth Ladder</span>
+                <span className="preview-live">Live</span>
+              </div>
+              <LiveOrderFlow />
+            </div>
+          </div>
+
+          <div id="rsiscreener" className="deepdive reverse">
+            <div className="dd-visual">
+              <div className="preview-head" style={{ marginBottom: 4 }}>
+                <span className="preview-title">RSI Screener &middot; 1H</span>
+                <span className="preview-live">Live</span>
+              </div>
+              <LiveRsiScreener />
+            </div>
+            <div className="dd-text">
+              <div className="dd-eyebrow">RSI Screener</div>
+              <h3>Scan the whole market for extremes in the time it takes to read four rows.</h3>
+              <p>Filtered by a minimum market cap floor, across the timeframes that matter to you, refreshed continuously &mdash; so you spend time deciding, not scrolling.</p>
+              <ul className="dd-list">
+                <li>Overbought / oversold across multiple timeframes</li>
+                <li>Market-cap floor filters out illiquid noise</li>
+                <li>One-click into full confluence view per symbol</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div dangerouslySetInnerHTML={{ __html: PART3_AFTER }} />
     </>
   );
 }
