@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import * as api from './client';
+import * as api from '../api/client';
 
 const BOT_TYPE_OPTIONS = [
   { value: 'scalp_market', label: 'Scalp -- Market entry' },
@@ -9,12 +9,12 @@ const BOT_TYPE_OPTIONS = [
   { value: 'swing_limit', label: 'Swing Trade -- Limit (pullback) entry' },
   { value: 'swing_market', label: 'Swing Trade -- Market entry' },
 ];
-const SESSION_OPTIONS = ['5AM', '7PM', '8PM'];
+const SESSION_OPTIONS = ['5AM', '7PM', '12PM', '12AM'];
 
 export default function CreateBotForm({ onCreated, onCancel }) {
   const [botType, setBotType] = useState('scalp_market');
   const [symbolsText, setSymbolsText] = useState('BTCUSDT, ETHUSDT');
-  const [sessions, setSessions] = useState(['8PM']);
+  const [sessions, setSessions] = useState(['7PM']);
   const [riskPercent, setRiskPercent] = useState(1);
   const [maxLossUsd, setMaxLossUsd] = useState(100);
   const [paperBalance, setPaperBalance] = useState(1000);
