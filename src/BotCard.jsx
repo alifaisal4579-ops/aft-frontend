@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import * as api from '../api/client';
+import * as api from './client';
 import TradesPanel from './TradesPanel';
 
 const BOT_TYPE_LABELS = {
