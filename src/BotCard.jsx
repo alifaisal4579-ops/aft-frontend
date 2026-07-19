@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import * as api from './client';
+import * as api from '../api/client';
 import TradesPanel from './TradesPanel';
 
 const BOT_TYPE_LABELS = {
@@ -36,40 +36,44 @@ export default function BotCard({ bot, onChanged }) {
     if (ok) onChanged(null, bot.id);
   }
 
+  const isReal = bot.mode === 'real';
+
   return (
     <div className="bot-card">
       <div className="bot-card-head">
         <span className={`status-dot ${bot.status}`} />
         <span className="bot-type">{BOT_TYPE_LABELS[bot.bot_type] || bot.bot_type}</span>
-        {bot.mode === 'real' && <span className="badge real-money-badge">REAL MONEY</span>}
+        {isReal && <span className="badge real-money-badge">Real money</span>}
         <span className={`badge ${bot.status}`}>{bot.status}</span>
       </div>
 
-      <div className="bot-card-row">
-        <span className="bot-card-label">Symbols</span>
-        <span>{bot.symbols.join(', ')}</span>
-      </div>
-      <div className="bot-card-row">
-        <span className="bot-card-label">Sessions</span>
-        <span>{bot.sessions.join(', ')}</span>
-      </div>
-      <div className="bot-card-row">
-        <span className="bot-card-label">Risk</span>
-        {bot.mode === 'real' ? (
-          <span>${bot.risk_per_trade_usd} per trade (real BloFin funds)</span>
-        ) : (
-          <span>{bot.risk_percent}% / trade (capped ${bot.max_loss_usd}) &middot; ${bot.paper_balance} paper balance</span>
-        )}
-      </div>
-      {bot.mode === 'real' && (
-        <div className="bot-card-row">
-          <span className="bot-card-label">Leverage</span>
-          <span>{bot.leverage}x &middot; {bot.margin_mode === 'isolated' ? 'Isolated' : 'Cross'}</span>
+      <div className="bot-card-stats">
+        <div className="bot-card-stat full">
+          <span className="bot-card-stat-label">Symbols</span>
+          <span className="bot-card-stat-value wrap">{bot.symbols.join(', ')}</span>
         </div>
-      )}
-      <div className="bot-card-row">
-        <span className="bot-card-label">Last check</span>
-        <span>{fmtTime(bot.last_check_at)}</span>
+        <div className="bot-card-stat">
+          <span className="bot-card-stat-label">Sessions</span>
+          <span className="bot-card-stat-value">{bot.sessions.join(', ')}</span>
+        </div>
+        <div className="bot-card-stat">
+          <span className="bot-card-stat-label">Last check</span>
+          <span className="bot-card-stat-value">{fmtTime(bot.last_check_at)}</span>
+        </div>
+        <div className="bot-card-stat full">
+          <span className="bot-card-stat-label">Risk per trade</span>
+          {isReal ? (
+            <span className="bot-card-stat-value wrap">${bot.risk_per_trade_usd} &middot; real BloFin funds</span>
+          ) : (
+            <span className="bot-card-stat-value wrap">{bot.risk_percent}% (capped ${bot.max_loss_usd}) &middot; ${bot.paper_balance} paper balance</span>
+          )}
+        </div>
+        {isReal && (
+          <div className="bot-card-stat full">
+            <span className="bot-card-stat-label">Leverage &amp; margin</span>
+            <span className="bot-card-stat-value">{bot.leverage}x &middot; {bot.margin_mode === 'isolated' ? 'Isolated' : 'Cross'}</span>
+          </div>
+        )}
       </div>
 
       <div className="bot-card-actions">
@@ -79,7 +83,7 @@ export default function BotCard({ bot, onChanged }) {
         <button className="btn-ghost" onClick={() => setShowTrades((v) => !v)}>
           {showTrades ? 'Hide trades' : 'View trades'}
         </button>
-        <button className="btn-ghost danger" onClick={handleDelete} disabled={busy}>
+        <button className="btn-ghost danger" onClick={handleDelete} disabled={busy} aria-label="Delete bot">
           Delete
         </button>
       </div>
