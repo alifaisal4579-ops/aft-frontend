@@ -9,6 +9,7 @@ import SimulatedDashboard from './SimulatedDashboard';
 import RealDashboard from './RealDashboard';
 import ToolsHub from './ToolsHub';
 import RsiScreenerPage from './RsiScreenerPage';
+import OrderFlowPage from './OrderFlowPage';
 
 function Topbar() {
   const { user, logout } = useAuth();
@@ -81,6 +82,14 @@ export default function App() {
                   element={
                     <ProtectedRoute>
                       <RsiScreenerPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/tools/order-flow"
+                  element={
+                    <ProtectedRoute>
+                      <OrderFlowPage />
                     </ProtectedRoute>
                   }
                 />
