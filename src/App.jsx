@@ -7,9 +7,7 @@ import Signup from './Signup';
 import ModeSelect from './ModeSelect';
 import SimulatedDashboard from './SimulatedDashboard';
 import RealDashboard from './RealDashboard';
-import ToolsHub from './ToolsHub';
-import RsiScreenerPage from './RsiScreenerPage';
-import OrderFlowPage from './OrderFlowPage';
+import ToolsSuite from './ToolsSuite';
 
 function Topbar() {
   const { user, logout } = useAuth();
@@ -36,6 +34,17 @@ export default function App() {
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
+
+      {/* Tools also render full-screen (it's an embedded iframe of the real
+          site, which has its own nav/chrome) -- but still behind login. */}
+      <Route
+        path="/tools"
+        element={
+          <ProtectedRoute>
+            <ToolsSuite />
+          </ProtectedRoute>
+        }
+      />
 
       {/* Everything else gets the app shell (topbar + content) */}
       <Route
@@ -66,30 +75,6 @@ export default function App() {
                   element={
                     <ProtectedRoute>
                       <RealDashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/tools"
-                  element={
-                    <ProtectedRoute>
-                      <ToolsHub />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/rsi-screener"
-                  element={
-                    <ProtectedRoute>
-                      <RsiScreenerPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/order-flow"
-                  element={
-                    <ProtectedRoute>
-                      <OrderFlowPage />
                     </ProtectedRoute>
                   }
                 />
