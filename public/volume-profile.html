@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Anchor VWAP — Ali Faisal Trades</title>
+<title>Volume Profile — Ali Faisal Trades</title>
 <meta name="theme-color" content="#080B10">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -28,17 +28,17 @@
   a.back-link{position:fixed;top:20px;left:20px;font-family:var(--mono);font-size:12px;color:var(--muted);text-decoration:none;}
   a.back-link:hover{color:var(--tape);}
 
-  .vw-wrap{max-width:1000px;margin:0 auto;}
-  .vw-header h1{margin:0;font-family:var(--display);font-size:28px;font-weight:700;color:var(--text);letter-spacing:-.02em;line-height:1.15;}
-  .vw-header p{
+  .vp-wrap{max-width:1100px;margin:0 auto;}
+  .vp-header h1{margin:0;font-family:var(--display);font-size:28px;font-weight:700;color:var(--text);letter-spacing:-.02em;line-height:1.15;}
+  .vp-header p{
     display:inline-block;margin-top:8px;margin-bottom:22px;
     padding:4px 10px;border:1px solid var(--border);border-radius:20px;
     background:var(--surface);color:var(--muted);font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;
   }
-  .vw-controls{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-bottom:16px;}
-  .vw-field{display:flex;flex-direction:column;gap:4px;}
-  .vw-field label{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-family:var(--mono);}
-  select, input[type=text]{
+  .vp-controls{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-bottom:16px;}
+  .vp-field{display:flex;flex-direction:column;gap:4px;}
+  .vp-field label{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-family:var(--mono);}
+  select, input[type=text], input[type=number]{
     background:var(--surface-2);border:1px solid var(--border);color:var(--text);
     padding:9px 12px;border-radius:var(--r-sm);font-family:var(--mono);font-size:12.5px;
     transition:border-color .15s, box-shadow .15s;
@@ -50,85 +50,81 @@
     background-image:url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238A96A5' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
     background-repeat:no-repeat;background-position:right 11px center;padding-right:30px;
   }
-  #vwLoadBtn{
+  #vpLoadBtn{
     background:linear-gradient(180deg, #F2B44E, #E19A28);
     color:#151006;border:none;border-radius:var(--r-sm);
     padding:10px 20px;font-family:var(--mono);font-size:12px;font-weight:700;
     letter-spacing:.04em;cursor:pointer;box-shadow:var(--shadow-1), inset 0 1px 0 rgba(255,255,255,.22);
     transition:transform .12s, box-shadow .15s, filter .15s;
   }
-  #vwLoadBtn:hover{opacity:1;filter:brightness(1.06);transform:translateY(-1px);box-shadow:var(--shadow-2), inset 0 1px 0 rgba(255,255,255,.22);}
-  #vwLoadBtn:active{transform:translateY(0);filter:brightness(.97);}
-  #vwLoadBtn:disabled{opacity:.55;cursor:default;transform:none;filter:none;}
+  #vpLoadBtn:hover{opacity:1;filter:brightness(1.06);transform:translateY(-1px);box-shadow:var(--shadow-2), inset 0 1px 0 rgba(255,255,255,.22);}
+  #vpLoadBtn:active{transform:translateY(0);filter:brightness(.97);}
+  #vpLoadBtn:disabled{opacity:.55;cursor:default;transform:none;filter:none;}
 
-  .vw-ticker{
-    display:flex;gap:14px;align-items:baseline;margin-bottom:16px;
+  .vp-ticker{
+    display:flex;flex-wrap:wrap;gap:14px;align-items:baseline;margin-bottom:16px;
     background:linear-gradient(90deg, var(--surface-2), var(--surface));
     border:1px solid var(--border);border-radius:var(--r-md);
     padding:15px 18px;box-shadow:var(--shadow-1);font-family:var(--mono);font-size:14px;
   }
-  .vw-ticker > span:first-child{font-weight:700;color:var(--tape);letter-spacing:.02em;}
-  .vw-ticker .up{color:var(--bull);} .vw-ticker .down{color:var(--bear);}
+  .vp-ticker > span:first-child{font-weight:700;color:var(--tape);letter-spacing:.02em;}
+  .vp-ticker .up{color:var(--bull);} .vp-ticker .down{color:var(--bear);}
 
-  .vw-panel{
+  .vp-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+  @media (max-width:820px){ .vp-grid{grid-template-columns:1fr;} }
+  .vp-panel{
     background:linear-gradient(180deg, var(--surface), var(--surface) 60%, rgba(16,21,29,.92));
     border:1px solid var(--border);border-radius:var(--r-lg);
-    box-shadow:var(--shadow-1);padding:16px;margin-bottom:16px;
+    box-shadow:var(--shadow-1);padding:16px;
   }
-  .vw-panel-title{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;}
-  .vw-panel-title::before{content:'';width:3px;height:12px;border-radius:2px;background:var(--tape);opacity:.8;}
+  .vp-panel-title{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;}
+  .vp-panel-title::before{content:'';width:3px;height:12px;border-radius:2px;background:var(--tape);opacity:.8;}
 
-  .vw-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12.5px;}
-  .vw-table th{text-align:left;color:var(--muted);font-size:10px;letter-spacing:.07em;text-transform:uppercase;padding:8px 10px;border-bottom:1px solid var(--border);background:var(--surface-2);position:sticky;top:0;}
-  .vw-table td{padding:10px;border-bottom:1px solid var(--border);}
-  .vw-table tr:last-child td{border-bottom:none;}
-  .vw-table tbody tr{transition:background .12s;}
-  .vw-table tbody tr:hover{background:rgba(232,166,60,.045);}
-  .vw-table .anchor-name{font-weight:700;color:var(--text);}
-  .vw-table .up{color:var(--bull);} .vw-table .down{color:var(--bear);}
-  .vw-badge{font-size:10px;font-weight:700;letter-spacing:.05em;padding:3px 9px;border-radius:3px;text-transform:uppercase;}
-  .vw-badge.above{background:rgba(47,216,166,.12);color:var(--bull);border:1px solid rgba(47,216,166,.3);}
-  .vw-badge.below{background:rgba(255,98,89,.12);color:var(--bear);border:1px solid rgba(255,98,89,.3);}
-
-  .vw-chart-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:14px;}
-  @media (max-width:820px){ .vw-chart-grid{grid-template-columns:1fr;} }
-  .vw-chart-box{background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:12px;}
-  .vw-chart-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;}
-  .vw-chart-name{font-family:var(--display);font-size:13px;font-weight:700;color:var(--text);}
-  .vw-chart-info{font-family:var(--mono);font-size:11px;color:var(--muted);}
-  .vw-chart-info.up{color:var(--bull);} .vw-chart-info.down{color:var(--bear);}
-  .vw-caption{font-family:var(--mono);font-size:10px;color:var(--muted);opacity:.75;}
+  .vp-stats{display:flex;flex-wrap:wrap;gap:28px;font-family:var(--mono);font-size:12.5px;color:var(--muted);}
+  .vp-stats b{color:var(--text);}
+  .vp-stats .vp-stat-label{display:block;font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:3px;}
+  .vp-stat-group{display:flex;flex-direction:column;gap:8px;}
+  .vp-stat-group-title{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:6px;}
+  .vp-stat-row{display:flex;flex-wrap:wrap;gap:20px;}
+  .vp-swatch{width:8px;height:8px;border-radius:50%;display:inline-block;}
+  .vp-swatch.dev{background:var(--tape);}
+  .vp-swatch.prev{background:#B98CFF;}
+  .vp-verdict{font-weight:700;padding:3px 9px;border-radius:3px;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;}
+  .vp-verdict.inside{background:rgba(232,166,60,.12);color:var(--tape);border:1px solid rgba(232,166,60,.3);}
+  .vp-verdict.above{background:rgba(47,216,166,.12);color:var(--bull);border:1px solid rgba(47,216,166,.3);}
+  .vp-verdict.below{background:rgba(255,98,89,.12);color:var(--bear);border:1px solid rgba(255,98,89,.3);}
+  .vp-caption{font-family:var(--mono);font-size:10px;color:var(--muted);opacity:.75;margin-top:16px;}
 </style>
 </head>
 <body>
 
 <a href="/" class="back-link">&larr; Ali Faisal Trades</a>
 
-<div id="page-vwap">
-<div class="vw-wrap">
-  <div class="vw-header">
-    <h1>Anchor VWAP</h1>
-    <p>Volume-weighted price, anchored to key calendar levels</p>
+<div id="page-volprofile">
+<div class="vp-wrap">
+  <div class="vp-header">
+    <h1>Volume Profile</h1>
+    <p>Where volume actually traded — POC, Value Area High/Low</p>
   </div>
 
-  <div class="vw-controls">
-    <div class="vw-field">
+  <div class="vp-controls">
+    <div class="vp-field">
       <label>Exchange</label>
-      <select id="vwExchangeSelect">
+      <select id="vpExchangeSelect">
         <option value="binance">Binance</option>
         <option value="bybit" selected>Bybit</option>
       </select>
     </div>
-    <div class="vw-field">
+    <div class="vp-field">
       <label>Market</label>
-      <select id="vwMarketSelect">
+      <select id="vpMarketSelect">
         <option value="spot">Spot</option>
         <option value="futures" selected>Futures (USDT-M)</option>
       </select>
     </div>
-    <div class="vw-field">
+    <div class="vp-field">
       <label>Symbol</label>
-      <select id="vwSymbolSelect">
+      <select id="vpSymbolSelect">
         <option value="BTCUSDT">BTCUSDT</option>
         <option value="ETHUSDT">ETHUSDT</option>
         <option value="SOLUSDT">SOLUSDT</option>
@@ -139,60 +135,160 @@
         <option value="__custom">Custom…</option>
       </select>
     </div>
-    <div class="vw-field" id="vwCustomWrap" style="display:none;">
+    <div class="vp-field" id="vpCustomWrap" style="display:none;">
       <label>Custom pair</label>
-      <input type="text" id="vwCustomSymbol" placeholder="e.g. LTCUSDT" />
+      <input type="text" id="vpCustomSymbol" placeholder="e.g. LTCUSDT" />
     </div>
-    <button id="vwLoadBtn">Load</button>
+    <div class="vp-field">
+      <label>Period</label>
+      <select id="vpPeriodSelect">
+        <option value="daily">Daily</option>
+        <option value="weekly" selected>Weekly</option>
+        <option value="monthly">Monthly</option>
+        <option value="15d">15 Days</option>
+        <option value="2m">2 Month</option>
+        <option value="3m">3 Month</option>
+        <option value="6m">6 Month</option>
+        <option value="1y">1 Year</option>
+      </select>
+    </div>
+    <div class="vp-field">
+      <label>Price bins</label>
+      <input type="number" id="vpBins" value="40" min="10" max="100" style="width:70px;" />
+    </div>
+
+    <button id="vpLoadBtn">Load</button>
   </div>
 
-  <div class="vw-ticker" id="vwTicker">
+  <div class="vp-ticker" id="vpTicker">
     <span style="color:var(--muted);">Loading…</span>
   </div>
 
-  <div class="vw-panel">
-    <div class="vw-panel-title">Anchors</div>
-    <table class="vw-table">
-      <thead><tr><th>Anchor</th><th>Anchored from</th><th>VWAP</th><th>Distance</th><th>Bias</th></tr></thead>
-      <tbody id="vwTableBody">
-        <tr><td colspan="5" style="color:var(--muted);padding:14px;">Press Load to fetch anchor levels.</td></tr>
-      </tbody>
-    </table>
+  <div class="vp-panel" style="margin-bottom:16px;">
+    <div class="vp-panel-title">Price</div>
+    <canvas id="vpPriceChart" height="280"></canvas>
   </div>
 
-  <div class="vw-panel">
-    <div class="vw-panel-title">Per-anchor charts</div>
-    <div class="vw-chart-grid" id="vwChartGrid">
-      <div class="vw-chart-box" data-anchor="daily"><div class="vw-chart-head"><span class="vw-chart-name">Daily</span><span class="vw-chart-info" id="vwInfo-daily">—</span></div><canvas id="vwChart-daily" height="180"></canvas></div>
-      <div class="vw-chart-box" data-anchor="weekly"><div class="vw-chart-head"><span class="vw-chart-name">Weekly</span><span class="vw-chart-info" id="vwInfo-weekly">—</span></div><canvas id="vwChart-weekly" height="180"></canvas></div>
-      <div class="vw-chart-box" data-anchor="monthly"><div class="vw-chart-head"><span class="vw-chart-name">Monthly</span><span class="vw-chart-info" id="vwInfo-monthly">—</span></div><canvas id="vwChart-monthly" height="180"></canvas></div>
-      <div class="vw-chart-box" data-anchor="quarterly"><div class="vw-chart-head"><span class="vw-chart-name">Quarterly</span><span class="vw-chart-info" id="vwInfo-quarterly">—</span></div><canvas id="vwChart-quarterly" height="180"></canvas></div>
-      <div class="vw-chart-box" data-anchor="sixmonth"><div class="vw-chart-head"><span class="vw-chart-name">6-Month</span><span class="vw-chart-info" id="vwInfo-sixmonth">—</span></div><canvas id="vwChart-sixmonth" height="180"></canvas></div>
-      <div class="vw-chart-box" data-anchor="yearly"><div class="vw-chart-head"><span class="vw-chart-name">Yearly</span><span class="vw-chart-info" id="vwInfo-yearly">—</span></div><canvas id="vwChart-yearly" height="180"></canvas></div>
+  <div class="vp-grid">
+    <div class="vp-panel vp-profile-panel">
+      <div class="vp-panel-title"><span class="vp-swatch dev"></span>Developing profile</div>
+      <canvas id="vpDevProfileChart" height="340"></canvas>
+    </div>
+    <div class="vp-panel vp-profile-panel">
+      <div class="vp-panel-title"><span class="vp-swatch prev"></span>Previous profile</div>
+      <canvas id="vpPrevProfileChart" height="340"></canvas>
     </div>
   </div>
 
-  <div class="vw-caption">VWAP = cumulative traded value ÷ cumulative volume since each anchor point (calendar-aligned UTC). Daily/Weekly charts use hourly candles; Monthly/Quarterly/6-Month/Yearly use daily candles.</div>
+  <div class="vp-panel">
+    <div class="vp-stats" id="vpStats">Press Load to build the profile.</div>
+  </div>
+
+  <div class="vp-caption">Volume is estimated per price level by spreading each candle's traded volume across its high–low range (standard approximation without tick data). Value Area = the tightest band of price containing ~70% of traded volume, expanded outward from the Point of Control.</div>
 </div>
 </div>
 
 <script>
 (function(){
-  const exchangeSelect = document.getElementById('vwExchangeSelect');
-  const marketSelect = document.getElementById('vwMarketSelect');
-  const symbolSelect = document.getElementById('vwSymbolSelect');
-  const customWrap = document.getElementById('vwCustomWrap');
-  const customSymbol = document.getElementById('vwCustomSymbol');
-  const loadBtn = document.getElementById('vwLoadBtn');
-  const tickerEl = document.getElementById('vwTicker');
-  const tableBody = document.getElementById('vwTableBody');
+  const exchangeSelect = document.getElementById('vpExchangeSelect');
+  const marketSelect = document.getElementById('vpMarketSelect');
+  const symbolSelect = document.getElementById('vpSymbolSelect');
+  const customWrap = document.getElementById('vpCustomWrap');
+  const customSymbol = document.getElementById('vpCustomSymbol');
+  const periodSelect = document.getElementById('vpPeriodSelect');
+  const binsInput = document.getElementById('vpBins');
+  periodSelect.addEventListener('change', () => {
+    const period = PERIODS[periodSelect.value];
+    if (period && period.bins) binsInput.value = period.bins;
+  });
+  const loadBtn = document.getElementById('vpLoadBtn');
+  const tickerEl = document.getElementById('vpTicker');
+  const statsEl = document.getElementById('vpStats');
 
-  let miniCharts = {};
+  let priceChart, devProfileChart, prevProfileChart;
 
+  // Draws a dashed guide line + a clearly-readable price label (dark pill
+  // background so it stays legible over any bar/line color underneath).
+  function drawPillLabel(ctx, x, y, text, color, align){
+    ctx.font = "700 11px 'JetBrains Mono', monospace";
+    const textWidth = ctx.measureText(text).width;
+    const padX = 6, padY = 4;
+    const boxW = textWidth + padX * 2;
+    const boxH = 16;
+    const boxX = align === 'right' ? x - boxW : x;
+    const boxY = y - boxH / 2;
+    ctx.fillStyle = 'rgba(6,8,11,.92)';
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1;
+    if (ctx.roundRect){
+      ctx.beginPath(); ctx.roundRect(boxX, boxY, boxW, boxH, 3); ctx.fill(); ctx.stroke();
+    } else {
+      ctx.fillRect(boxX, boxY, boxW, boxH); ctx.strokeRect(boxX, boxY, boxW, boxH);
+    }
+    ctx.fillStyle = '#F2F5F8';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, boxX + padX, y + 0.5);
+  }
+
+  // Horizontal-bar profile charts: marks are {rowIndex, color, label, dash}.
+  if (!window.__vpPriceLabelsRegistered){
+    window.__vpPriceLabelsRegistered = true;
+    Chart.register({
+      id: 'priceLabels',
+      afterDatasetsDraw(chart, args, options){
+        const marks = options && options.marks;
+        if (!marks) return;
+        const { ctx, chartArea, scales } = chart;
+        ctx.save();
+        marks.forEach(m => {
+          const yPixel = scales.y.getPixelForValue(m.rowIndex);
+          ctx.strokeStyle = m.color;
+          ctx.setLineDash(m.dash || []);
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(chartArea.left, yPixel);
+          ctx.lineTo(chartArea.right, yPixel);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          drawPillLabel(ctx, chartArea.left + 6, yPixel, m.label, m.color, 'left');
+        });
+        ctx.restore();
+      },
+
+    });
+  }
+
+  // Price line chart: marks are {value, color, label} on a linear/price y-axis.
+  if (!window.__vpHLineLabelsRegistered){
+    window.__vpHLineLabelsRegistered = true;
+    Chart.register({
+      id: 'hLineLabels',
+      afterDatasetsDraw(chart, args, options){
+        const marks = options && options.marks;
+        if (!marks) return;
+        const { ctx, chartArea, scales } = chart;
+        ctx.save();
+        marks.forEach(m => {
+          const yPixel = scales.y.getPixelForValue(m.value);
+          if (yPixel < chartArea.top || yPixel > chartArea.bottom) return;
+          const align = m.align || 'right';
+          const x = align === 'left' ? chartArea.left + 6 : chartArea.right - 6;
+          drawPillLabel(ctx, x, yPixel, m.label, m.color, align);
+        });
+        ctx.restore();
+      },
+    });
+  }
+
+  exchangeSelect.addEventListener('change', () => {
+    document.getElementById('vpCustomSymbol').placeholder = 'e.g. LTCUSDT';
+  });
+  marketSelect.addEventListener('change', () => {});
   symbolSelect.addEventListener('change', () => {
     customWrap.style.display = symbolSelect.value === '__custom' ? 'flex' : 'none';
   });
-  loadBtn.addEventListener('click', loadVwap);
+  loadBtn.addEventListener('click', loadProfile);
 
   function currentSymbol(){
     if (symbolSelect.value === '__custom') return (customSymbol.value || '').trim().toUpperCase();
@@ -201,7 +297,40 @@
   function currentExchange(){ return exchangeSelect.value; }
   function isFutures(){ return marketSelect.value === 'futures'; }
   // Cosmetic only — TradingView-style ".P" suffix for perpetuals in the UI.
+  // The actual API symbol stays the same (e.g. BTCUSDT) on both exchanges.
   function displaySymbol(symbol){ return isFutures() ? symbol + '.P' : symbol; }
+
+  // Each period defines: how far back the developing window starts, the matching
+  // previous (fully closed) window of the same length, and which candle
+  // interval/limit combo comfortably covers both windows in one fetch.
+  const PERIODS = {
+    daily:   { label:'Daily',   interval:'15m', limit:200, bins:30,
+      start:(now) => Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+      previousStart:(now) => Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()) - 86400000 },
+    weekly:  { label:'Weekly',  interval:'1h',  limit:340, bins:40,
+      start:(now) => {
+        const dow = now.getUTCDay(); const daysSinceMonday = (dow + 6) % 7;
+        return Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()) - daysSinceMonday * 86400000;
+      },
+      previousStart:(now) => {
+        const dow = now.getUTCDay(); const daysSinceMonday = (dow + 6) % 7;
+        return Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()) - (daysSinceMonday + 7) * 86400000;
+      } },
+    monthly: { label:'Monthly', interval:'4h',  limit:400, bins:60,
+      start:(now) => Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1),
+      previousStart:(now) => Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1) },
+    '15d':   { label:'15 Days', interval:'1h',  limit:740, bins:45,
+      start:(now) => now.getTime() - 15 * 86400000, previousStart:(now) => now.getTime() - 30 * 86400000 },
+    '2m':    { label:'2 Month', interval:'4h',  limit:740, bins:70,
+      start:(now) => now.getTime() - 60 * 86400000, previousStart:(now) => now.getTime() - 120 * 86400000 },
+    '3m':    { label:'3 Month', interval:'4h',  limit:1000, bins:80,
+      start:(now) => now.getTime() - 90 * 86400000, previousStart:(now) => now.getTime() - 180 * 86400000 },
+    '6m':    { label:'6 Month', interval:'1d',  limit:370, bins:90,
+      start:(now) => now.getTime() - 182 * 86400000, previousStart:(now) => now.getTime() - 364 * 86400000 },
+    '1y':    { label:'1 Year',  interval:'1d',  limit:740, bins:100,
+      start:(now) => now.getTime() - 365 * 86400000, previousStart:(now) => now.getTime() - 730 * 86400000 },
+  };
+
 
   async function fetchJson(url, retries){
     retries = retries === undefined ? 2 : retries;
@@ -229,17 +358,15 @@
       const data = await fetchJson(`https://api.bybit.com/v5/market/kline?category=${category}&symbol=${symbol}&interval=${toBybitInterval(interval)}&limit=${limit}`);
       if (data.retCode !== 0) throw new Error(symbol + ': ' + (data.retMsg || 'Bybit error'));
       const list = data.result && data.result.list;
-      if (!Array.isArray(list) || !list.length) throw new Error(symbol + ': no data on Bybit ' + category + ' for ' + interval);
-      // Bybit kline fields: [start, open, high, low, close, volume, turnover]; newest-first -> flip
+      if (!Array.isArray(list) || !list.length) throw new Error(symbol + ': no candle data on Bybit ' + category + ' — check the symbol.');
+      // Bybit returns newest-first; flip to oldest-first to match the rest of the pipeline
       return list.slice().reverse().map(c => ({
-        time:+c[0], open:+c[1], high:+c[2], low:+c[3], close:+c[4], volume:+c[5], quoteVolume:+c[6],
+        time: +c[0], open:+c[1], high:+c[2], low:+c[3], close:+c[4], volume:+c[5],
       }));
     }
     const data = await fetchJson(`${binanceBase()}${binanceKlinesPath()}?symbol=${symbol}&interval=${interval}&limit=${limit}`);
-    if (!Array.isArray(data) || !data.length) throw new Error(symbol + ': no data for ' + interval);
-    return data.map(c => ({
-      time: c[0], open:+c[1], high:+c[2], low:+c[3], close:+c[4], volume:+c[5], quoteVolume:+c[7],
-    }));
+    if (!Array.isArray(data) || !data.length) throw new Error(symbol + ': no candle data — check the symbol.');
+    return data.map(c => ({ time:c[0], open:+c[1], high:+c[2], low:+c[3], close:+c[4], volume:+c[5] }));
   }
 
   async function fetchTicker(symbol){
@@ -254,91 +381,134 @@
     const t = await fetchJson(`${binanceBase()}${binanceTickerPath()}?symbol=${symbol}`);
     return { lastPrice: parseFloat(t.lastPrice), change1dPct: parseFloat(t.priceChangePercent) };
   }
+  // then find the Point of Control and expand outward to the 70% Value Area —
+  // the standard volume-profile / auction-theory construction.
+  function buildProfile(candles, numBins, rangeMin, rangeMax){
+    const minLow = rangeMin !== undefined ? rangeMin : Math.min(...candles.map(c => c.low));
+    const maxHigh = rangeMax !== undefined ? rangeMax : Math.max(...candles.map(c => c.high));
+    const binSize = (maxHigh - minLow) / numBins;
+    const bins = Array.from({length:numBins}, (_, i) => ({
+      low: minLow + i * binSize, high: minLow + (i + 1) * binSize, volume: 0,
+    }));
 
-  // Calendar-aligned UTC anchor start times
-  function anchors(now){
-    const y = now.getUTCFullYear(), m = now.getUTCMonth(), d = now.getUTCDate();
-    const dow = now.getUTCDay(); // 0=Sun..6=Sat
-    const daysSinceMonday = (dow + 6) % 7;
-    const dayStart = Date.UTC(y, m, d);
-    const weekStart = dayStart - daysSinceMonday * 86400000;
-    const monthStart = Date.UTC(y, m, 1);
-    const quarterStart = Date.UTC(y, Math.floor(m / 3) * 3, 1);
-    const halfStart = Date.UTC(y, m < 6 ? 0 : 6, 1);
-    const yearStart = Date.UTC(y, 0, 1);
-    return [
-      { key:'daily', label:'Daily', start: dayStart },
-      { key:'weekly', label:'Weekly', start: weekStart },
-      { key:'monthly', label:'Monthly', start: monthStart },
-      { key:'quarterly', label:'Quarterly', start: quarterStart },
-      { key:'sixmonth', label:'6-Month', start: halfStart },
-      { key:'yearly', label:'Yearly', start: yearStart },
-    ];
-  }
+    candles.forEach(c => {
+      const range = c.high - c.low;
+      if (range <= 0){
+        const idx = Math.min(numBins - 1, Math.max(0, Math.floor((c.close - minLow) / binSize)));
+        bins[idx].volume += c.volume;
+        return;
+      }
+      for (let i = 0; i < numBins; i++){
+        const overlapLow = Math.max(bins[i].low, c.low);
+        const overlapHigh = Math.min(bins[i].high, c.high);
+        const overlap = overlapHigh - overlapLow;
+        if (overlap > 0) bins[i].volume += c.volume * (overlap / range);
+      }
+    });
 
-  function vwapFrom(candles, startTime){
-    let sumQuote = 0, sumBase = 0;
-    for (const c of candles){
-      if (c.time >= startTime){ sumQuote += c.quoteVolume; sumBase += c.volume; }
+    const totalVolume = bins.reduce((a, b) => a + b.volume, 0);
+    if (totalVolume === 0) return null;
+    let pocIndex = 0;
+    bins.forEach((b, i) => { if (b.volume > bins[pocIndex].volume) pocIndex = i; });
+
+    let lowIdx = pocIndex, highIdx = pocIndex;
+    let vaVolume = bins[pocIndex].volume;
+    while (vaVolume < 0.7 * totalVolume && (lowIdx > 0 || highIdx < numBins - 1)){
+      const nextLowVol = lowIdx > 0 ? bins[lowIdx - 1].volume : -1;
+      const nextHighVol = highIdx < numBins - 1 ? bins[highIdx + 1].volume : -1;
+      if (nextHighVol >= nextLowVol){ highIdx++; vaVolume += bins[highIdx].volume; }
+      else { lowIdx--; vaVolume += bins[lowIdx].volume; }
     }
-    if (sumBase === 0) return null;
-    return sumQuote / sumBase;
+
+    return {
+      bins, totalVolume,
+      poc: bins[pocIndex].low + binSize / 2,
+      pocIndex, vahIndex: highIdx, valIndex: lowIdx,
+      vah: bins[highIdx].high, val: bins[lowIdx].low,
+    };
   }
 
   function fmtPrice(v){
-    if (v === null || v === undefined) return 'n/a';
+    if (v === null || v === undefined || isNaN(v)) return 'n/a';
     return v.toLocaleString(undefined, {maximumFractionDigits: v < 1 ? 6 : 2});
   }
-  function fmtDate(ts){
-    return new Date(ts).toLocaleDateString(undefined, {year:'numeric', month:'short', day:'numeric'});
+  function fmtVol(v){
+    if (Math.abs(v) >= 1e9) return (v/1e9).toFixed(2) + 'B';
+    if (Math.abs(v) >= 1e6) return (v/1e6).toFixed(2) + 'M';
+    if (Math.abs(v) >= 1e3) return (v/1e3).toFixed(1) + 'K';
+    return v.toFixed(0);
   }
 
-  async function loadVwap(){
+  async function loadProfile(){
     const symbol = currentSymbol();
     if (!symbol){
-      tableBody.innerHTML = '<tr><td colspan="5" style="color:var(--bear);padding:14px;">Enter a valid symbol.</td></tr>';
+      statsEl.innerHTML = '<span style="color:var(--bear);">Enter a valid symbol.</span>';
       return;
     }
+    const period = PERIODS[periodSelect.value];
+    const numBins = Math.min(100, Math.max(10, parseInt(binsInput.value) || period.bins || 40));
+
     loadBtn.disabled = true;
     loadBtn.textContent = 'Loading…';
     tickerEl.innerHTML = '<span style="color:var(--muted);">Loading…</span>';
-    tableBody.innerHTML = '<tr><td colspan="5" style="color:var(--muted);padding:14px;">Fetching candles…</td></tr>';
+    statsEl.innerHTML = 'Building profile…';
 
     try {
       const now = new Date();
-      const [hourly, daily, ticker] = await Promise.all([
-        fetchKlines(symbol, '1h', 200),
-        fetchKlines(symbol, '1d', 400),
+      const currentStart = period.start(now);
+      const previousStart = period.previousStart(now);
+      const [rawCandles, ticker] = await Promise.all([
+        fetchKlines(symbol, period.interval, period.limit),
         fetchTicker(symbol),
       ]);
 
+      const developingCandles = rawCandles.filter(c => c.time >= currentStart);
+      const previousCandles = rawCandles.filter(c => c.time >= previousStart && c.time < currentStart);
+      if (developingCandles.length < 2) throw new Error('Not enough candles in this period yet — try a shorter one.');
+
+      // Shared bin range across both profiles so they plot on the same price axis
+      const allForRange = previousCandles.length ? rawCandles.filter(c => c.time >= previousStart) : developingCandles;
+      const rangeMin = Math.min(...allForRange.map(c => c.low));
+      const rangeMax = Math.max(...allForRange.map(c => c.high));
+
+      const developing = buildProfile(developingCandles, numBins, rangeMin, rangeMax);
+      const previous = previousCandles.length >= 2 ? buildProfile(previousCandles, numBins, rangeMin, rangeMax) : null;
+
       const lastPrice = ticker.lastPrice;
       const change1d = ticker.change1dPct;
-      tickerEl.innerHTML = `<span>${displaySymbol(symbol)}</span><span>${fmtPrice(lastPrice)}</span><span class="${change1d>=0?'up':'down'}">${change1d>=0?'+':''}${change1d.toFixed(2)}%</span>`;
+      tickerEl.innerHTML = `<span>${displaySymbol(symbol)}</span><span>${fmtPrice(lastPrice)}</span><span class="${change1d>=0?'up':'down'}">${change1d>=0?'+':''}${change1d.toFixed(2)}%</span><span style="color:var(--muted);font-size:12px;">${period.label} · developing ${developingCandles.length} candles${previous ? ' · previous ' + previousCandles.length : ''}</span>`;
 
-      const levels = anchors(now);
-      // Daily and Weekly are recent enough to read from hourly candles;
-      // Monthly/Quarterly/6-Month/Yearly read from daily candles.
-      const rows = levels.map(a => {
-        const source = (a.key === 'daily' || a.key === 'weekly') ? hourly : daily;
-        const vwap = vwapFrom(source, a.start);
-        const distance = vwap ? (lastPrice - vwap) / vwap * 100 : null;
-        return { ...a, vwap, distance };
-      });
+      let verdict, verdictClass;
+      if (lastPrice > developing.vah){ verdict = 'Above value area'; verdictClass = 'above'; }
+      else if (lastPrice < developing.val){ verdict = 'Below value area'; verdictClass = 'below'; }
+      else { verdict = 'Inside value area'; verdictClass = 'inside'; }
 
-      tableBody.innerHTML = rows.map(r => `
-        <tr>
-          <td class="anchor-name">${r.label}</td>
-          <td style="color:var(--muted);">${fmtDate(r.start)}</td>
-          <td>${fmtPrice(r.vwap)}</td>
-          <td class="${r.distance>=0?'up':'down'}">${r.vwap ? (r.distance>=0?'+':'')+r.distance.toFixed(2)+'%' : 'n/a'}</td>
-          <td>${r.vwap ? `<span class="vw-badge ${r.distance>=0?'above':'below'}">${r.distance>=0?'Above':'Below'}</span>` : '—'}</td>
-        </tr>
-      `).join('');
+      statsEl.innerHTML = `
+        <div class="vp-stat-group">
+          <div class="vp-stat-group-title"><span class="vp-swatch dev"></span>Developing (${period.label})</div>
+          <div class="vp-stat-row">
+            <span><span class="vp-stat-label">POC</span><b>${fmtPrice(developing.poc)}</b></span>
+            <span><span class="vp-stat-label">VAH</span><b>${fmtPrice(developing.vah)}</b></span>
+            <span><span class="vp-stat-label">VAL</span><b>${fmtPrice(developing.val)}</b></span>
+            <span><span class="vp-stat-label">Price is</span><span class="vp-verdict ${verdictClass}">${verdict}</span></span>
+          </div>
+        </div>
+        ${previous ? `
+        <div class="vp-stat-group">
+          <div class="vp-stat-group-title"><span class="vp-swatch prev"></span>Previous period</div>
+          <div class="vp-stat-row">
+            <span><span class="vp-stat-label">POC</span><b>${fmtPrice(previous.poc)}</b></span>
+            <span><span class="vp-stat-label">VAH</span><b>${fmtPrice(previous.vah)}</b></span>
+            <span><span class="vp-stat-label">VAL</span><b>${fmtPrice(previous.val)}</b></span>
+          </div>
+        </div>` : '<div class="vp-stat-group"><span style="color:var(--muted);">Not enough history yet for a previous-period comparison.</span></div>'}
+      `;
 
-      renderAnchorCharts(hourly, daily, rows, symbol, lastPrice);
+      renderPriceChart(developingCandles, previousCandles, developing, previous, symbol, period.interval);
+      renderDevProfileChart(developing);
+      renderPrevProfileChart(previous);
     } catch (e) {
-      tableBody.innerHTML = `<tr><td colspan="5" style="color:var(--bear);padding:14px;">${e.message || 'Failed to load data.'}</td></tr>`;
+      statsEl.innerHTML = `<span style="color:var(--bear);">${e.message || 'Failed to load data.'}</span>`;
       tickerEl.innerHTML = '<span style="color:var(--bear);">Failed to load.</span>';
     } finally {
       loadBtn.disabled = false;
@@ -346,54 +516,141 @@
     }
   }
 
-  const anchorColors = {
-    daily:'#E8A63C', weekly:'#6C93F5', monthly:'#2FD8A6',
-    quarterly:'#FF6259', sixmonth:'#B98CFF', yearly:'#FF9F5B',
-  };
+  function fmtLabel(interval, time){
+    const d = new Date(time);
+    return (interval === '1d') ? d.toLocaleDateString(undefined,{month:'short',day:'numeric'})
+      : d.toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  }
 
-  function renderAnchorCharts(hourly, daily, rows, symbol, lastPrice){
-    rows.forEach(r => {
-      const source = (r.key === 'daily' || r.key === 'weekly') ? hourly : daily;
-      const candles = source.filter(c => c.time >= r.start);
-      const infoEl = document.getElementById('vwInfo-' + r.key);
-      if (infoEl){
-        infoEl.className = 'vw-chart-info ' + (r.distance >= 0 ? 'up' : 'down');
-        infoEl.textContent = r.vwap ? `VWAP ${fmtPrice(r.vwap)} · ${r.distance>=0?'+':''}${r.distance.toFixed(2)}%` : 'n/a';
-      }
-      if (candles.length < 2) return;
+  function renderPriceChart(developingCandles, previousCandles, developing, previous, symbol, interval){
+    const allCandles = [...previousCandles, ...developingCandles];
+    const labels = allCandles.map(c => fmtLabel(interval, c.time));
+    const closes = allCandles.map(c => c.close);
+    const splitIndex = previousCandles.length; // where developing period begins
 
-      const isIntraday = (r.key === 'daily' || r.key === 'weekly');
-      const labels = candles.map(c => isIntraday
-        ? new Date(c.time).toLocaleString(undefined, {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'})
-        : new Date(c.time).toLocaleDateString(undefined, {month:'short', day:'numeric'}));
-      const closes = candles.map(c => c.close);
-      const color = anchorColors[r.key] || '#7C8998';
+    const nullBefore = (arr, idx, val) => arr.map((_, i) => i >= idx ? val : null);
+    const nullAfter = (arr, idx, val) => arr.map((_, i) => i < idx ? val : null);
 
-      if (miniCharts[r.key]) miniCharts[r.key].destroy();
-      miniCharts[r.key] = new Chart(document.getElementById('vwChart-' + r.key), {
-        type: 'line',
-        data: {
-          labels,
-          datasets: [
-            { label: symbol, data: closes, borderColor:'#EAEEF3', borderWidth:1.3, pointRadius:0, tension:.12 },
-            { label: 'VWAP', data: labels.map(() => r.vwap), borderColor: color, borderWidth:1.4, borderDash:[5,3], pointRadius:0 },
-          ],
+    const scales = {
+      x: { ticks:{ color:'#7C8998', maxTicksLimit:8, font:{family:'JetBrains Mono', size:9} }, grid:{ color:'#1A2029' } },
+      y: { ticks:{ color:'#7C8998', font:{family:'JetBrains Mono', size:9} }, grid:{ color:'#1A2029' } },
+    };
+
+    const canvas = document.getElementById('vpPriceChart');
+    const ctx = canvas.getContext('2d');
+    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height || 320);
+    gradient.addColorStop(0, 'rgba(232,166,60,.28)');
+    gradient.addColorStop(1, 'rgba(232,166,60,0)');
+
+    const datasets = [
+      { label:symbol, data:closes, borderColor:'#EAEEF3', borderWidth:1.6, pointRadius:0, tension:.15, fill:true, backgroundColor:gradient },
+      { label:'Developing POC', data:nullBefore(labels, splitIndex, developing.poc), borderColor:'#E8A63C', borderWidth:1.6, borderDash:[7,3], pointRadius:0, spanGaps:false },
+      { label:'Developing VA', data:nullBefore(labels, splitIndex, developing.vah), borderColor:'#6C93F5', borderWidth:1.1, borderDash:[3,3], pointRadius:0 },
+      { label:'Developing VA ', data:nullBefore(labels, splitIndex, developing.val), borderColor:'#6C93F5', borderWidth:1.1, borderDash:[3,3], pointRadius:0 },
+    ];
+    if (previous){
+      datasets.push(
+        { label:'Previous POC', data:nullAfter(labels, splitIndex, previous.poc), borderColor:'#B98CFF', borderWidth:1.4, borderDash:[7,3], pointRadius:0 },
+        { label:'Previous VA', data:nullAfter(labels, splitIndex, previous.vah), borderColor:'#9AA3B0', borderWidth:1, borderDash:[2,3], pointRadius:0 },
+        { label:'Previous VA ', data:nullAfter(labels, splitIndex, previous.val), borderColor:'#9AA3B0', borderWidth:1, borderDash:[2,3], pointRadius:0 },
+      );
+    }
+
+    const marks = [
+      { value: developing.poc, color:'#E8A63C', label: 'Dev POC ' + fmtPrice(developing.poc), align:'right' },
+      { value: developing.vah, color:'#6C93F5', label: 'Dev VAH ' + fmtPrice(developing.vah), align:'right' },
+      { value: developing.val, color:'#6C93F5', label: 'Dev VAL ' + fmtPrice(developing.val), align:'right' },
+    ];
+    if (previous){
+      marks.push(
+        { value: previous.poc, color:'#B98CFF', label: 'Prev POC ' + fmtPrice(previous.poc), align:'left' },
+        { value: previous.vah, color:'#9AA3B0', label: 'Prev VAH ' + fmtPrice(previous.vah), align:'left' },
+        { value: previous.val, color:'#9AA3B0', label: 'Prev VAL ' + fmtPrice(previous.val), align:'left' },
+      );
+    }
+
+    if (priceChart) priceChart.destroy();
+    priceChart = new Chart(canvas, {
+      type:'line',
+      data:{ labels, datasets },
+      options:{
+        responsive:true,
+        interaction:{ mode:'index', intersect:false },
+        animation:{ duration:600, easing:'easeOutQuart' },
+        plugins:{
+          legend:{ display:true, position:'bottom', labels:{ color:'#7C8998', font:{family:'JetBrains Mono', size:9.5}, boxWidth:12, filter:(item)=> !item.text.endsWith(' ') } },
+          hLineLabels:{ marks },
         },
-        options: {
-          responsive: true,
-          interaction: { mode:'index', intersect:false },
-          animation: { duration:500 },
-          plugins: { legend: { display:false } },
-          scales: {
-            x: { ticks:{ color:'#7C8998', maxTicksLimit:5, font:{family:'JetBrains Mono', size:8.5} }, grid:{ color:'#1A2029' } },
-            y: { ticks:{ color:'#7C8998', font:{family:'JetBrains Mono', size:8.5} }, grid:{ color:'#1A2029' } },
-          },
-        },
-      });
+        scales,
+      },
     });
   }
 
-  loadVwap();
+  function renderDevProfileChart(profile){
+    devProfileChart = renderSingleProfileChart('vpDevProfileChart', devProfileChart, profile, {
+      pocColor:'#E8A63C', vaColor:'rgba(108,147,245,.85)', outsideColor:'rgba(124,137,152,.35)',
+    });
+  }
+  function renderPrevProfileChart(profile){
+    if (!profile){
+      if (prevProfileChart){ prevProfileChart.destroy(); prevProfileChart = null; }
+      const canvas = document.getElementById('vpPrevProfileChart');
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#7C8998';
+      ctx.font = '12px Manrope, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Not enough history for a previous period yet', canvas.width / 2, canvas.height / 2);
+      return;
+    }
+    prevProfileChart = renderSingleProfileChart('vpPrevProfileChart', prevProfileChart, profile, {
+      pocColor:'#B98CFF', vaColor:'rgba(185,140,255,.55)', outsideColor:'rgba(124,137,152,.35)',
+    });
+  }
+
+  function renderSingleProfileChart(canvasId, existingChart, profile, colors){
+    const numBins = profile.bins.length;
+    const ordered = [...profile.bins].reverse(); // high price at top
+    const labels = ordered.map(b => fmtPrice((b.low + b.high) / 2));
+    const data = ordered.map(b => b.volume);
+    const barColors = ordered.map((b, i) => {
+      const origIndex = numBins - 1 - i;
+      if (origIndex === profile.pocIndex) return colors.pocColor;
+      if (origIndex >= profile.valIndex && origIndex <= profile.vahIndex) return colors.vaColor;
+      return colors.outsideColor;
+    });
+
+    const rowOf = (binIndex) => numBins - 1 - binIndex;
+    const marks = [
+      { rowIndex: rowOf(profile.pocIndex), color: colors.pocColor, label: 'POC ' + fmtPrice(profile.poc) },
+      { rowIndex: rowOf(profile.vahIndex), color: colors.vaColor, label: 'VAH ' + fmtPrice(profile.vah), dash:[4,3] },
+      { rowIndex: rowOf(profile.valIndex), color: colors.vaColor, label: 'VAL ' + fmtPrice(profile.val), dash:[4,3] },
+    ];
+
+    if (existingChart) existingChart.destroy();
+    const chart = new Chart(document.getElementById(canvasId), {
+      type:'bar',
+      data:{ labels, datasets:[{ label:'Volume', data, backgroundColor:barColors, borderRadius:3, barPercentage:.85, categoryPercentage:.9 }] },
+      options:{
+        indexAxis:'y',
+        responsive:true,
+        animation:{ duration:600, easing:'easeOutQuart' },
+        layout:{ padding:{ right:8 } },
+        plugins:{
+          legend:{ display:false },
+          tooltip:{ callbacks:{ label:(ctx)=> fmtVol(ctx.parsed.x) } },
+          priceLabels:{ marks },
+        },
+        scales:{
+          x:{ ticks:{ color:'#7C8998', font:{family:'JetBrains Mono', size:9}, callback:(v)=>fmtVol(v) }, grid:{ color:'#1A2029' } },
+          y:{ ticks:{ color:'#7C8998', font:{family:'JetBrains Mono', size:8}, maxTicksLimit:20 }, grid:{ display:false } },
+        },
+      },
+    });
+    return chart;
+  }
+
+  loadProfile();
 })();
 </script>
 
