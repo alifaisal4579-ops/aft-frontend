@@ -767,3 +767,8 @@ td.confluences {
 /* Confluence overlay tags on the depth ladder */
 .of-lad-row .lconf{position:absolute;right:6px;top:0;font-size:9px;font-weight:700;color:var(--tape);white-space:nowrap;z-index:1;text-shadow:0 1px 4px rgba(0,0,0,.9);}
 .of-lad-row.conf{background:rgba(232,166,60,.05);}
+
+/* Tools suite iframe wrapper (embeds the real site, full fidelity) */
+.tools-suite-wrap{display:flex;flex-direction:column;height:100vh;}
+.tools-suite-bar{padding:10px 16px;border-bottom:1px solid var(--border);background:var(--bg);}
+.tools-suite-frame{flex:1;width:100%;border:none;}
