@@ -21,7 +21,12 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
-    if (url.pathname === '/aft-tools-suite.html') {
+    // Cloudflare's static-asset serving auto-strips the .html extension from
+    // the browser-visible URL (so /aft-tools-suite.html shows as just
+    // /aft-tools-suite) -- checking only the exact .html path let the
+    // extensionless form bypass this check entirely, which is exactly how
+    // direct access slipped through. Match both.
+    if (url.pathname === '/aft-tools-suite.html' || url.pathname === '/aft-tools-suite') {
       const cookieHeader = request.headers.get('Cookie') || '';
       const hasSession = cookieHeader
         .split(';')
