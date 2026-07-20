@@ -252,7 +252,7 @@ const PART_A = `
     <div class="nav-links">
       <a href="/sector-screener.html">Sector Screener</a>
       <a href="/confluence-dashboard.html">Confluence Dashboard</a>
-      <a href="/position-size-calculator.html">Position Size Calc</a>
+      <a href="/position-size-calculator.html">Position Size Calculator</a>
     </div>
     <div class="nav-cta-group">
       <a class="nav-telegram" href="https://t.me/alifaisaltrades" target="_blank" rel="noopener">
