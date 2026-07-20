@@ -4,234 +4,250 @@ import LiveRsiScreener from './LiveRsiScreener';
 
 const HOMEPAGE_CSS = `
   :root{
-    --bg:#080B10; --surface:#0E131B; --surface-2:#151C27; --surface-3:#1A2230;
-    --border:#222B38; --border-soft:rgba(34,43,56,.6);
-    --text:#E8ECF1; --muted:#7C8998; --muted-2:#57626F;
-    --tape:#E8A63C; --tape-soft:rgba(232,166,60,.12);
-    --bull:#2FD8A6; --bull-soft:rgba(47,216,166,.12);
-    --bear:#FF6259; --bear-soft:rgba(255,98,89,.12);
-    --violet:#8B7FE8; --violet-soft:rgba(139,127,232,.12);
+    --bg:#06070C;
+    --text:#EEF1F6; --muted:#8993A6; --muted-2:#565F72;
+    --tape:#E8A63C; --bull:#2FD8A6; --bear:#FF6259; --violet:#9C8CFF;
+    --glass:rgba(255,255,255,.045); --glass-hover:rgba(255,255,255,.075);
+    --glass-border:rgba(255,255,255,.09); --glass-border-hover:rgba(232,166,60,.4);
     --mono:'JetBrains Mono',ui-monospace,monospace;
-    --display:'Space Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-    --radius:16px; --radius-sm:10px;
+    --sans:'Manrope',-apple-system,sans-serif;
+    --display:'Space Grotesk',var(--sans);
+    --r:18px;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
   html{scroll-behavior:smooth;}
-  ::selection{background:rgba(232,166,60,.25);color:var(--text);}
+  ::selection{background:rgba(232,166,60,.28);color:#fff;}
   body{
-    background:
-      radial-gradient(ellipse 1100px 600px at 12% -8%, rgba(232,166,60,.07), transparent 55%),
-      radial-gradient(ellipse 900px 600px at 100% 8%, rgba(47,216,166,.055), transparent 55%),
-      var(--bg);
-    color:var(--text); font-family:var(--display); -webkit-font-smoothing:antialiased;
-    line-height:1.5;
+    background:var(--bg);color:var(--text);font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;overflow-x:hidden;line-height:1.5;
   }
   a{color:inherit;text-decoration:none;}
   .wrap{max-width:1180px;margin:0 auto;padding:0 24px;}
-  img,svg{display:block;max-width:100%;}
+
+  /* ---- ambient animated mesh background ---- */
+  .mesh{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;}
+  .mesh::before,.mesh::after,.mesh i{
+    content:'';position:absolute;border-radius:50%;filter:blur(90px);opacity:.55;
+  }
+  .mesh::before{
+    width:640px;height:640px;top:-220px;left:-120px;
+    background:radial-gradient(circle,rgba(232,166,60,.22),transparent 70%);
+    animation:drift1 26s ease-in-out infinite;
+  }
+  .mesh::after{
+    width:560px;height:560px;top:10%;right:-160px;
+    background:radial-gradient(circle,rgba(47,216,166,.18),transparent 70%);
+    animation:drift2 32s ease-in-out infinite;
+  }
+  .mesh i{
+    width:520px;height:520px;bottom:-200px;left:30%;
+    background:radial-gradient(circle,rgba(156,140,255,.15),transparent 70%);
+    animation:drift3 38s ease-in-out infinite;
+  }
+  @keyframes drift1{0%,100%{transform:translate(0,0) scale(1);}50%{transform:translate(80px,60px) scale(1.15);}}
+  @keyframes drift2{0%,100%{transform:translate(0,0) scale(1);}50%{transform:translate(-70px,80px) scale(1.1);}}
+  @keyframes drift3{0%,100%{transform:translate(0,0) scale(1);}50%{transform:translate(50px,-70px) scale(1.2);}}
+  @media (prefers-reduced-motion: reduce){ .mesh::before,.mesh::after,.mesh i{animation:none;} }
+
+  /* ---- glass base ---- */
+  .glass{
+    background:var(--glass);backdrop-filter:blur(20px) saturate(140%);-webkit-backdrop-filter:blur(20px) saturate(140%);
+    border:1px solid var(--glass-border);border-radius:var(--r);
+    box-shadow:0 1px 0 rgba(255,255,255,.06) inset, 0 20px 60px -30px rgba(0,0,0,.7);
+    position:relative;
+  }
+  .glass::before{
+    content:'';position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;
+    background:linear-gradient(160deg,rgba(255,255,255,.14),transparent 40%);
+    -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+    -webkit-mask-composite:xor;mask-composite:exclude;
+  }
+
+  /* ---- scroll reveal ---- */
+  .reveal{opacity:0;transform:translateY(28px);transition:opacity .7s cubic-bezier(.16,1,.3,1),transform .7s cubic-bezier(.16,1,.3,1);}
+  .reveal.in{opacity:1;transform:translateY(0);}
+  @media (prefers-reduced-motion: reduce){ .reveal{opacity:1;transform:none;transition:none;} }
 
   /* ---- nav ---- */
+  .nav-outer{position:sticky;top:16px;z-index:60;display:flex;justify-content:center;padding:0 16px;}
   nav{
-    position:sticky;top:0;z-index:50;
-    background:rgba(8,11,16,.82);backdrop-filter:blur(10px);
-    border-bottom:1px solid var(--border-soft);
+    width:100%;max-width:1180px;display:flex;align-items:center;gap:24px;
+    padding:12px 20px;border-radius:999px;
+    background:rgba(10,12,18,.55);backdrop-filter:blur(18px) saturate(160%);-webkit-backdrop-filter:blur(18px) saturate(160%);
+    border:1px solid rgba(255,255,255,.08);
+    box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 12px 40px -20px rgba(0,0,0,.8);
+    transition:background .3s ease,box-shadow .3s ease;
   }
-  .nav-inner{display:flex;align-items:center;gap:28px;padding:16px 24px;max-width:1180px;margin:0 auto;}
-  .logo{font-family:var(--mono);font-weight:700;font-size:14px;letter-spacing:.02em;}
+  nav.scrolled{background:rgba(8,10,16,.78);box-shadow:0 1px 0 rgba(255,255,255,.08) inset,0 16px 50px -18px rgba(0,0,0,.85);}
+  .logo{font-family:var(--mono);font-weight:700;font-size:13px;letter-spacing:.02em;white-space:nowrap;}
   .logo b{color:var(--tape);}
-  .nav-links{display:flex;gap:22px;flex:1;font-size:13px;color:var(--muted);}
+  .nav-links{display:flex;gap:20px;flex:1;font-size:13px;color:var(--muted);}
+  .nav-links a{transition:color .15s ease;position:relative;}
   .nav-links a:hover{color:var(--text);}
-  .nav-cta{
-    font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.02em;
-    background:var(--tape);color:#241a05;padding:9px 16px;border-radius:8px;
-    transition:filter .15s ease;
-  }
-  .nav-cta:hover{filter:brightness(1.08);}
+  .nav-links a::after{content:'';position:absolute;left:0;right:0;bottom:-6px;height:1.5px;background:var(--tape);transform:scaleX(0);transform-origin:left;transition:transform .25s ease;}
+  .nav-links a:hover::after{transform:scaleX(1);}
   .nav-cta-group{display:flex;align-items:center;gap:10px;}
   .nav-telegram{
-    font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.01em;
-    color:var(--muted);border:1px solid var(--border);padding:8px 14px;border-radius:8px;
-    display:flex;align-items:center;gap:6px;transition:border-color .15s ease,color .15s ease;
+    font-family:var(--mono);font-size:12px;font-weight:600;color:var(--muted);
+    border:1px solid rgba(255,255,255,.1);padding:8px 14px;border-radius:999px;
+    display:flex;align-items:center;gap:6px;transition:all .2s ease;white-space:nowrap;
   }
-  .nav-telegram:hover{border-color:#2FA5D8;color:#5FC2EF;}
-  .nav-telegram svg{width:14px !important;height:14px !important;flex-shrink:0;}
-  @media (max-width:760px){ .nav-links{display:none;} .nav-telegram span{display:none;} }
+  .nav-telegram:hover{border-color:rgba(94,196,240,.5);color:#8fd4f5;background:rgba(94,196,240,.06);}
+  .nav-telegram svg{width:13px;height:13px;flex-shrink:0;}
+  .nav-cta{
+    font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.02em;
+    background:linear-gradient(135deg,#F2BE5E,var(--tape));color:#241a05;padding:9px 18px;border-radius:999px;
+    white-space:nowrap;transition:filter .2s ease,transform .2s ease;box-shadow:0 6px 20px -8px rgba(232,166,60,.6);
+  }
+  .nav-cta:hover{filter:brightness(1.08);transform:translateY(-1px);}
+  @media (max-width:820px){ .nav-links{display:none;} }
 
   /* ---- hero ---- */
-  .hero{padding:76px 0 40px;}
-  .hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center;}
+  .hero{position:relative;z-index:1;padding:80px 0 40px;}
+  .hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center;}
   .eyebrow{
-    font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
-    color:var(--tape);margin-bottom:16px;display:flex;align-items:center;gap:8px;
+    display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;
+    letter-spacing:.1em;text-transform:uppercase;color:var(--tape);margin-bottom:22px;
+    padding:6px 14px;border-radius:999px;background:rgba(232,166,60,.08);border:1px solid rgba(232,166,60,.22);
   }
-  .eyebrow::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--tape);box-shadow:0 0 0 3px var(--tape-soft);}
+  .eyebrow i{width:6px;height:6px;border-radius:50%;background:var(--tape);box-shadow:0 0 0 3px rgba(232,166,60,.22);animation:pulse 2s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
   h1{
-    font-size:clamp(34px,4.6vw,52px);font-weight:700;line-height:1.06;letter-spacing:-.02em;
-    margin-bottom:20px;
+    font-family:var(--display);font-size:clamp(36px,4.8vw,56px);font-weight:700;line-height:1.04;
+    letter-spacing:-.02em;margin-bottom:22px;
   }
-  h1 .accent{color:var(--tape);}
-  .hero-sub{font-size:16.5px;color:var(--muted);max-width:520px;margin-bottom:28px;line-height:1.65;}
+  h1 .accent{background:linear-gradient(100deg,var(--tape),#F5C878 60%,var(--tape));-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .hero-sub{font-size:16.5px;color:var(--muted);max-width:520px;margin-bottom:30px;line-height:1.7;}
   .hero-sub b{color:var(--text);font-weight:600;}
-  .cta-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:34px;}
+  .cta-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:36px;}
   .btn-primary{
-    font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:.01em;
-    background:var(--tape);color:#241a05;padding:13px 22px;border-radius:9px;
-    display:inline-flex;align-items:center;gap:8px;transition:filter .15s ease,transform .15s ease;
+    font-family:var(--mono);font-size:13.5px;font-weight:700;
+    background:linear-gradient(135deg,#F2BE5E,var(--tape));color:#241a05;padding:15px 26px;border-radius:14px;
+    display:inline-flex;align-items:center;gap:8px;transition:filter .2s ease,transform .2s ease,box-shadow .2s ease;
+    box-shadow:0 10px 30px -10px rgba(232,166,60,.55);
   }
-  .btn-primary:hover{filter:brightness(1.08);transform:translateY(-1px);}
+  .btn-primary:hover{filter:brightness(1.07);transform:translateY(-2px);box-shadow:0 14px 36px -8px rgba(232,166,60,.65);}
   .btn-secondary{
-    font-family:var(--mono);font-size:13px;font-weight:600;
-    border:1px solid var(--border);color:var(--text);padding:13px 20px;border-radius:9px;
-    transition:border-color .15s ease;
+    font-family:var(--mono);font-size:13.5px;font-weight:600;color:var(--text);
+    padding:15px 24px;border-radius:14px;transition:all .2s ease;
   }
-  .btn-secondary:hover{border-color:var(--tape);}
-  .trust-row{display:flex;gap:20px;flex-wrap:wrap;font-family:var(--mono);font-size:11.5px;color:var(--muted-2);}
+  .btn-secondary:hover{background:var(--glass-hover);border-color:var(--glass-border-hover);}
+  .trust-row{display:flex;gap:22px;flex-wrap:wrap;font-family:var(--mono);font-size:11.5px;color:var(--muted-2);}
   .trust-row b{color:var(--muted);}
 
-  /* ---- hero visual: mini confluence card ---- */
+  /* ---- hero glass terminal ---- */
   .hero-visual{position:relative;}
-  .glow{position:absolute;inset:-40px;background:radial-gradient(circle at 60% 30%, rgba(232,166,60,.14), transparent 65%);filter:blur(10px);z-index:0;}
-  .preview-card{
-    position:relative;z-index:1;background:linear-gradient(160deg,var(--surface-2),var(--surface));
-    border:1px solid var(--border-soft);border-radius:var(--radius);padding:18px 18px 14px;
-    box-shadow:0 20px 50px -20px rgba(0,0,0,.6);
-  }
-  .preview-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
-  .preview-title{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
-  .preview-live{
-    font-family:var(--mono);font-size:10px;color:var(--bull);display:flex;align-items:center;gap:5px;
-  }
-  .preview-live::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--bull);animation:blink 2s ease-in-out infinite;}
-  @keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
-  .conf-row{
-    display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;
-    background:rgba(8,11,16,.4);margin-bottom:6px;
-  }
-  .conf-sym{font-family:var(--mono);font-size:12px;font-weight:600;width:64px;flex-shrink:0;}
+  .hero-glow{position:absolute;inset:-60px;background:radial-gradient(circle at 65% 30%,rgba(232,166,60,.28),transparent 60%);filter:blur(20px);z-index:-1;}
+  .terminal{padding:22px 22px 18px;animation:floatCard 7s ease-in-out infinite;}
+  @keyframes floatCard{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
+  @media (prefers-reduced-motion: reduce){ .terminal{animation:none;} }
+  .term-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+  .term-title{font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);}
+  .term-live{font-family:var(--mono);font-size:10px;color:var(--bull);display:flex;align-items:center;gap:5px;}
+  .term-live::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--bull);box-shadow:0 0 8px var(--bull);animation:pulse 2s ease-in-out infinite;}
+  .conf-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.03);margin-bottom:7px;transition:background .2s ease;}
+  .conf-row:hover{background:rgba(255,255,255,.06);}
+  .conf-sym{font-family:var(--mono);font-size:12px;font-weight:600;width:70px;flex-shrink:0;}
   .conf-bars{display:flex;gap:3px;flex:1;}
-  .conf-bar{height:14px;border-radius:3px;flex:1;background:var(--border);}
-  .conf-bar.on{background:var(--bull);}
-  .conf-bar.on.tape{background:var(--tape);}
+  .conf-bar{height:14px;border-radius:4px;flex:1;background:rgba(255,255,255,.07);}
+  .conf-bar.on{background:var(--bull);box-shadow:0 0 10px rgba(47,216,166,.5);}
+  .conf-bar.on.tape{background:var(--tape);box-shadow:0 0 10px rgba(232,166,60,.5);}
   .conf-score{font-family:var(--mono);font-size:11px;font-weight:700;width:34px;text-align:right;flex-shrink:0;}
-  .conf-score.high{color:var(--bull);}
-  .conf-score.mid{color:var(--tape);}
-  .preview-foot{
-    margin-top:10px;padding-top:10px;border-top:1px solid var(--border-soft);
-    font-family:var(--mono);font-size:10px;color:var(--muted-2);display:flex;justify-content:space-between;
-  }
+  .conf-score.high{color:var(--bull);} .conf-score.mid{color:var(--tape);}
+  .term-foot{margin-top:10px;padding-top:12px;border-top:1px solid rgba(255,255,255,.07);font-family:var(--mono);font-size:10px;color:var(--muted-2);display:flex;justify-content:space-between;}
 
-  /* ---- ticker strip ---- */
-  .ticker-strip{
-    border-top:1px solid var(--border-soft);border-bottom:1px solid var(--border-soft);
-    background:var(--surface);overflow:hidden;padding:13px 0;
-  }
-  .ticker-track{display:flex;gap:40px;white-space:nowrap;animation:scroll 32s linear infinite;width:max-content;}
-  .ticker-strip:hover .ticker-track{animation-play-state:paused;}
+  /* ---- ticker ---- */
+  .ticker-outer{position:relative;z-index:1;display:flex;justify-content:center;padding:0 16px;margin:36px 0;}
+  .ticker-strip{width:100%;max-width:1180px;padding:13px 0;border-radius:999px;overflow:hidden;}
+  .ticker-track{display:flex;gap:44px;white-space:nowrap;animation:scroll 34s linear infinite;width:max-content;padding:0 24px;}
+  .ticker-outer:hover .ticker-track{animation-play-state:paused;}
   @keyframes scroll{from{transform:translateX(0);}to{transform:translateX(-50%);}}
   .ticker-item{font-family:var(--mono);font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:8px;}
   .ticker-item b{color:var(--text);}
-  .ticker-item .up{color:var(--bull);}
-  .ticker-item .down{color:var(--bear);}
+  .up{color:var(--bull);} .down{color:var(--bear);}
   @media (prefers-reduced-motion: reduce){ .ticker-track{animation:none;} }
 
   /* ---- section shell ---- */
-  section{padding:88px 0;scroll-margin-top:64px;}
-  .section-head{max-width:640px;margin-bottom:48px;}
+  section{position:relative;z-index:1;padding:70px 0;}
+  .section-head{max-width:640px;margin-bottom:44px;}
   .section-head.center{margin-left:auto;margin-right:auto;text-align:center;}
-  h2{font-size:clamp(24px,3vw,32px);font-weight:700;letter-spacing:-.01em;line-height:1.18;margin-bottom:12px;}
+  h2{font-family:var(--display);font-size:clamp(26px,3vw,34px);font-weight:700;letter-spacing:-.01em;line-height:1.18;margin-bottom:12px;}
   .section-desc{color:var(--muted);font-size:15px;line-height:1.7;}
 
   /* ---- tool grid ---- */
-  .tool-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1px;background:var(--border-soft);border:1px solid var(--border-soft);border-radius:var(--radius);overflow:hidden;}
-  .tool-card{background:var(--surface);padding:26px 24px;transition:background .18s ease;position:relative;display:block;text-decoration:none;color:inherit;}
-  .tool-card.live{cursor:pointer;}
-  .tool-card.live:hover{background:var(--surface-2);}
-  .tool-live-badge{
-    position:absolute;top:20px;right:20px;font-family:var(--mono);font-size:9px;letter-spacing:.04em;
-    color:var(--bull);background:var(--bull-soft);border:1px solid rgba(47,216,166,.3);
-    padding:3px 8px;border-radius:20px;white-space:nowrap;
+  .tool-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:14px;}
+  .tool-card{
+    padding:24px 22px;transition:transform .3s cubic-bezier(.16,1,.3,1),background .3s ease,border-color .3s ease;
+    display:block;text-decoration:none;color:inherit;
   }
-  .tool-card:hover{background:var(--surface-2);}
-  .tool-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;font-family:var(--mono);font-weight:700;font-size:13px;}
-  .tool-card h3{font-size:15.5px;font-weight:600;margin-bottom:8px;}
-  .tool-card p{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:12px;}
-  .tool-tag{font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted-2);}
+  .tool-card:hover{transform:translateY(-5px);background:var(--glass-hover);border-color:var(--glass-border-hover);}
+  .tool-card.live{cursor:pointer;}
+  .tool-live-badge{
+    position:absolute;top:20px;right:20px;font-family:var(--mono);font-size:8.5px;letter-spacing:.04em;
+    color:var(--bull);background:rgba(47,216,166,.12);border:1px solid rgba(47,216,166,.3);
+    padding:3px 9px;border-radius:999px;white-space:nowrap;
+  }
+  .tool-icon{
+    width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+    margin-bottom:16px;font-family:var(--mono);font-weight:700;font-size:13px;
+  }
+  .tool-card h3{font-family:var(--display);font-size:16px;font-weight:600;margin-bottom:8px;}
+  .tool-card p{font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:12px;}
+  .tool-tag{font-family:var(--mono);font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted-2);}
 
   /* ---- process ---- */
-  .process{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border-soft);border:1px solid var(--border-soft);border-radius:var(--radius);overflow:hidden;}
+  .process{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
   @media (max-width:820px){ .process{grid-template-columns:repeat(2,1fr);} }
-  .process-step{background:var(--surface);padding:24px 20px;position:relative;}
-  .process-num{font-family:var(--mono);font-size:11px;color:var(--tape);margin-bottom:14px;}
-  .process-step h4{font-size:14.5px;font-weight:600;margin-bottom:8px;}
+  .process-step{padding:26px 22px;}
+  .process-num{font-family:var(--mono);font-size:11px;color:var(--tape);margin-bottom:16px;}
+  .process-step h4{font-family:var(--display);font-size:15px;font-weight:600;margin-bottom:9px;}
   .process-step p{font-size:12.5px;color:var(--muted);line-height:1.6;}
 
-  /* ---- deep dive with mockups ---- */
-  .deepdive{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center;margin-bottom:90px;scroll-margin-top:80px;}
-  .deepdive.reverse{grid-template-columns:1fr 1fr;}
-  .deepdive.reverse .dd-visual{order:2;}
-  .deepdive.reverse .dd-text{order:1;}
+  /* ---- deep dive ---- */
+  .deepdive{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center;margin-bottom:70px;}
+  .deepdive.reverse .dd-visual{order:2;} .deepdive.reverse .dd-text{order:1;}
   @media (max-width:860px){ .deepdive,.deepdive.reverse{grid-template-columns:1fr;} .deepdive.reverse .dd-visual,.deepdive.reverse .dd-text{order:0;} }
-  .dd-eyebrow{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--tape);margin-bottom:12px;}
-  .dd-text h3{font-size:22px;font-weight:700;margin-bottom:14px;letter-spacing:-.01em;}
+  .dd-eyebrow{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--tape);margin-bottom:14px;}
+  .dd-text h3{font-family:var(--display);font-size:23px;font-weight:700;margin-bottom:15px;letter-spacing:-.01em;}
   .dd-text p{color:var(--muted);font-size:14.5px;line-height:1.7;margin-bottom:16px;}
   .dd-list{list-style:none;}
-  .dd-list li{font-size:13.5px;color:var(--muted);padding:6px 0 6px 22px;position:relative;}
-  .dd-list li::before{content:'\\2713';position:absolute;left:0;color:var(--bull);font-family:var(--mono);font-size:12px;}
-  .dd-visual{background:linear-gradient(160deg,var(--surface-2),var(--surface));border:1px solid var(--border-soft);border-radius:var(--radius);padding:20px;box-shadow:0 20px 50px -24px rgba(0,0,0,.55);}
+  .dd-list li{font-size:13.5px;color:var(--muted);padding:6px 0 6px 24px;position:relative;}
+  .dd-list li::before{content:'\\2713';position:absolute;left:2px;color:var(--bull);font-family:var(--mono);font-size:12px;}
+  .dd-visual{padding:20px;}
 
-  /* order flow ladder mockup */
-  .ladder{font-family:var(--mono);font-size:11.5px;}
-  .ladder-row{display:grid;grid-template-columns:56px 1fr 56px;gap:8px;align-items:center;padding:3px 0;}
-  .ladder-bar{height:15px;border-radius:3px;}
-  .ladder-bar.ask{background:linear-gradient(90deg,transparent,var(--bear-soft));margin-left:auto;}
-  .ladder-bar.bid{background:linear-gradient(90deg,var(--bull-soft),transparent);}
-  .ladder-price{color:var(--muted);text-align:right;}
-  .ladder-price.mid{color:var(--tape);font-weight:700;text-align:center;}
-  .ladder-wall{color:var(--text);font-size:9.5px;background:var(--tape-soft);color:var(--tape);padding:1px 5px;border-radius:4px;margin-left:6px;}
-
-  /* rsi screener table mockup */
-  .mini-table{width:100%;font-family:var(--mono);font-size:12px;border-collapse:collapse;}
-  .mini-table th{text-align:left;color:var(--muted-2);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;padding:8px 8px;border-bottom:1px solid var(--border-soft);}
-  .mini-table td{padding:9px 8px;border-bottom:1px solid rgba(34,43,56,.4);}
-  .mini-table tr:last-child td{border-bottom:none;}
-  .pill{font-size:10px;padding:2px 8px;border-radius:12px;font-weight:600;}
-  .pill.bull{background:var(--bull-soft);color:var(--bull);}
-  .pill.bear{background:var(--bear-soft);color:var(--bear);}
+  .live-widget-loading,.live-widget-error{font-family:var(--mono);font-size:12.5px;color:var(--muted);padding:30px 10px;text-align:center;}
+  .live-widget-error{color:var(--bear);}
+  .live-widget-foot{margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.07);font-family:var(--mono);font-size:10px;color:var(--muted-2);display:flex;justify-content:space-between;}
+  .preview-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+  .preview-title{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
+  .preview-live{font-family:var(--mono);font-size:10px;color:var(--bull);display:flex;align-items:center;gap:5px;}
+  .preview-live::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--bull);animation:pulse 2s ease-in-out infinite;}
 
   /* ---- faq ---- */
-  .faq-item{border-bottom:1px solid var(--border-soft);padding:22px 0;}
-  .faq-item h4{font-size:15.5px;font-weight:600;margin-bottom:8px;}
+  .faq-item{padding:24px 0;border-bottom:1px solid rgba(255,255,255,.06);}
+  .faq-item:last-child{border-bottom:none;}
+  .faq-item h4{font-family:var(--display);font-size:16px;font-weight:600;margin-bottom:9px;}
   .faq-item p{font-size:13.5px;color:var(--muted);line-height:1.7;max-width:680px;}
 
   /* ---- final cta ---- */
-  .final-cta{
-    background:linear-gradient(150deg,var(--surface-2),var(--surface));
-    border:1px solid var(--border-soft);border-radius:20px;padding:56px 40px;text-align:center;
-    position:relative;overflow:hidden;
-  }
-  .final-cta::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 0%, rgba(232,166,60,.1), transparent 60%);}
+  .final-cta{padding:64px 40px;text-align:center;position:relative;overflow:hidden;}
+  .final-cta-glow{position:absolute;inset:-40px;background:radial-gradient(ellipse at 50% 0%,rgba(232,166,60,.16),transparent 65%);pointer-events:none;}
   .final-cta h2{position:relative;margin-bottom:14px;}
-  .final-cta p{position:relative;color:var(--muted);font-size:15px;max-width:480px;margin:0 auto 26px;}
-  .final-cta .cta-row{justify-content:center;position:relative;}
+  .final-cta p{position:relative;color:var(--muted);font-size:15px;max-width:480px;margin:0 auto 28px;}
+  .final-cta .cta-row{justify-content:center;position:relative;margin-bottom:0;}
 
-  footer{border-top:1px solid var(--border-soft);padding:40px 0 32px;}
-  .footer-inner{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;}
-  .footer-links{display:flex;gap:20px;font-size:12.5px;color:var(--muted);}
-  .footer-note{font-family:var(--mono);font-size:11px;color:var(--muted-2);max-width:560px;line-height:1.6;margin-top:20px;}
-
-  .live-widget-loading,.live-widget-error{
-    font-family:var(--mono);font-size:12.5px;color:var(--muted);padding:30px 10px;text-align:center;
-  }
-  .live-widget-error{color:var(--bear);}
-  .live-widget-foot{
-    margin-top:10px;padding-top:10px;border-top:1px solid var(--border-soft);
-    font-family:var(--mono);font-size:10px;color:var(--muted-2);display:flex;justify-content:space-between;
-  }
+  footer{position:relative;z-index:1;padding:44px 0 36px;}
+  .footer-inner{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;padding-top:28px;border-top:1px solid rgba(255,255,255,.07);}
+  .footer-links{display:flex;gap:22px;font-size:12.5px;color:var(--muted);}
+  .footer-links a:hover{color:var(--text);}
+  .footer-note{font-family:var(--mono);font-size:10.5px;color:var(--muted-2);max-width:560px;line-height:1.6;margin-top:18px;}
 `;
-const PART1_BEFORE = `
+const PART_A = `
 
-<nav>
-  <div class="nav-inner">
+<div class="mesh"><i></i></div>
+
+<div class="nav-outer">
+  <nav id="mainNav" class="glass">
     <span class="logo">AFT <b>Tools</b></span>
     <div class="nav-links">
       <a href="/sector-screener.html">Sector Screener</a>
@@ -240,28 +256,27 @@ const PART1_BEFORE = `
     </div>
     <div class="nav-cta-group">
       <a class="nav-telegram" href="https://t.me/alifaisaltrades" target="_blank" rel="noopener">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px;min-width:14px;max-width:14px;"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71l-4.14-3.05-2 1.92c-.23.23-.42.42-.82.42z"/></svg>
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71l-4.14-3.05-2 1.92c-.23.23-.42.42-.82.42z"/></svg>
         <span>Join Telegram</span>
       </a>
       <a class="nav-cta" href="/login">Open Terminal &rarr;</a>
     </div>
-  </div>
-</nav>
+  </nav>
+</div>
 
 <header class="hero">
   <div class="wrap hero-grid">
     <div>
-      <div class="eyebrow">16 Tools &middot; One Login &middot; Zero Guesswork</div>
+      <div class="eyebrow"><i></i>16 Tools &middot; One Login &middot; Zero Guesswork</div>
       <h1>Price shows what happened.<br><span class="accent">Order flow shows who did it.</span></h1>
       <p class="hero-sub">
         AFT Tools is a <b>16-tool institutional trading suite</b> &mdash; screeners, order flow, volume,
         VWAPs, Fibonacci structure, live signals and a paper-trading bot &mdash; all unified into one
-        confluence engine. Log in once, and every tool talks to every other tool. No more juggling eight tabs
-        just to decide if a trade is even worth taking.
+        confluence engine. Log in once, and every tool talks to every other tool.
       </p>
       <div class="cta-row">
         <a class="btn-primary" href="/login">Login &amp; Start Trading &rarr;</a>
-        <a class="btn-secondary" href="#suite">See all 16 tools</a>
+        <a class="btn-secondary glass" href="#suite">See all 16 tools</a>
       </div>
       <div class="trust-row">
         <span><b>16</b> tools, one login</span>
@@ -271,11 +286,11 @@ const PART1_BEFORE = `
     </div>
 
     <div class="hero-visual">
-      <div class="glow"></div>
-      <div class="preview-card">
-        <div class="preview-head">
-          <span class="preview-title">Confluence Dashboard</span>
-          <span class="preview-live">Live</span>
+      <div class="hero-glow"></div>
+      <div class="terminal glass">
+        <div class="term-head">
+          <span class="term-title">Confluence Dashboard</span>
+          <span class="term-live">Live</span>
         </div>
         <div class="conf-row">
           <span class="conf-sym">BTCUSDT</span>
@@ -301,7 +316,7 @@ const PART1_BEFORE = `
           </div>
           <span class="conf-score mid">2/5</span>
         </div>
-        <div class="preview-foot">
+        <div class="term-foot">
           <span>RSI &middot; Volume &middot; Order Flow &middot; VWAP &middot; Fib</span>
           <span>updated 4s ago</span>
         </div>
@@ -310,204 +325,207 @@ const PART1_BEFORE = `
   </div>
 </header>
 
-<div class="ticker-strip">
-  <div class="ticker-track">
-    <span class="ticker-item">BTCUSDT <b>$64,682</b> <span class="up">+1.2%</span> &middot; 4/5 confluence</span>
-    <span class="ticker-item">Order Flow: bid wall <b>$64,420</b> &middot; 340K USDT</span>
-    <span class="ticker-item">SOLUSDT <b>$187.9</b> <span class="down">-0.8%</span> &middot; VWAP reclaim</span>
-    <span class="ticker-item">RSI Screener: <b>6</b> symbols oversold &lt;30</span>
-    <span class="ticker-item">ETHUSDT <b>$3,681</b> <span class="up">+0.4%</span> &middot; Fib 61.8% test</span>
-    <span class="ticker-item">Volume Profile: HVN forming <b>$64,100&ndash;64,300</b></span>
-    <span class="ticker-item">BTCUSDT <b>$64,682</b> <span class="up">+1.2%</span> &middot; 4/5 confluence</span>
-    <span class="ticker-item">Order Flow: bid wall <b>$64,420</b> &middot; 340K USDT</span>
-    <span class="ticker-item">SOLUSDT <b>$187.9</b> <span class="down">-0.8%</span> &middot; VWAP reclaim</span>
-    <span class="ticker-item">RSI Screener: <b>6</b> symbols oversold &lt;30</span>
-    <span class="ticker-item">ETHUSDT <b>$3,681</b> <span class="up">+0.4%</span> &middot; Fib 61.8% test</span>
-    <span class="ticker-item">Volume Profile: HVN forming <b>$64,100&ndash;64,300</b></span>
+<div class="ticker-outer">
+  <div class="ticker-strip glass">
+    <div class="ticker-track">
+      <span class="ticker-item">BTCUSDT <b>$64,682</b> <span class="up">+1.2%</span> &middot; 4/5 confluence</span>
+      <span class="ticker-item">Order Flow: bid wall <b>$64,420</b> &middot; 340K USDT</span>
+      <span class="ticker-item">SOLUSDT <b>$187.9</b> <span class="down">-0.8%</span> &middot; VWAP reclaim</span>
+      <span class="ticker-item">RSI Screener: <b>6</b> symbols oversold &lt;30</span>
+      <span class="ticker-item">ETHUSDT <b>$3,681</b> <span class="up">+0.4%</span> &middot; Fib 61.8% test</span>
+      <span class="ticker-item">Volume Profile: HVN forming <b>$64,100&ndash;64,300</b></span>
+      <span class="ticker-item">BTCUSDT <b>$64,682</b> <span class="up">+1.2%</span> &middot; 4/5 confluence</span>
+      <span class="ticker-item">Order Flow: bid wall <b>$64,420</b> &middot; 340K USDT</span>
+      <span class="ticker-item">SOLUSDT <b>$187.9</b> <span class="down">-0.8%</span> &middot; VWAP reclaim</span>
+      <span class="ticker-item">RSI Screener: <b>6</b> symbols oversold &lt;30</span>
+      <span class="ticker-item">ETHUSDT <b>$3,681</b> <span class="up">+0.4%</span> &middot; Fib 61.8% test</span>
+      <span class="ticker-item">Volume Profile: HVN forming <b>$64,100&ndash;64,300</b></span>
+    </div>
   </div>
 </div>
 
 <section id="suite">
   <div class="wrap">
-    <div class="section-head">
-      <div class="eyebrow">The full suite &middot; 16 tools</div>
+    <div class="section-head reveal">
+      <div class="eyebrow"><i></i>The full suite &middot; 16 tools</div>
       <h2>Not sixteen separate tabs. One confluence stack.</h2>
       <p class="section-desc">
         Each tool answers a different question &mdash; where's the crowd, where's the real size, where's
-        the level that matters, who's already positioned. Used together, they stop agreeing by accident
-        and start agreeing on purpose. Three are open right now, no login needed &mdash; try them below.
+        the level that matters, who's already positioned. Three are open right now, no login needed.
       </p>
     </div>
 
     <div class="tool-grid">
-      <a href="/sector-screener.html" class="tool-card live">
-        <div class="tool-icon" style="background:var(--tape-soft);color:var(--tape);">Se</div>
-        <span class="tool-live-badge">Try it now &middot; no login</span>
+      <a href="/sector-screener.html" class="tool-card live glass reveal">
+        <div class="tool-icon" style="background:rgba(232,166,60,.14);color:var(--tape);">Se</div>
+        <span class="tool-live-badge">Try it now</span>
         <h3>Sector Screener</h3>
-        <p>Ranks crypto sectors (L1s, DeFi, AI, memecoins) by relative strength so you know which basket the money is actually rotating into before you pick a symbol inside it.</p>
+        <p>Ranks crypto sectors by relative strength so you know which basket the money is actually rotating into.</p>
         <span class="tool-tag">rotation &middot; relative strength</span>
       </a>
-      <div class="tool-card">
-        <div class="tool-icon" style="background:var(--bull-soft);color:var(--bull);">Tr</div>
+      <div class="tool-card glass reveal">
+        <div class="tool-icon" style="background:rgba(47,216,166,.14);color:var(--bull);">Tr</div>
         <h3>Trend Screener</h3>
-        <p>Price vs EMA200 combined with OBV vs its own EMA &mdash; a dual-confirmation scan that only flags a trend when both price and real volume flow agree.</p>
+        <p>Price vs EMA200 combined with OBV vs its own EMA &mdash; a dual-confirmation trend scan.</p>
         <span class="tool-tag">dual-confirmation</span>
       </div>
-      <div class="tool-card">
-        <div class="tool-icon" style="background:var(--violet-soft);color:var(--violet);">Fu</div>
+      <div class="tool-card glass reveal">
+        <div class="tool-icon" style="background:rgba(156,140,255,.14);color:var(--violet);">Fu</div>
         <h3>Futures Screener</h3>
-        <p>Every USDT-M perpetual pair with 1H/4H/12H/24H change side by side in one table &mdash; find what's actually moving right now, not what moved yesterday.</p>
+        <p>Every USDT-M perpetual pair with 1H/4H/12H/24H change side by side in one table.</p>
         <span class="tool-tag">multi-timeframe</span>
       </div>
-      <div class="tool-card">
-        <div class="tool-icon" style="background:var(--bull-soft);color:var(--bull);">RS</div>
+      <div class="tool-card glass reveal">
+        <div class="tool-icon" style="background:rgba(47,216,166,.14);color:var(--bull);">RS</div>
         <h3>RSI Screener</h3>
-        <p>Scans the entire market for overbought and oversold conditions across timeframes, filtered by a minimum market cap so you're not chasing illiquid noise.</p>
+        <p>Scans the entire market for overbought and oversold conditions, filtered by market cap.</p>
         <span class="tool-tag">momentum &middot; extremes</span>
       </div>
-      <div class="tool-card">
-        <div class="tool-icon" style="background:var(--violet-soft);color:var(--violet);">Vo</div>
+      <div class="tool-card glass reveal">
+        <div class="tool-icon" style="background:rgba(156,140,255,.14);color:var(--violet);">Vo</div>
         <h3>Volume Profile</h3>
-        <p>Maps where volume actually traded, not just where price moved &mdash; surfacing high-volume nodes and value areas that behave like real support and resistance.</p>
+        <p>Maps where volume actually traded, surfacing nodes that behave like real support/resistance.</p>
         <span class="tool-tag">HVN/LVN &middot; value area</span>
       </div>
-      <div class="tool-card">
-        <div class="tool-icon" style="background:var(--tape-soft);color:var(--tape);">VW</div>
+      <div class="tool-card glass reveal">
+        <div class="tool-icon" style="background:rgba(232,166,60,.14);color:var(--tape);">VW</div>
         <h3>Anchor VWAP</h3>
-        <p>Daily, weekly, monthly and quarterly anchored VWAPs in one view, with a previous-levels table so you can see exactly which anchor price is currently respecting.</p>
+        <p>Daily, weekly, monthly and quarterly anchored VWAPs in one view with previous-levels table.</p>
         <span class="tool-tag">anchored &middot; multi-timeframe</span>
       </div>
-      <div class="tool-card">
-        <div class="tool-icon" style="background:var(--bear-soft);color:var(--bear);">CZ</div>
+      <div class="tool-card glass reveal">
+        <div class="tool-icon" style="background:rgba(255,98,89,.14);color:var(--bear);">CZ</div>
         <h3>Confluence Zones</h3>
-        <p>Ranks price zones by how many independent sources (33 of them) mark the same level, so a "zone" here means real agreement, not one lucky Fibonacci line.</p>
+        <p>Ranks price zones by how many of 33 independent sources mark the same level.</p>
         <span class="tool-tag">33 sources &middot; ranked</span>
       </div>
-      <a href="/confluence-dashboard.html" class="tool-card live">
-        <div class="tool-icon" style="background:var(--violet-soft);color:var(--violet);">CD</div>
-        <span class="tool-live-badge">Try it now &middot; no login</span>
+      <a href="/confluence-dashboard.html" class="tool-card live glass reveal">
+        <div class="tool-icon" style="background:rgba(156,140,255,.14);color:var(--violet);">CD</div>
+        <span class="tool-live-badge">Try it now</span>
         <h3>Confluence Dashboard</h3>
-        <p>Pulls Trend, OBV, RSI and VWAP into one score per symbol across 5 timeframes &mdash; how many signals actually agree, right now, so a "setup" means more than one indicator's opinion.</p>
+        <p>Trend, OBV, RSI and VWAP into one score per symbol across 5 timeframes.</p>
         <span class="tool-tag">aggregated &middot; scored</span>
       </a>
-      <div class="tool-card">
-        <div class="tool-icon" style="background:var(--bull-soft);color:var(--bull);">Fi</div>
+      <div class="tool-card glass reveal">
+        <div class="tool-icon" style="background:rgba(47,216,166,.14);color:var(--bull);">Fi</div>
         <h3>Fibonacci Levels</h3>
-        <p>Auto-plots retracement and extension levels off the dominant swing, so the 61.8% and 78.6% zones that matter are marked before price gets there, not after.</p>
+        <p>Auto-plots retracement and extension levels off the dominant swing, before price gets there.</p>
         <span class="tool-tag">retracement &middot; extension</span>
       </div>
-      <div class="tool-card">
-        <div class="tool-icon" style="background:var(--bull-soft);color:var(--bull);">RC</div>
+      <div class="tool-card glass reveal">
+        <div class="tool-icon" style="background:rgba(47,216,166,.14);color:var(--bull);">RC</div>
         <h3>RSI Checker</h3>
-        <p>A fast, single-symbol RSI read across every timeframe at once &mdash; the quick sanity check before you commit to a full screener scan.</p>
+        <p>A fast, single-symbol RSI read across every timeframe at once.</p>
         <span class="tool-tag">single symbol</span>
       </div>
-      <div class="tool-card">
-        <div class="tool-icon" style="background:var(--violet-soft);color:var(--violet);">CB</div>
+      <div class="tool-card glass reveal">
+        <div class="tool-icon" style="background:rgba(156,140,255,.14);color:var(--violet);">CB</div>
         <h3>Cipher B Checker</h3>
-        <p>Money-flow and wave-trend signal checker &mdash; a second, independent lens for spotting momentum shifts that pure price-action screeners miss.</p>
+        <p>Money-flow and wave-trend signal checker &mdash; a second, independent momentum lens.</p>
         <span class="tool-tag">money flow &middot; wave trend</span>
       </div>
-      <div class="tool-card">
-        <div class="tool-icon" style="background:var(--bear-soft);color:var(--bear);">OF</div>
+      <div class="tool-card glass reveal">
+        <div class="tool-icon" style="background:rgba(255,98,89,.14);color:var(--bear);">OF</div>
         <h3>Order Flow</h3>
-        <p>An aggregated depth ladder across 14 exchanges with wall detection, CVD divergence and liquidation clusters &mdash; the closest read you'll get on where size is actually resting.</p>
+        <p>Aggregated depth ladder across 14 exchanges with wall detection and CVD divergence.</p>
         <span class="tool-tag">depth &middot; walls &middot; CVD</span>
       </div>
-      <div class="tool-card">
-        <div class="tool-icon" style="background:var(--tape-soft);color:var(--tape);">LS</div>
+      <div class="tool-card glass reveal">
+        <div class="tool-icon" style="background:rgba(232,166,60,.14);color:var(--tape);">LS</div>
         <h3>Lakhsmi Signals</h3>
-        <p>The core AFT signal engine &mdash; the same confluence logic that powers the automated trading bots, available here as an on-demand read for any symbol.</p>
+        <p>The core AFT signal engine &mdash; the same logic that powers the automated trading bots.</p>
         <span class="tool-tag">core engine</span>
       </div>
-      <div class="tool-card">
-        <div class="tool-icon" style="background:var(--bull-soft);color:var(--bull);">PT</div>
+      <div class="tool-card glass reveal">
+        <div class="tool-icon" style="background:rgba(47,216,166,.14);color:var(--bull);">PT</div>
         <h3>Paper Trading</h3>
-        <p>Simulated order tracking against real live market data &mdash; test a setup, a size, a stop, without risking a single dollar until you're actually ready.</p>
+        <p>Simulated order tracking against real live market data &mdash; risk nothing until you're ready.</p>
         <span class="tool-tag">simulated &middot; real data</span>
       </div>
-      <div class="tool-card">
-        <div class="tool-icon" style="background:var(--bear-soft);color:var(--bear);">Al</div>
+      <div class="tool-card glass reveal">
+        <div class="tool-icon" style="background:rgba(255,98,89,.14);color:var(--bear);">Al</div>
         <h3>Alerts</h3>
-        <p>Set it, forget it, get notified &mdash; price and confluence alerts so you're not staring at charts all day waiting for a level to hit.</p>
+        <p>Price and confluence alerts so you're not staring at charts all day.</p>
         <span class="tool-tag">price &middot; confluence</span>
       </div>
-      <a href="/position-size-calculator.html" class="tool-card live">
-        <div class="tool-icon" style="background:var(--tape-soft);color:var(--tape);">$</div>
-        <span class="tool-live-badge">Try it now &middot; no login</span>
+      <a href="/position-size-calculator.html" class="tool-card live glass reveal">
+        <div class="tool-icon" style="background:rgba(232,166,60,.14);color:var(--tape);">$</div>
+        <span class="tool-live-badge">Try it now</span>
         <h3>Position Size Calculator</h3>
-        <p>Portfolio size, risk %, stop-loss % in &mdash; exact position size out. The single most-skipped step in every losing trade, solved in three fields.</p>
+        <p>Portfolio, risk %, stop-loss % in &mdash; exact position size out. Three fields, no guessing.</p>
         <span class="tool-tag">risk-based sizing</span>
       </a>
     </div>
   </div>
 </section>
 
-<section id="confluence" style="background:var(--surface);border-top:1px solid var(--border-soft);border-bottom:1px solid var(--border-soft);">
+<section id="confluence">
   <div class="wrap">
-    <div class="section-head center" style="margin-left:auto;margin-right:auto;">
-      <div class="eyebrow" style="justify-content:center;">How confluence works</div>
+    <div class="section-head center reveal">
+      <div class="eyebrow" style="justify-content:center;"><i></i>How confluence works</div>
       <h2>Four questions, asked in order.</h2>
-      <p class="section-desc">A symbol only earns a high confluence score if it survives every stage &mdash; not by tripping one indicator.</p>
+      <p class="section-desc">A symbol only earns a high confluence score if it survives every stage.</p>
     </div>
     <div class="process">
-      <div class="process-step">
+      <div class="process-step glass reveal">
         <div class="process-num">01 &middot; SCREEN</div>
         <h4>Where's the crowd?</h4>
-        <p>Sector and RSI screeners narrow thousands of pairs to the handful actually showing relative strength or momentum extremes.</p>
+        <p>Sector and RSI screeners narrow thousands of pairs to a handful showing real strength.</p>
       </div>
-      <div class="process-step">
+      <div class="process-step glass reveal">
         <div class="process-num">02 &middot; CONFIRM</div>
         <h4>Is size actually there?</h4>
-        <p>Volume Profile and Order Flow check whether real size backs the move, or if it's thin, easily-reversed volume.</p>
+        <p>Volume Profile and Order Flow check whether real size backs the move.</p>
       </div>
-      <div class="process-step">
+      <div class="process-step glass reveal">
         <div class="process-num">03 &middot; LOCATE</div>
         <h4>Where's the level?</h4>
-        <p>VWAPs and Fibonacci structure pinpoint the exact price zone the setup should react at, not just "somewhere near here."</p>
+        <p>VWAPs and Fibonacci structure pinpoint the exact zone that should react.</p>
       </div>
-      <div class="process-step">
+      <div class="process-step glass reveal">
         <div class="process-num">04 &middot; SCORE</div>
         <h4>How many agree?</h4>
-        <p>The Confluences Dashboard tallies every independent yes into one live score per symbol &mdash; visible, not hidden in your head.</p>
+        <p>The Confluence Dashboard tallies every independent yes into one live score.</p>
       </div>
     </div>
   </div>
 </section>
 `;
-const PART3_AFTER = `
+const PART_C = `
 
-<section id="faq" style="background:var(--surface);border-top:1px solid var(--border-soft);">
+<section id="faq">
   <div class="wrap" style="max-width:820px;">
-    <div class="section-head">
-      <div class="eyebrow">Frequently asked</div>
+    <div class="section-head reveal">
+      <div class="eyebrow"><i></i>Frequently asked</div>
       <h2>What the suite is built to do.</h2>
     </div>
-
-    <div class="faq-item">
-      <h4>Do I need to use all 16 tools together?</h4>
-      <p>No. Each tool works standalone, but the Confluence Dashboard is what turns separate signals into one visible score &mdash; that's where the suite compounds.</p>
-    </div>
-    <div class="faq-item">
-      <h4>What counts as a high-confluence setup?</h4>
-      <p>A symbol where multiple independent tools &mdash; screener, volume, order flow, level structure &mdash; agree at the same time, at the same zone. One indicator alone never counts as confluence.</p>
-    </div>
-    <div class="faq-item">
-      <h4>Is this financial advice or a signal service?</h4>
-      <p>No. AFT Tools is market-structure and order-flow analytics &mdash; decision support, not a buy/sell call. You still make the trade decision and manage your own risk.</p>
-    </div>
-    <div class="faq-item">
-      <h4>Which exchanges does the data come from?</h4>
-      <p>Order flow and depth data is aggregated across 14 exchanges; screeners and levels are computed on real market data, not testnet or delayed feeds.</p>
+    <div class="glass" style="padding:8px 28px;">
+      <div class="faq-item">
+        <h4>Do I need to use all 16 tools together?</h4>
+        <p>No. Each tool works standalone, but the Confluence Dashboard is what turns separate signals into one visible score &mdash; that's where the suite compounds.</p>
+      </div>
+      <div class="faq-item">
+        <h4>What counts as a high-confluence setup?</h4>
+        <p>A symbol where multiple independent tools &mdash; screener, volume, order flow, level structure &mdash; agree at the same zone, at the same time.</p>
+      </div>
+      <div class="faq-item">
+        <h4>Is this financial advice or a signal service?</h4>
+        <p>No. AFT Tools is market-structure and order-flow analytics &mdash; decision support, not a buy/sell call.</p>
+      </div>
+      <div class="faq-item">
+        <h4>Which exchanges does the data come from?</h4>
+        <p>Order flow and depth data is aggregated across 14 exchanges; screeners and levels are computed on real market data.</p>
+      </div>
     </div>
   </div>
 </section>
 
 <section>
   <div class="wrap">
-    <div class="final-cta">
+    <div class="final-cta glass reveal">
+      <div class="final-cta-glow"></div>
       <h2>16 tools. One login. Trading made easy.</h2>
-      <p>Stop reading eight tabs to make one decision. Log in once and every tool works together &mdash; free to open, no install.</p>
+      <p>Stop reading eight tabs to make one decision. Log in once and every tool works together.</p>
       <div class="cta-row">
         <a class="btn-primary" href="/login">Login &amp; Start Trading &rarr;</a>
       </div>
@@ -521,7 +539,7 @@ const PART3_AFTER = `
       <span class="logo">AFT <b>Tools</b></span>
       <div class="footer-links">
         <a href="#suite">Suite</a>
-        <a href="#confluence">Confluence Engine</a>
+        <a href="#confluence">How it works</a>
         <a href="#faq">FAQ</a>
       </div>
     </div>
@@ -532,25 +550,58 @@ const PART3_AFTER = `
   </div>
 </footer>
 
+<script>
+  // Scroll-reveal
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  // Nav glass intensifies on scroll
+  const nav = document.getElementById('mainNav');
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 40) nav.classList.add('scrolled');
+    else nav.classList.remove('scrolled');
+  }, { passive: true });
+</script>
+
 `;
 
 export default function Home() {
   useEffect(() => {
     document.title = 'AFT Tools \u00b7 16 Institutional Trading Tools \u00b7 One Login';
+
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+    document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
+
+    const nav = document.getElementById('mainNav');
+    const onScroll = () => {
+      if (!nav) return;
+      if (window.scrollY > 40) nav.classList.add('scrolled');
+      else nav.classList.remove('scrolled');
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+
+    return () => {
+      io.disconnect();
+      window.removeEventListener('scroll', onScroll);
+    };
   }, []);
 
   return (
     <>
       <style>{HOMEPAGE_CSS}</style>
-      <div dangerouslySetInnerHTML={{ __html: PART1_BEFORE }} />
+      <div dangerouslySetInnerHTML={{ __html: PART_A }} />
 
       <section>
         <div className="wrap">
           <div id="orderflow" className="deepdive">
-            <div className="dd-text">
+            <div className="dd-text reveal">
               <div className="dd-eyebrow">Order Flow</div>
               <h3>See where size is actually resting, not where a line on a chart guesses it is.</h3>
-              <p>An aggregated depth ladder across 14 exchanges, with local-neighborhood wall detection, distance-from-mid tracking and a live imbalance read.</p>
+              <p>An aggregated depth ladder across 14 exchanges, with local-neighborhood wall detection and a live imbalance read.</p>
               <ul className="dd-list">
                 <li>Wall age tracking &mdash; is this size fresh or stale</li>
                 <li>CVD divergence detector</li>
@@ -558,8 +609,8 @@ export default function Home() {
                 <li>14-exchange aggregated depth</li>
               </ul>
             </div>
-            <div className="dd-visual">
-              <div className="preview-head" style={{ marginBottom: 16 }}>
+            <div className="dd-visual glass reveal">
+              <div className="preview-head">
                 <span className="preview-title">BTCUSDT &middot; Depth Ladder</span>
                 <span className="preview-live">Live</span>
               </div>
@@ -568,17 +619,17 @@ export default function Home() {
           </div>
 
           <div id="rsiscreener" className="deepdive reverse">
-            <div className="dd-visual">
-              <div className="preview-head" style={{ marginBottom: 4 }}>
+            <div className="dd-visual glass reveal">
+              <div className="preview-head">
                 <span className="preview-title">RSI Screener &middot; 1H</span>
                 <span className="preview-live">Live</span>
               </div>
               <LiveRsiScreener />
             </div>
-            <div className="dd-text">
+            <div className="dd-text reveal">
               <div className="dd-eyebrow">RSI Screener</div>
               <h3>Scan the whole market for extremes in the time it takes to read four rows.</h3>
-              <p>Filtered by a minimum market cap floor, across the timeframes that matter to you, refreshed continuously &mdash; so you spend time deciding, not scrolling.</p>
+              <p>Filtered by a minimum market cap floor, refreshed continuously &mdash; so you spend time deciding, not scrolling.</p>
               <ul className="dd-list">
                 <li>Overbought / oversold across multiple timeframes</li>
                 <li>Market-cap floor filters out illiquid noise</li>
@@ -589,7 +640,7 @@ export default function Home() {
         </div>
       </section>
 
-      <div dangerouslySetInnerHTML={{ __html: PART3_AFTER }} />
+      <div dangerouslySetInnerHTML={{ __html: PART_C }} />
     </>
   );
 }
