@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Position Size Calculator — Ali Faisal Trades</title>
+<meta name="theme-color" content="#080B10">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Manrope:wght@400;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0D12; --surface:#121821; --surface-2:#171E28;
+    --border:#242C38; --text:#EAEEF3; --muted:#7C8998;
+    --bull:#2FD8A6; --bear:#FF6259; --tape:#E8A63C; --cyan:#E8A63C;
+    --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --sans: 'Manrope', -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    --display: 'Space Grotesk', var(--sans);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--sans);}
+  body{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:60px 20px;}
+  a.back-link{position:fixed;top:20px;left:20px;font-family:var(--mono);font-size:12px;color:var(--muted);text-decoration:none;}
+  a.back-link:hover{color:var(--tape);}
+
+  .ps-card{
+    width:100%;max-width:520px;background:var(--surface);border:1px solid var(--border);
+    border-radius:12px;padding:28px 28px 24px;position:relative;overflow:hidden;
+    box-shadow:0 20px 50px -25px rgba(0,0,0,.6);
+  }
+  .ps-card::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:2px;
+    background:linear-gradient(90deg,var(--tape),transparent 70%);
+  }
+  h1{margin:0 0 2px;font-family:var(--display);font-size:22px;font-weight:700;color:var(--text);}
+  .ps-by{margin:0 0 22px;font-family:var(--mono);font-size:11.5px;color:var(--muted);letter-spacing:.04em;}
+  .ps-field{margin-bottom:16px;}
+  .ps-field label{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.04em;color:var(--muted);margin-bottom:6px;text-transform:uppercase;}
+  .ps-field input{
+    width:100%;background:var(--surface-2);border:1px solid var(--border);color:var(--text);
+    padding:10px 12px;border-radius:5px;font-family:var(--mono);font-size:13px;
+  }
+  .ps-field input::placeholder{color:var(--muted);}
+  .ps-field input:focus{outline:1px solid var(--cyan);outline-offset:0;}
+  #psCalcBtn{
+    width:100%;background:var(--bull);color:#08130D;border:none;border-radius:6px;
+    padding:12px 16px;font-family:var(--mono);font-size:12.5px;font-weight:700;
+    letter-spacing:.03em;cursor:pointer;margin-top:4px;
+  }
+  #psCalcBtn:hover{opacity:.9;}
+  .ps-result{
+    margin-top:16px;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;
+    padding:14px 16px;font-family:var(--mono);font-size:12.5px;color:var(--muted);line-height:1.9;
+  }
+  .ps-result .ps-row{display:flex;justify-content:space-between;gap:12px;}
+  .ps-result .ps-row b{color:var(--text);}
+  .ps-result.ps-error{color:var(--bear);}
+</style>
+</head>
+<body>
+
+<a href="/" class="back-link">&larr; Ali Faisal Trades</a>
+
+<div class="ps-card">
+  <h1>Position Size Calculator</h1>
+  <p class="ps-by">by Ali Faisal</p>
+
+  <div class="ps-field">
+    <label>Total Portfolio Amount (USD)</label>
+    <input type="number" id="psPortfolio" placeholder="Enter your portfolio amount" min="0" step="any" />
+  </div>
+  <div class="ps-field">
+    <label>Risk Per Trade (% of Portfolio)</label>
+    <input type="number" id="psRiskPct" placeholder="Enter risk per trade percentage" min="0" max="100" step="any" />
+  </div>
+  <div class="ps-field">
+    <label>Stop-Loss Percentage (%)</label>
+    <input type="number" id="psStopLoss" placeholder="Enter stop-loss percentage" min="0" max="100" step="any" />
+  </div>
+
+  <button id="psCalcBtn">Calculate Position Size</button>
+
+  <div id="psResult" class="ps-result">Fill in the fields above and press Calculate.</div>
+</div>
+
+<script>
+(function(){
+  const portfolioInput = document.getElementById('psPortfolio');
+  const riskInput = document.getElementById('psRiskPct');
+  const stopLossInput = document.getElementById('psStopLoss');
+  const calcBtn = document.getElementById('psCalcBtn');
+  const resultEl = document.getElementById('psResult');
+
+  function fmtUsd(v){
+    return '$' + v.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+  }
+
+  function calculate(){
+    const portfolio = parseFloat(portfolioInput.value);
+    const riskPct = parseFloat(riskInput.value);
+    const stopLossPct = parseFloat(stopLossInput.value);
+
+    if (!portfolio || portfolio <= 0){
+      resultEl.className = 'ps-result ps-error';
+      resultEl.textContent = 'Enter a valid portfolio amount.';
+      return;
+    }
+    if (!riskPct || riskPct <= 0 || riskPct > 100){
+      resultEl.className = 'ps-result ps-error';
+      resultEl.textContent = 'Enter a risk-per-trade % between 0 and 100.';
+      return;
+    }
+    if (!stopLossPct || stopLossPct <= 0 || stopLossPct > 100){
+      resultEl.className = 'ps-result ps-error';
+      resultEl.textContent = 'Enter a stop-loss % between 0 and 100.';
+      return;
+    }
+
+    const riskAmount = portfolio * (riskPct / 100);
+    const positionSize = riskAmount / (stopLossPct / 100);
+    const positionPctOfPortfolio = (positionSize / portfolio) * 100;
+
+    resultEl.className = 'ps-result';
+    resultEl.innerHTML = `
+      <div class="ps-row"><span>Risk amount (this trade)</span><b>${fmtUsd(riskAmount)}</b></div>
+      <div class="ps-row"><span>Recommended position size</span><b>${fmtUsd(positionSize)}</b></div>
+      <div class="ps-row"><span>Position size vs portfolio</span><b>${positionPctOfPortfolio.toFixed(1)}%</b></div>
+    `;
+  }
+
+  calcBtn.addEventListener('click', calculate);
+  [portfolioInput, riskInput, stopLossInput].forEach(el => {
+    el.addEventListener('keydown', e => { if (e.key === 'Enter') calculate(); });
+  });
+})();
+</script>
+
+</body>
+</html>
