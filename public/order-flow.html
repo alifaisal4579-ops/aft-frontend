@@ -1,0 +1,2029 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Order Flow — Ali Faisal Trades</title>
+<meta name="theme-color" content="#080B10">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Manrope:wght@400;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#0A0D12; --surface:#121821; --surface-2:#171E28;
+    --border:#242C38; --text:#EAEEF3; --muted:#7C8998; --muted-2:#565F72;
+    --bull:#2FD8A6; --bear:#FF6259; --tape:#E8A63C;
+    --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --sans: 'Manrope', -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    --display: 'Space Grotesk', var(--sans);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--sans);}
+  body{padding:60px 20px;}
+  a.back-link{position:fixed;top:20px;left:20px;font-family:var(--mono);font-size:12px;color:var(--muted);text-decoration:none;}
+  a.back-link:hover{color:var(--tape);}
+
+  .of-wrap{max-width:1200px;margin:0 auto;}
+  .of-header h1{margin:0;font-family:var(--display);font-size:26px;font-weight:700;color:var(--text);}
+  .of-header p{margin:4px 0 20px;font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);}
+  .of-controls{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-bottom:16px;}
+  .of-field{display:flex;flex-direction:column;gap:4px;}
+  .of-field label{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-family:var(--mono);}
+  select, input[type=text]{
+    background:var(--surface-2);border:1px solid var(--border);color:var(--text);
+    padding:8px 10px;border-radius:5px;font-family:var(--mono);font-size:12.5px;min-width:90px;
+  }
+  select:focus, input:focus{outline:1px solid var(--tape);outline-offset:0;}
+  button{
+    background:var(--tape);color:#0A0D12;border:none;border-radius:5px;
+    padding:9px 18px;font-family:var(--mono);font-size:12px;font-weight:700;
+    letter-spacing:.04em;cursor:pointer;
+  }
+  button:hover{opacity:.88;}
+  .of-ticker{
+    font-family:var(--mono);font-size:15px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;
+    margin-bottom:16px;padding:16px 20px;background:linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%);
+    border:1px solid var(--border);border-radius:10px;
+  }
+  .of-ticker-dot{width:8px;height:8px;border-radius:50%;background:var(--bull);flex-shrink:0;box-shadow:0 0 0 0 rgba(47,216,166,.6);animation:ofLivePulse 1.8s ease-in-out infinite;}
+  .of-ticker-sym{font-weight:800;color:var(--tape);font-size:15px;letter-spacing:.02em;}
+  .of-ticker-price{font-weight:800;font-size:22px;color:var(--text);}
+  .of-ticker-pct{font-weight:700;font-size:13px;padding:4px 10px;border-radius:20px;}
+  .of-ticker-pct.up{color:var(--bull);background:rgba(47,216,166,.12);}
+  .of-ticker-pct.down{color:var(--bear);background:rgba(255,98,89,.12);}
+  .of-ticker-meta{color:var(--muted);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;margin-left:auto;}
+  .of-ticker .up{color:var(--bull);} .of-ticker .down{color:var(--bear);}
+
+  .of-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(460px, 1fr));gap:16px;margin-bottom:16px;}
+  .of-section-label{
+    grid-column:1/-1;display:flex;align-items:center;gap:12px;margin:8px 0 -4px;
+    font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--tape);
+  }
+  .of-section-label:first-child{margin-top:0;}
+  .of-section-label::after{content:'';flex:1;height:1px;background:linear-gradient(90deg, var(--border), transparent);}
+  .of-panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;transition:border-color .15s;}
+  .of-panel:hover{border-color:#2C3644;}
+  .of-panel-title{
+    font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text);font-weight:600;
+    margin-bottom:14px;display:flex;align-items:center;gap:9px;
+  }
+  .of-panel-title::before{content:'';width:3px;height:13px;border-radius:2px;background:var(--tape);opacity:.9;flex-shrink:0;}
+  .of-cvd-controls{margin-bottom:10px;}
+  .of-cvd-stats{display:grid;grid-template-columns:repeat(3, 1fr);gap:10px;margin-bottom:14px;}
+  .of-stat{background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center;}
+  .of-stat b{display:block;font-family:var(--mono);font-size:15px;font-weight:800;color:var(--text);margin-bottom:2px;}
+  .of-stat span{font-family:var(--mono);font-size:8.5px;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);}
+  .of-oi-breakdown{font-family:var(--mono);font-size:10.5px;color:var(--muted);margin:-6px 0 12px;}
+
+  .of-imbalance{margin-bottom:10px;}
+  .of-imbalance-bar{height:22px;border-radius:6px;overflow:hidden;background:rgba(255,98,89,.25);position:relative;}
+  .of-imbalance-fill{height:100%;background:rgba(47,216,166,.55);width:50%;transition:width .25s ease-out;}
+  .of-imb-row{display:flex;align-items:center;gap:10px;margin-top:6px;}
+  .of-imbalance-label{text-align:center;font-family:var(--mono);font-size:11px;color:var(--muted);flex:1;}
+  .of-imb-spark{display:inline-flex;align-items:center;opacity:.9;}
+
+  .of-live-toggle{display:flex;align-items:center;gap:6px;cursor:pointer;font-family:var(--mono);font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);user-select:none;}
+  .of-live-toggle input{position:absolute;opacity:0;width:0;height:0;}
+  .of-live-dot{width:7px;height:7px;border-radius:50%;background:var(--muted);flex-shrink:0;}
+  .of-live-toggle input:checked ~ .of-live-dot{background:var(--bull);box-shadow:0 0 0 0 rgba(47,216,166,.6);animation:ofLivePulse 1.6s ease-in-out infinite;}
+  @keyframes ofLivePulse{
+    0%{box-shadow:0 0 0 0 rgba(47,216,166,.55);}
+    70%{box-shadow:0 0 0 6px rgba(47,216,166,0);}
+    100%{box-shadow:0 0 0 0 rgba(47,216,166,0);}
+  }
+
+  .of-lad-view{display:flex;gap:6px;margin:10px 0 8px;}
+  .of-lad-view button{background:var(--surface-2);border:1px solid var(--border);color:var(--muted);font-family:var(--mono);font-size:10.5px;padding:5px 12px;border-radius:6px;cursor:pointer;}
+  .of-lad-view button.active{color:var(--tape);border-color:rgba(232,166,60,.5);background:rgba(232,166,60,.08);}
+  .of-ladder{font-family:var(--mono);font-size:11.5px;max-height:560px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;padding:4px 0;background:var(--surface-2);}
+  .of-lad-row{display:flex;align-items:center;gap:8px;padding:1px 10px;line-height:17px;}
+  .of-lad-row .lp{width:86px;flex-shrink:0;text-align:right;}
+  .of-lad-row.ask .lp{color:var(--bear);}
+  .of-lad-row.bid .lp{color:var(--bull);}
+  .of-lad-row .lq{width:70px;flex-shrink:0;text-align:right;color:var(--muted);}
+  .of-lad-row .lbar-wrap{flex:1;position:relative;height:15px;}
+  .of-lad-row .lbar{position:absolute;top:1px;bottom:1px;left:0;border-radius:2px;opacity:.32;}
+  .of-lad-row.ask .lbar{background:var(--bear);}
+  .of-lad-row.bid .lbar{background:var(--bull);}
+  .of-lad-row.wall .lbar{opacity:.85;}
+  .of-lad-row.wall .lq{color:var(--text);font-weight:700;}
+  .of-lad-row .ltag{position:absolute;left:8px;top:0;font-size:10px;font-weight:700;color:var(--text);text-shadow:0 1px 4px rgba(0,0,0,.9);white-space:nowrap;z-index:1;}
+  .of-lad-row .lconf{position:absolute;right:6px;top:0;font-size:9px;font-weight:700;color:var(--tape);white-space:nowrap;z-index:1;text-shadow:0 1px 4px rgba(0,0,0,.9);}
+  .of-lad-row.conf{background:rgba(232,166,60,.05);}
+  .of-lad-mid{display:flex;justify-content:space-between;align-items:center;padding:4px 10px;margin:3px 0;border-top:1px dashed rgba(232,166,60,.4);border-bottom:1px dashed rgba(232,166,60,.4);background:rgba(232,166,60,.06);}
+  .of-lad-mid span{color:var(--tape);font-weight:700;font-family:var(--mono);font-size:13px;}
+  .of-lad-mid i{font-style:normal;font-family:var(--mono);font-size:10px;color:var(--muted);}
+  .of-lad-meta{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:8px;opacity:.8;}
+
+  .of-liq-clusters{font-family:var(--mono);font-size:11px;color:var(--muted);padding:6px 2px 10px;line-height:1.6;}
+  .of-liq-clusters b{color:var(--text);}
+
+  .of-tape-legend{display:flex;flex-wrap:wrap;gap:14px;margin:10px 0;font-family:var(--mono);font-size:10.5px;color:var(--muted);}
+  .of-tape-filter{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);}
+  .of-tape-filter select{min-width:auto;padding:5px 8px;font-size:11px;}
+  .of-tape.paused{outline:1px solid var(--tape);outline-offset:-1px;}
+  .of-tape-legend span{display:flex;align-items:center;gap:5px;}
+  .of-tape-legend .sw{display:inline-block;width:9px;height:9px;border-radius:2px;}
+  .of-tape-legend .sw.buy{background:var(--bull);}
+  .of-tape-legend .sw.sell{background:var(--bear);}
+  .of-tape-legend .sw.large{background:#E8A63C;}
+  .of-tape-legend .sw.whale{background:#B98CFF;}
+  .of-tape{max-height:340px;overflow-y:auto;font-family:var(--mono);font-size:11.5px;border:1px solid var(--border);border-radius:8px;}
+  .of-tape-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:5px 12px;border-bottom:1px solid rgba(34,43,56,.5);}
+  .of-tape-row:last-child{border-bottom:none;}
+  .of-tape-row.buy{background:rgba(47,216,166,.05);}
+  .of-tape-row.sell{background:rgba(255,98,89,.05);}
+  .of-tape-row.large{background:rgba(232,166,60,.12);font-weight:700;}
+  .of-tape-row.whale{background:rgba(185,140,255,.18);font-weight:700;box-shadow:inset 3px 0 0 #B98CFF;}
+  .of-tape-row .t-time{color:var(--muted);}
+  .of-tape-row .t-exch{color:var(--muted-2);font-size:9.5px;}
+  .of-tape-row .t-price.buy{color:var(--bull);}
+  .of-tape-row .t-price.sell{color:var(--bear);}
+  .of-tape-row .t-tag{font-size:9px;text-transform:uppercase;letter-spacing:.04em;text-align:right;}
+  .of-tape-row .t-tag.whale{color:#B98CFF;}
+  .of-tape-row .t-tag.large{color:#E8A63C;}
+
+  .of-read{
+    margin-top:12px;padding:10px 12px;border-radius:8px;background:var(--surface-2);
+    border-left:3px solid var(--tape);font-size:12.5px;line-height:1.5;color:var(--text);
+  }
+  .of-read.warn{border-left-color:var(--tape);}
+  .of-read.bull{border-left-color:var(--bull);}
+  .of-read.bear{border-left-color:var(--bear);}
+  .of-read b{color:var(--tape);}
+  .of-caption{margin-top:16px;font-size:12px;color:var(--muted);line-height:1.6;max-width:1100px;}
+</style>
+</head>
+<body>
+
+<a href="/" class="back-link">&larr; Ali Faisal Trades</a>
+
+<div id="page-orderflow">
+<div class="of-wrap">
+  <div class="of-header">
+    <h1>Order Flow</h1>
+    <p>CVD, order book, open interest, funding, liquidations, and live trade flow — three exchanges combined, no fluff</p>
+  </div>
+
+  <div class="of-controls">
+    <div class="of-field">
+      <label>Exchange</label>
+      <select id="ofExchangeSelect">
+        <option value="binance">Binance</option>
+        <option value="bybit" selected>Bybit</option>
+      </select>
+    </div>
+    <div class="of-field">
+      <label>Market</label>
+      <select id="ofMarketSelect">
+        <option value="futures" selected>Futures (USDT-M)</option>
+        <option value="spot">Spot</option>
+      </select>
+    </div>
+    <div class="of-field">
+      <label>Symbol</label>
+      <select id="ofSymbolSelect">
+        <option value="BTCUSDT">BTCUSDT</option>
+        <option value="ETHUSDT">ETHUSDT</option>
+        <option value="SOLUSDT">SOLUSDT</option>
+        <option value="BNBUSDT">BNBUSDT</option>
+        <option value="XRPUSDT">XRPUSDT</option>
+        <option value="DOGEUSDT">DOGEUSDT</option>
+        <option value="ADAUSDT">ADAUSDT</option>
+        <option value="__custom">Custom…</option>
+      </select>
+    </div>
+    <div class="of-field" id="ofCustomWrap" style="display:none;">
+      <label>Custom pair</label>
+      <input type="text" id="ofCustomSymbol" placeholder="e.g. LTCUSDT" />
+    </div>
+    <button id="ofLoadBtn">Load</button>
+  </div>
+
+  <div class="of-ticker" id="ofTicker"><span style="color:var(--muted);">Loading…</span></div>
+
+  <div class="of-grid">
+    <div class="of-section-label"><span>Order Flow Core</span></div>
+    <div class="of-panel">
+      <div class="of-panel-title">Cumulative Volume Delta — Combined (Binance + Bybit + OKX)</div>
+      <div class="of-cvd-controls">
+        <select id="ofCvdTf">
+          <option value="15m">15m candles</option>
+          <option value="1h" selected>1H candles</option>
+          <option value="4h">4H candles</option>
+        </select>
+      </div>
+      <div class="of-cvd-stats">
+        <div class="of-stat"><b id="ofCvdCurrent">—</b><span>Cumulative delta (window)</span></div>
+        <div class="of-stat"><b id="ofCvdLast">—</b><span>Last candle delta</span></div>
+        <div class="of-stat"><b id="ofCvdBias">—</b><span>Read</span></div>
+      </div>
+      <canvas id="ofCvdChart" height="180"></canvas>
+      <div class="of-read" id="ofCvdRead"></div>
+    </div>
+
+    <div class="of-panel">
+      <div class="of-panel-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+        <span>Order Book — Aggregated Depth Ladder (up to 14 markets)</span>
+        <label class="of-tape-filter">Detail
+          <select id="ofLadderBin">
+            <option value="fine">Fine (more rows)</option>
+            <option value="auto" selected>Auto</option>
+            <option value="coarse">Coarse (bigger bins)</option>
+          </select>
+        </label>
+      </div>
+      <div class="of-imbalance" id="ofImbalance">
+        <div class="of-imbalance-bar"><div class="of-imbalance-fill" id="ofImbalanceFill"></div></div>
+        <div class="of-imb-row"><div class="of-imbalance-label" id="ofImbalanceLabel">—</div><span class="of-imb-spark" id="ofImbSpark" title="Bid % over the last ~10 minutes"></span></div>
+      </div>
+      <div class="of-lad-view">
+        <button id="ofViewLadder" class="active">Ladder</button>
+        <button id="ofViewChart">Depth Chart</button>
+      </div>
+      <div class="of-ladder" id="ofLadder"></div>
+      <div id="ofDepthChartWrap" style="display:none;"><canvas id="ofDepthChart"></canvas></div>
+      <div class="of-lad-meta" id="ofLadderMeta">Auto-refreshes every 5 seconds while this page is open.</div>
+      <div class="of-read" id="ofBookRead"></div>
+    </div>
+
+    <div class="of-section-label"><span>Derivatives Positioning</span></div>
+    <div class="of-panel">
+      <div class="of-panel-title">Open Interest — Combined (Binance + Bybit + OKX)</div>
+      <div class="of-cvd-stats">
+        <div class="of-stat"><b id="ofOiCurrent">—</b><span>Current OI</span></div>
+        <div class="of-stat"><b id="ofOiUsd">—</b><span>Notional (USD)</span></div>
+        <div class="of-stat"><b id="ofOiChange">—</b><span>24H change</span></div>
+      </div>
+      <div class="of-oi-breakdown" id="ofOiBreakdown"></div>
+      <canvas id="ofOiChart" height="150"></canvas>
+      <div class="of-read" id="ofOiRead"></div>
+    </div>
+
+    <div class="of-panel">
+      <div class="of-panel-title">Funding Rate</div>
+      <div class="of-cvd-stats">
+        <div class="of-stat"><b id="ofFundingCurrent">—</b><span>Current rate</span></div>
+        <div class="of-stat"><b id="ofFundingCountdown">—</b><span>Next funding</span></div>
+        <div class="of-stat"><b id="ofFundingAvg">—</b><span>7D average</span></div>
+      </div>
+      <canvas id="ofFundingChart" height="150"></canvas>
+      <div class="of-read" id="ofFundingRead"></div>
+    </div>
+
+    <div class="of-panel">
+      <div class="of-panel-title">Long/Short Ratio</div>
+      <div class="of-cvd-stats">
+        <div class="of-stat"><b id="ofLsLong">—</b><span>Long accounts</span></div>
+        <div class="of-stat"><b id="ofLsShort">—</b><span>Short accounts</span></div>
+        <div class="of-stat"><b id="ofLsRatio">—</b><span>L/S ratio</span></div>
+      </div>
+      <canvas id="ofLsChart" height="150"></canvas>
+      <div class="of-read" id="ofLsRead"></div>
+    </div>
+
+    <div class="of-panel">
+      <div class="of-panel-title">Futures Premium / Basis</div>
+      <div class="of-cvd-stats">
+        <div class="of-stat"><b id="ofBasisSpot">—</b><span>Spot price</span></div>
+        <div class="of-stat"><b id="ofBasisFutures">—</b><span>Futures price</span></div>
+        <div class="of-stat"><b id="ofBasisPct">—</b><span>Basis</span></div>
+      </div>
+      <div class="of-read" id="ofBasisRead"></div>
+    </div>
+
+    <div class="of-section-label"><span>Live Streams</span></div>
+    <div class="of-panel" style="grid-column:1/-1;">
+      <div class="of-panel-title" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>Live Liquidations — Combined (Binance + Bybit + OKX)</span>
+        <label class="of-live-toggle">
+          <input type="checkbox" id="ofLiqToggle" checked>
+          <span class="of-live-dot" id="ofLiqDot"></span>
+          <span>Live</span>
+        </label>
+      </div>
+      <div class="of-tape-legend">
+        <span><i class="sw buy"></i> Short liquidated (forced buy)</span>
+        <span><i class="sw sell"></i> Long liquidated (forced sell)</span>
+        <span><i class="sw whale"></i> Large (&gt;$100K)</span>
+        <span style="margin-left:auto;color:var(--muted-2);">Hover to pause</span>
+      </div>
+      <div class="of-liq-clusters" id="ofLiqClusters"></div>
+      <div class="of-tape" id="ofLiqFeed"></div>
+      <div class="of-read" id="ofLiqRead">Waiting for liquidations…</div>
+    </div>
+
+    <div class="of-panel" style="grid-column:1/-1;">
+      <div class="of-panel-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+        <span>Live Trade Tape — Combined (Binance + Bybit + OKX)</span>
+        <div style="display:flex;align-items:center;gap:14px;">
+          <label class="of-tape-filter">
+            <span>Min size</span>
+            <select id="ofTapeMinSize">
+              <option value="0">All</option>
+              <option value="1000">$1K+</option>
+              <option value="5000" selected>$5K+</option>
+              <option value="25000">$25K+</option>
+              <option value="50000">$50K+ (Large only)</option>
+              <option value="250000">$250K+ (Whale only)</option>
+            </select>
+          </label>
+          <label class="of-live-toggle">
+            <input type="checkbox" id="ofTapeToggle" checked>
+            <span class="of-live-dot" id="ofTapeDot"></span>
+            <span>Live</span>
+          </label>
+        </div>
+      </div>
+      <div class="of-tape-legend">
+        <span><i class="sw buy"></i> Buy (taker)</span>
+        <span><i class="sw sell"></i> Sell (taker)</span>
+        <span><i class="sw large"></i> Large (&gt;$50K)</span>
+        <span><i class="sw whale"></i> Whale (&gt;$250K)</span>
+        <span style="margin-left:auto;color:var(--muted-2);">Hover the tape to pause it</span>
+      </div>
+      <div class="of-tape" id="ofTape"></div>
+      <div class="of-read" id="ofTapeRead">Collecting trades…</div>
+    </div>
+  </div>
+
+  <div class="of-caption">CVD, Open Interest, the Trade Tape, and Live Liquidations all combine Binance + Bybit + OKX automatically — regardless of which Exchange is selected above. Order Book, Funding Rate, Long/Short Ratio, and Basis remain per the selected Exchange (Binance or Bybit) since order books are separate liquidity pools per venue and those three are inherently single-exchange metrics, not additive ones. CVD sums each exchange's taker buy/sell volume into shared time buckets — Binance's split comes straight from its klines (exact), Bybit and OKX don't expose a taker split in candles so theirs is approximated from recent trade prints instead. The Trade Tape and Live Liquidations merge all three exchanges' real-time streams into one feed, each row tagged with its source exchange; trades over $50K notional are marked "Large" and over $250K "Whale", liquidations over $100K "Large". A forced sell liquidation means a long got closed out, a forced buy means a short did. Open Interest sums each exchange's current OI (OKX reports its own OI in contracts, converted to base-currency using that instrument's contract value) — OKX has no easily-accessible public OI history endpoint, so its number counts toward the current total but not the trend chart or 24h-change calc, which stay Binance + Bybit only. If a pair is missing on one exchange, everything above falls back to whichever ones have it and says so. None of this is a modeled liquidation-heatmap estimate — that needs assumed leverage distributions that aren't public data, a separate and harder problem. Funding/Open Interest/Basis/Long-Short all use futures-only endpoints (spot has neither) — Market is forced to Futures for the relevant panels regardless of the Market selector above. All data is live and public — no API key. Not financial advice.
+  <br><br>
+  <b style="color:var(--tape);">Not yet on this page:</b> the Multi-Coin Comparison scanner (top-100-by-market-cap scan with its own table) — coming in the next update.</div>
+</div>
+</div>
+
+<script>
+(function(){
+  const exchangeSelect = document.getElementById('ofExchangeSelect');
+  const marketSelect = document.getElementById('ofMarketSelect');
+  const symbolSelect = document.getElementById('ofSymbolSelect');
+  const customWrap = document.getElementById('ofCustomWrap');
+  const customSymbol = document.getElementById('ofCustomSymbol');
+  const loadBtn = document.getElementById('ofLoadBtn');
+  const tickerEl = document.getElementById('ofTicker');
+  const cvdTfSelect = document.getElementById('ofCvdTf');
+
+  let cvdChart = null, oiChart = null, fundingChart = null;
+  let fundingCountdownTimer = null;
+  let nextFundingTime = null;
+
+  symbolSelect.addEventListener('change', () => {
+    customWrap.style.display = symbolSelect.value === '__custom' ? 'flex' : 'none';
+  });
+  loadBtn.addEventListener('click', loadAll);
+  cvdTfSelect.addEventListener('change', loadCvd);
+
+  function currentSymbol(){
+    if (symbolSelect.value === '__custom') return (customSymbol.value || '').trim().toUpperCase();
+    return symbolSelect.value;
+  }
+  function currentExchange(){ return exchangeSelect.value; }
+  function isFutures(){ return marketSelect.value === 'futures'; }
+  function displaySymbol(symbol){ return isFutures() ? symbol + '.P' : symbol; }
+
+  async function fetchJson(url, retries){
+    retries = retries === undefined ? 2 : retries;
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return await res.json();
+    } catch (e) {
+      if (retries > 0) { await new Promise(r => setTimeout(r, 400)); return fetchJson(url, retries - 1); }
+      throw e;
+    }
+  }
+  function toBybitInterval(interval){
+    return { '15m':'15', '1h':'60', '4h':'240', '1d':'D' }[interval] || '60';
+  }
+  function fmtPrice(v){
+    if (v === null || v === undefined || isNaN(v)) return 'n/a';
+    return v.toLocaleString(undefined, {maximumFractionDigits: v < 1 ? 6 : 2});
+  }
+  function fmtCompact(v){
+    if (v === null || v === undefined || isNaN(v)) return 'n/a';
+    const abs = Math.abs(v);
+    const sign = v < 0 ? '-' : '';
+    if (abs >= 1e9) return sign + (abs/1e9).toFixed(2) + 'B';
+    if (abs >= 1e6) return sign + (abs/1e6).toFixed(2) + 'M';
+    if (abs >= 1e3) return sign + (abs/1e3).toFixed(1) + 'K';
+    return sign + abs.toFixed(2);
+  }
+
+  async function fetchTicker(symbol){
+    if (currentExchange() === 'bybit'){
+      const category = isFutures() ? 'linear' : 'spot';
+      const data = await fetchJson(`https://api.bybit.com/v5/market/tickers?category=${category}&symbol=${symbol}`);
+      if (data.retCode !== 0) throw new Error(symbol + ': ' + (data.retMsg || 'Bybit error'));
+      const t = data.result && data.result.list && data.result.list[0];
+      if (!t) throw new Error(symbol + ': no ticker data on Bybit.');
+      return {
+        lastPrice: parseFloat(t.lastPrice), change1dPct: parseFloat(t.price24hPcnt) * 100,
+        fundingRate: t.fundingRate ? parseFloat(t.fundingRate) : null,
+      };
+    }
+    const base = isFutures() ? 'https://fapi.binance.com' : 'https://api.binance.com';
+    const path = isFutures() ? '/fapi/v1/ticker/24hr' : '/api/v3/ticker/24hr';
+    const t = await fetchJson(`${base}${path}?symbol=${symbol}`);
+    return { lastPrice: parseFloat(t.lastPrice), change1dPct: parseFloat(t.priceChangePercent) };
+  }
+
+  async function fetchKlines(symbol, interval, limit){
+    if (currentExchange() === 'bybit'){
+      const category = isFutures() ? 'linear' : 'spot';
+      const data = await fetchJson(`https://api.bybit.com/v5/market/kline?category=${category}&symbol=${symbol}&interval=${toBybitInterval(interval)}&limit=${limit}`);
+      if (data.retCode !== 0) throw new Error(symbol + ': ' + (data.retMsg || 'Bybit error'));
+      const list = data.result && data.result.list;
+      if (!Array.isArray(list) || !list.length) throw new Error(symbol + ': no data on Bybit for ' + interval);
+      return list.slice().reverse().map(c => ({ time:+c[0], close:+c[4], volume:+c[5] }));
+    }
+    const base = isFutures() ? 'https://fapi.binance.com' : 'https://api.binance.com';
+    const path = isFutures() ? '/fapi/v1/klines' : '/api/v3/klines';
+    const data = await fetchJson(`${base}${path}?symbol=${symbol}&interval=${interval}&limit=${limit}`);
+    if (!Array.isArray(data) || !data.length) throw new Error(symbol + ': no data for ' + interval);
+    return data.map(c => ({ time:c[0], close:+c[4], volume:+c[5], takerBuyBase:+c[9] }));
+  }
+
+  // ---------------- CVD ----------------
+  // Buckets a list of {side, size, timeMs} trades into fixed-width time
+  // buckets and sums signed volume per bucket -- lets us combine a
+  // trade-based approximation (Bybit, OKX) with Binance's exact per-candle
+  // taker split on the same timeline.
+  function bucketTrades(trades, bucketMs){
+    const map = new Map();
+    trades.forEach(t => {
+      const bucket = Math.floor(t.timeMs / bucketMs) * bucketMs;
+      map.set(bucket, (map.get(bucket) || 0) + t.signedSize);
+    });
+    return map;
+  }
+
+  function tfToMs(tf){
+    return { '15m':900000, '1h':3600000, '4h':14400000 }[tf] || 3600000;
+  }
+
+  async function loadCvd(){
+    const symbol = currentSymbol();
+    if (!symbol) return;
+    const tf = cvdTfSelect.value;
+    const bucketMs = tfToMs(tf);
+    const canvas = document.getElementById('ofCvdChart');
+    let labels, deltas, cumulative, lastDelta, bias, divergence = null;
+    try {
+      const bucketMap = new Map(); // bucketTime -> combined signed delta
+      const priceMap = new Map();  // bucketTime -> Binance close price (for divergence detection)
+
+      // Binance: exact taker-buy split straight from klines. Fetched directly
+      // (not via the shared fetchKlines helper) so this always hits Binance,
+      // regardless of what the Exchange dropdown happens to be set to.
+      try {
+        const biI = tf; // '15m' | '1h' | '4h' -- same strings Binance's API expects
+        const binData = await fetchJson(`https://fapi.binance.com/fapi/v1/klines?symbol=${symbol}&interval=${biI}&limit=100`);
+        if (Array.isArray(binData) && binData.length){
+          binData.forEach(c => {
+            const bucket = Math.floor(c[0] / bucketMs) * bucketMs;
+            const volume = parseFloat(c[5]), takerBuyBase = parseFloat(c[9]);
+            const d = 2 * takerBuyBase - volume;
+            bucketMap.set(bucket, (bucketMap.get(bucket) || 0) + d);
+            priceMap.set(bucket, parseFloat(c[4]));
+          });
+        }
+      } catch (e) { /* Binance may not list this pair -- continue with whatever else works */ }
+
+      // Bybit: no taker split in klines -- approximate from recent trade prints.
+      try {
+        const category = isFutures() ? 'linear' : 'spot';
+        const data = await fetchJson(`https://api.bybit.com/v5/market/recent-trade?category=${category}&symbol=${symbol}&limit=1000`);
+        if (data.retCode === 0){
+          const trades = (data.result.list || []).map(t => ({
+            timeMs: +t.time, signedSize: (t.side === 'Buy' ? 1 : -1) * parseFloat(t.size),
+          }));
+          const bybitBuckets = bucketTrades(trades, bucketMs);
+          bybitBuckets.forEach((v, k) => bucketMap.set(k, (bucketMap.get(k) || 0) + v));
+        }
+      } catch (e) { /* continue */ }
+
+      // OKX: same situation as Bybit -- approximate from recent trades.
+      try {
+        const instId = okxInstId(symbol);
+        const res = await fetchJson(`https://www.okx.com/api/v5/market/trades?instId=${instId}&limit=500`);
+        if (res.data && res.data.length){
+          const trades = res.data.map(t => ({
+            timeMs: +t.ts, signedSize: (t.side === 'buy' ? 1 : -1) * parseFloat(t.sz),
+          }));
+          const okxBuckets = bucketTrades(trades, bucketMs);
+          okxBuckets.forEach((v, k) => bucketMap.set(k, (bucketMap.get(k) || 0) + v));
+        }
+      } catch (e) { /* continue */ }
+
+      if (!bucketMap.size) throw new Error('CVD unavailable on all exchanges for ' + symbol);
+
+      const sortedBuckets = [...bucketMap.entries()].sort((a,b) => a[0]-b[0]).slice(-100);
+      deltas = sortedBuckets.map(([,d]) => d);
+      labels = deltas.map((_,i) => i);
+      let running = 0;
+      cumulative = deltas.map(d => { running += d; return running; });
+      lastDelta = deltas.length ? deltas.slice(-5).reduce((a,b) => a+b, 0) : 0;
+
+      // Divergence detection: split the recent window in two halves and
+      // compare extremes. Price higher-high while CVD makes a lower high =
+      // bearish divergence (the push up isn't backed by net buying); price
+      // lower-low while CVD holds a higher low = bullish divergence.
+      divergence = null;
+      const pairs = sortedBuckets
+        .map(([k], i) => ({ p: priceMap.get(k), c: cumulative[i] }))
+        .filter(x => x.p !== undefined);
+      if (pairs.length >= 20){
+        const w = pairs.slice(-40);
+        const half = Math.floor(w.length / 2);
+        const a = w.slice(0, half), b = w.slice(half);
+        const maxP = arr => Math.max(...arr.map(x => x.p)), minP = arr => Math.min(...arr.map(x => x.p));
+        const maxC = arr => Math.max(...arr.map(x => x.c)), minC = arr => Math.min(...arr.map(x => x.c));
+        if (maxP(b) > maxP(a) && maxC(b) < maxC(a)) divergence = 'bearish';
+        else if (minP(b) < minP(a) && minC(b) > minC(a)) divergence = 'bullish';
+      }
+
+      document.getElementById('ofCvdCurrent').textContent = fmtCompact(cumulative[cumulative.length - 1]);
+      document.getElementById('ofCvdLast').textContent = (lastDelta >= 0 ? '+' : '') + fmtCompact(lastDelta);
+      bias = cumulative[cumulative.length-1] > 0 ? 'Bullish' : cumulative[cumulative.length-1] < 0 ? 'Bearish' : 'Flat';
+      const biasEl = document.getElementById('ofCvdBias');
+      biasEl.textContent = bias;
+      biasEl.style.color = bias === 'Bullish' ? 'var(--bull)' : bias === 'Bearish' ? 'var(--bear)' : 'var(--muted)';
+
+      if (cvdChart) cvdChart.destroy();
+      cvdChart = new Chart(canvas, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            { type:'bar', data: deltas, backgroundColor: deltas.map(d => d >= 0 ? 'rgba(47,216,166,.45)' : 'rgba(255,98,89,.45)'), barPercentage:1, categoryPercentage:1, order:2 },
+            { type:'line', data: cumulative, borderColor:'#E8A63C', borderWidth:2, pointRadius:0, tension:.15, yAxisID:'y2', order:1 },
+          ],
+        },
+        options: {
+          responsive: true, animation:{duration:250},
+          plugins:{ legend:{display:false} },
+          scales:{
+            x:{ display:false },
+            y:{ ticks:{ color:'#7C8998', font:{family:'JetBrains Mono', size:9}, callback:(v)=>fmtCompact(v) }, grid:{ color:'#1A2029' } },
+            y2:{ position:'right', ticks:{ color:'#E8A63C', font:{family:'JetBrains Mono', size:9}, callback:(v)=>fmtCompact(v) }, grid:{ display:false } },
+          },
+        },
+      });
+    } catch (e) {
+      document.getElementById('ofCvdCurrent').textContent = 'n/a';
+      document.getElementById('ofCvdLast').textContent = 'n/a';
+      document.getElementById('ofCvdBias').textContent = e.message || 'Failed';
+      return null;
+    }
+    return { cumulative: cumulative[cumulative.length - 1], lastDelta, bias, deltas, divergence };
+  }
+
+  // ---------------- Order Book: Aggregated Depth Ladder ----------------
+  // Combines Binance + Bybit + OKX resting order books (up to ~1900 raw price
+  // levels per side from public REST endpoints -- Binance 1000, Bybit 500,
+  // OKX 400 on futures), bins them into price buckets, and renders a single
+  // vertical depth ladder with large-order "wall" detection (any bin holding
+  // 3x+ the average bin size gets highlighted with its size labelled, like an
+  // aggregated DOM). Auto-refreshes every 5 seconds while the page is open;
+  // the timer is cleared by disconnectLiveOrderBook() on page switch.
+  let ladderTimer = null;
+  let ladderBusy = false;
+  let ladderView = 'ladder';       // 'ladder' | 'chart'
+  let lastBooks = null;            // last fetched books, for view re-render
+  let depthChart = null;           // Chart.js instance for the depth chart view
+  let wallSeen = new Map();        // "side:binPrice" -> first-seen ms (wall age tracking)
+  let imbHist = [];                // rolling bid% samples for the sparkline (~10 min at 5s)
+  let confLevels = [];             // [{price,label}] Fib/EMA/VWAP overlay levels
+  let confLevelsAt = 0, confSymbol = null;
+
+  function niceBinSize(raw){
+    // Round an arbitrary bin size to a clean 1 / 2 / 2.5 / 5 x 10^n number
+    // so ladder prices land on sensible boundaries (50, 100, 250...).
+    const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    const n = raw / mag;
+    let nice;
+    if (n < 1.5) nice = 1; else if (n < 2.25) nice = 2; else if (n < 3.75) nice = 2.5; else if (n < 7.5) nice = 5; else nice = 10;
+    return nice * mag;
+  }
+
+  // Verbatim copies of the Fibonacci Levels tool's pivot/swing logic (the
+  // site-wide reference implementation) -- local names so they shadow
+  // nothing and match the tool's math exactly.
+  function ladFindPivots(candles, pivotWidth){
+    const highs = [], lows = [];
+    for (let i = pivotWidth; i < candles.length - pivotWidth; i++){
+      let isHigh = true, isLow = true;
+      for (let k = 1; k <= pivotWidth; k++){
+        if (candles[i].high < candles[i-k].high || candles[i].high < candles[i+k].high) isHigh = false;
+        if (candles[i].low > candles[i-k].low || candles[i].low > candles[i+k].low) isLow = false;
+        if (!isHigh && !isLow) break;
+      }
+      if (isHigh) highs.push({ idx: i, price: candles[i].high });
+      if (isLow) lows.push({ idx: i, price: candles[i].low });
+    }
+    if (!highs.length || candles[candles.length-1].high >= Math.max(...highs.map(h=>h.price))){
+      highs.push({ idx: candles.length-1, price: candles[candles.length-1].high });
+    }
+    if (!lows.length || candles[candles.length-1].low <= Math.min(...lows.map(l=>l.price))){
+      lows.push({ idx: candles.length-1, price: candles[candles.length-1].low });
+    }
+    return { highs, lows };
+  }
+  function ladFindSwing(candles){
+    const pivotWidth = Math.max(2, Math.min(5, Math.floor(candles.length / 25)));
+    const { highs, lows } = ladFindPivots(candles, pivotWidth);
+    const bestHigh = highs.reduce((a,b) => b.price > a.price ? b : a);
+    const bestLow = lows.reduce((a,b) => b.price < a.price ? b : a);
+    return { hi: bestHigh.price, hiIdx: bestHigh.idx, lo: bestLow.price, loIdx: bestLow.idx };
+  }
+
+  // MEXC futures depth returns sizes in CONTRACTS -- convert to base
+  // currency using the per-symbol contractSize (cached, like OKX's ctVal).
+  let mexcCsCache = {};
+  async function fetchMexcContractSize(mexcSymbol){
+    if (mexcCsCache[mexcSymbol]) return mexcCsCache[mexcSymbol];
+    const res = await fetchJson(`https://contract.mexc.com/api/v1/contract/detail?symbol=${mexcSymbol}`);
+    if (!res.data || !res.data.contractSize) throw new Error('MEXC contract not found: ' + mexcSymbol);
+    const cs = parseFloat(res.data.contractSize);
+    mexcCsCache[mexcSymbol] = cs;
+    return cs;
+  }
+
+  // ---- Confluence overlay for the ladder: computed from BYBIT data ONLY,
+  // using the exact same helpers as Confluence Zones / Lakhsmi Signals
+  // (anchors, profileFrom, vwapFrom, computeEMA copied verbatim from that
+  // engine), so a "Monthly VAL" or "Yearly VWAP" tag on the ladder is the
+  // SAME number those tools show. The order book itself stays aggregated
+  // across all venues -- only these overlay levels are Bybit-sourced. ----
+  const LAD_PROFILE_SRC = { daily:'15m', weekly:'1h', monthly:'4h', quarterly:'4h', sixmonth:'1d', yearly:'1d' };
+  const LAD_VWAP_SRC = { daily:'1h', weekly:'1h', monthly:'1d', quarterly:'1d', sixmonth:'1d', yearly:'1d' };
+  const LAD_PROFILE_BINS = { daily:30, weekly:40, monthly:60, quarterly:80, sixmonth:90, yearly:100 };
+
+  async function ladFetchBybitKlines(symbol, interval, limit){
+    // Always Bybit linear, regardless of the page's Exchange dropdown.
+    const data = await fetchJson(`https://api.bybit.com/v5/market/kline?category=linear&symbol=${symbol}&interval=${toBybitInterval(interval)}&limit=${limit}`);
+    if (data.retCode !== 0) throw new Error(symbol + ': ' + (data.retMsg || 'Bybit error'));
+    const list = data.result && data.result.list;
+    if (!Array.isArray(list) || !list.length) throw new Error(symbol + ': no data on Bybit for ' + interval);
+    return list.slice().reverse().map(c => ({
+      time:+c[0], open:+c[1], high:+c[2], low:+c[3], close:+c[4], volume:+c[5], quoteVolume:+c[6],
+    }));
+  }
+
+  function ladAnchors(now){
+    const y = now.getUTCFullYear(), m = now.getUTCMonth(), d = now.getUTCDate();
+    const dow = now.getUTCDay();
+    const daysSinceMonday = (dow + 6) % 7;
+    const dayStart = Date.UTC(y, m, d);
+    const weekStart = dayStart - daysSinceMonday * 86400000;
+    const monthStart = Date.UTC(y, m, 1);
+    const quarterStartMonth = Math.floor(m / 3) * 3;
+    const quarterStart = Date.UTC(y, quarterStartMonth, 1);
+    const halfStartMonth = m < 6 ? 0 : 6;
+    const halfStart = Date.UTC(y, halfStartMonth, 1);
+    const yearStart = Date.UTC(y, 0, 1);
+    return [
+      { key:'daily', label:'Daily', start:dayStart, previousStart:dayStart - 86400000 },
+      { key:'weekly', label:'Weekly', start:weekStart, previousStart:weekStart - 7*86400000 },
+      { key:'monthly', label:'Monthly', start:monthStart, previousStart:Date.UTC(y, m-1, 1) },
+      { key:'quarterly', label:'Quarterly', start:quarterStart, previousStart:Date.UTC(y, quarterStartMonth-3, 1) },
+      { key:'sixmonth', label:'6-Month', start:halfStart, previousStart:Date.UTC(y, halfStartMonth-6, 1) },
+      { key:'yearly', label:'Yearly', start:yearStart, previousStart:Date.UTC(y-1, 0, 1) },
+    ];
+  }
+
+  function ladComputeEMA(values, period){
+    const k = 2 / (period + 1);
+    const ema = [values[0]];
+    for (let i = 1; i < values.length; i++) ema.push(values[i] * k + ema[i-1] * (1-k));
+    return ema;
+  }
+
+  function ladVwapFrom(candles, startTime, endTime){
+    let sumQuote = 0, sumBase = 0;
+    for (const c of candles){
+      if (c.time >= startTime && (!endTime || c.time < endTime)){ sumQuote += c.quoteVolume; sumBase += c.volume; }
+    }
+    return sumBase > 0 ? sumQuote / sumBase : null;
+  }
+
+  function ladProfileFrom(candles, startTime, endTime, numBins, rangeMin, rangeMax){
+    const set = endTime
+      ? candles.filter(c => c.time >= startTime && c.time < endTime)
+      : candles.filter(c => c.time >= startTime);
+    if (set.length < 2) return null;
+    const minLow = rangeMin !== undefined ? rangeMin : Math.min(...set.map(c => c.low));
+    const maxHigh = rangeMax !== undefined ? rangeMax : Math.max(...set.map(c => c.high));
+    if (maxHigh <= minLow) return null;
+    const binSize = (maxHigh - minLow) / numBins;
+    const bins = new Array(numBins).fill(0);
+    set.forEach(c => {
+      const range = c.high - c.low;
+      if (range <= 0){
+        const idx = Math.min(numBins - 1, Math.max(0, Math.floor((c.close - minLow) / binSize)));
+        bins[idx] += c.volume;
+        return;
+      }
+      for (let i = 0; i < numBins; i++){
+        const binLow = minLow + i * binSize, binHigh = binLow + binSize;
+        const overlap = Math.min(binHigh, c.high) - Math.max(binLow, c.low);
+        if (overlap > 0) bins[i] += c.volume * (overlap / range);
+      }
+    });
+    const total = bins.reduce((a,b) => a + b, 0);
+    let pocIndex = 0;
+    bins.forEach((v, i) => { if (v > bins[pocIndex]) pocIndex = i; });
+    let lowIdx = pocIndex, highIdx = pocIndex, vaVol = bins[pocIndex];
+    while (vaVol < 0.7 * total && (lowIdx > 0 || highIdx < numBins - 1)){
+      const nextLow = lowIdx > 0 ? bins[lowIdx - 1] : -1;
+      const nextHigh = highIdx < numBins - 1 ? bins[highIdx + 1] : -1;
+      if (nextHigh >= nextLow){ highIdx++; vaVol += bins[highIdx]; }
+      else { lowIdx--; vaVol += bins[lowIdx]; }
+    }
+    return {
+      poc: minLow + pocIndex * binSize + binSize / 2,
+      vah: minLow + (highIdx + 1) * binSize,
+      val: minLow + lowIdx * binSize,
+    };
+  }
+
+  async function ensureConfLevels(symbol){
+    const now = Date.now();
+    if (confSymbol === symbol && now - confLevelsAt < 120000) return; // levels move slowly -- 2 min cache
+    confSymbol = symbol; confLevelsAt = now;
+    try {
+      // Same per-TF limits Lakhsmi Signals uses.
+      const [k15, k1h, k4h, k1d] = await Promise.all([
+        ladFetchBybitKlines(symbol, '15m', 300),
+        ladFetchBybitKlines(symbol, '1h', 400),
+        ladFetchBybitKlines(symbol, '4h', 600),
+        ladFetchBybitKlines(symbol, '1d', 800),
+      ]);
+      const K = { '15m': k15, '1h': k1h, '4h': k4h, '1d': k1d };
+      const levels = [];
+
+      // 6 anchors x previous-period Volume Profile (POC/VAH/VAL) + anchored
+      // VWAP -- identical assembly to Confluence Zones / Lakhsmi Signals.
+      ladAnchors(new Date()).forEach(a => {
+        const profileSource = K[LAD_PROFILE_SRC[a.key]];
+        let profile = null;
+        if (profileSource){
+          const sharedSet = profileSource.filter(c => c.time >= a.previousStart);
+          if (sharedSet.length >= 2){
+            const rangeMin = Math.min(...sharedSet.map(c => c.low));
+            const rangeMax = Math.max(...sharedSet.map(c => c.high));
+            profile = ladProfileFrom(profileSource, a.previousStart, a.start, LAD_PROFILE_BINS[a.key] || 40, rangeMin, rangeMax);
+          }
+        }
+        if (profile){
+          levels.push({ price: profile.poc, label: `${a.label} POC` });
+          levels.push({ price: profile.vah, label: `${a.label} VAH` });
+          levels.push({ price: profile.val, label: `${a.label} VAL` });
+        }
+        const vwapSource = K[LAD_VWAP_SRC[a.key]];
+        const anchorVwap = vwapSource ? ladVwapFrom(vwapSource, a.start) : null;
+        if (anchorVwap) levels.push({ price: anchorVwap, label: `${a.label} VWAP` });
+      });
+
+      // EMA 50 / 100 / 200 on 1H and 4H.
+      [['1h','1H'], ['4h','4H']].forEach(([tf, lbl]) => {
+        const closes = K[tf].map(c => c.close);
+        [50, 100, 200].forEach(p => {
+          if (closes.length >= p){
+            const e = ladComputeEMA(closes, p);
+            levels.push({ price: e[e.length-1], label: `EMA${p} ${lbl}` });
+          }
+        });
+      });
+
+      // 1H Fibonacci retracement (same swing logic as the Fibonacci tool).
+      const win = k1h.slice(-90);
+      if (win.length >= 10){
+        const { hi, hiIdx, lo, loIdx } = ladFindSwing(win);
+        if (hi > lo){
+          const range = hi - lo, up = hiIdx > loIdx;
+          const fib = (r) => up ? hi - range * r : lo + range * r;
+          levels.push({ price: fib(0.5), label: 'Fib 50% 1H' });
+          levels.push({ price: fib(0.618), label: 'Fib 61.8% 1H' });
+          levels.push({ price: fib(0.65), label: 'Fib 65% 1H' });
+          levels.push({ price: fib(0.786), label: 'Fib 78.6% 1H' });
+        }
+      }
+
+      confLevels = levels;
+    } catch (e) { /* overlay is optional -- keep whatever levels we had */ }
+  }
+
+  async function fetchDepthAll(symbol){
+    // Aggregates SIX public order books regardless of the Market selector --
+    // spot and perp walls are both real resting liquidity, and combining
+    // them is what gives the widest possible price coverage from free REST
+    // endpoints (Binance spot alone allows 5000 levels per side, by far the
+    // deepest public book available).
+    const okxSpotId = symbol.replace(/(USDT|USDC)$/, '-$1');
+    const okxPerpId = okxInstId(symbol);
+    const defs = [
+      ['Binance Perp', async () => {
+        const d = await fetchJson(`https://fapi.binance.com/fapi/v1/depth?symbol=${symbol}&limit=1000`);
+        return { bids: d.bids.map(([p,q]) => [+p,+q]), asks: d.asks.map(([p,q]) => [+p,+q]) };
+      }],
+      ['Binance Spot', async () => {
+        const d = await fetchJson(`https://api.binance.com/api/v3/depth?symbol=${symbol}&limit=5000`);
+        return { bids: d.bids.map(([p,q]) => [+p,+q]), asks: d.asks.map(([p,q]) => [+p,+q]) };
+      }],
+      ['Bybit Perp', async () => {
+        const d = await fetchJson(`https://api.bybit.com/v5/market/orderbook?category=linear&symbol=${symbol}&limit=500`);
+        if (d.retCode !== 0) throw new Error(d.retMsg || 'Bybit error');
+        return { bids: d.result.b.map(([p,q]) => [+p,+q]), asks: d.result.a.map(([p,q]) => [+p,+q]) };
+      }],
+      ['Bybit Spot', async () => {
+        const d = await fetchJson(`https://api.bybit.com/v5/market/orderbook?category=spot&symbol=${symbol}&limit=200`);
+        if (d.retCode !== 0) throw new Error(d.retMsg || 'Bybit error');
+        return { bids: d.result.b.map(([p,q]) => [+p,+q]), asks: d.result.a.map(([p,q]) => [+p,+q]) };
+      }],
+      ['OKX Perp', async () => {
+        const d = await fetchJson(`https://www.okx.com/api/v5/market/books?instId=${okxPerpId}&sz=400`);
+        if (d.code !== '0' || !d.data || !d.data[0]) throw new Error('OKX error ' + (d.msg || d.code));
+        const mult = await fetchOkxCtVal(okxPerpId); // contracts -> base ccy
+        return { bids: d.data[0].bids.map(r => [+r[0], +r[1] * mult]), asks: d.data[0].asks.map(r => [+r[0], +r[1] * mult]) };
+      }],
+      ['OKX Spot', async () => {
+        const d = await fetchJson(`https://www.okx.com/api/v5/market/books?instId=${okxSpotId}&sz=400`);
+        if (d.code !== '0' || !d.data || !d.data[0]) throw new Error('OKX error ' + (d.msg || d.code));
+        return { bids: d.data[0].bids.map(r => [+r[0], +r[1]]), asks: d.data[0].asks.map(r => [+r[0], +r[1]]) };
+      }],
+      // ---- Additional venues. All wrapped in allSettled, so any that a
+      // browser can't reach (CORS) or that don't list the pair simply drop
+      // out -- the meta line shows which markets actually made it in. ----
+      ['MEXC Spot', async () => {
+        // Binance-compatible API, up to 5000 levels/side -- as deep as Binance spot.
+        const d = await fetchJson(`https://api.mexc.com/api/v3/depth?symbol=${symbol}&limit=5000`);
+        if (!d.bids || !d.asks) throw new Error('MEXC spot error');
+        return { bids: d.bids.map(([p,q]) => [+p,+q]), asks: d.asks.map(([p,q]) => [+p,+q]) };
+      }],
+      ['MEXC Perp', async () => {
+        const ms = symbol.replace(/(USDT|USDC)$/, '_$1');
+        const d = await fetchJson(`https://contract.mexc.com/api/v1/contract/depth/${ms}?limit=1000`);
+        if (!d.data || !d.data.bids) throw new Error('MEXC perp error');
+        const cs = await fetchMexcContractSize(ms); // contracts -> base ccy
+        return {
+          bids: d.data.bids.map(r => [+r[0], +r[1] * cs]),
+          asks: d.data.asks.map(r => [+r[0], +r[1] * cs]),
+        };
+      }],
+      ['Gate Spot', async () => {
+        const gs = symbol.replace(/(USDT|USDC)$/, '_$1');
+        const d = await fetchJson(`https://api.gateio.ws/api/v4/spot/order_book?currency_pair=${gs}&limit=100`);
+        if (!d.bids || !d.asks) throw new Error('Gate spot error');
+        return { bids: d.bids.map(([p,q]) => [+p,+q]), asks: d.asks.map(([p,q]) => [+p,+q]) };
+      }],
+      ['Bitget Spot', async () => {
+        const d = await fetchJson(`https://api.bitget.com/api/v2/spot/market/orderbook?symbol=${symbol}&type=step0&limit=150`);
+        if (!d.data || !d.data.bids) throw new Error('Bitget spot error ' + (d.msg || ''));
+        return { bids: d.data.bids.map(([p,q]) => [+p,+q]), asks: d.data.asks.map(([p,q]) => [+p,+q]) };
+      }],
+      ['Bitget Perp', async () => {
+        const d = await fetchJson(`https://api.bitget.com/api/v2/mix/market/merge-depth?productType=USDT-FUTURES&symbol=${symbol}&limit=100`);
+        if (!d.data || !d.data.bids) throw new Error('Bitget perp error ' + (d.msg || ''));
+        return { bids: d.data.bids.map(([p,q]) => [+p,+q]), asks: d.data.asks.map(([p,q]) => [+p,+q]) };
+      }],
+      ['Kraken Spot', async () => {
+        const d = await fetchJson(`https://api.kraken.com/0/public/Depth?pair=${symbol}&count=500`);
+        if (d.error && d.error.length) throw new Error('Kraken: ' + d.error[0]);
+        const book = d.result && Object.values(d.result)[0];
+        if (!book || !book.bids) throw new Error('Kraken: pair not found');
+        return { bids: book.bids.map(r => [+r[0], +r[1]]), asks: book.asks.map(r => [+r[0], +r[1]]) };
+      }],
+      ['HTX Spot', async () => {
+        const d = await fetchJson(`https://api.huobi.pro/market/depth?symbol=${symbol.toLowerCase()}&type=step0`);
+        if (d.status !== 'ok' || !d.tick || !d.tick.bids) throw new Error('HTX error ' + (d['err-msg'] || ''));
+        return { bids: d.tick.bids.map(([p,q]) => [+p,+q]), asks: d.tick.asks.map(([p,q]) => [+p,+q]) };
+      }],
+      ['KuCoin Spot', async () => {
+        const ks = symbol.replace(/(USDT|USDC)$/, '-$1');
+        const d = await fetchJson(`https://api.kucoin.com/api/v1/market/orderbook/level2_100?symbol=${ks}`);
+        if (!d.data || !d.data.bids) throw new Error('KuCoin error ' + (d.msg || ''));
+        return { bids: d.data.bids.map(([p,q]) => [+p,+q]), asks: d.data.asks.map(([p,q]) => [+p,+q]) };
+      }],
+    ];
+    const results = await Promise.allSettled(defs.map(([,fn]) => fn()));
+    const books = [], used = [];
+    results.forEach((r, i) => {
+      if (r.status === 'fulfilled'){ books.push(r.value); used.push(defs[i][0]); }
+      else console.warn('[Depth Ladder] ' + defs[i][0] + ' failed:', r.reason && r.reason.message);
+    });
+    if (!books.length) throw new Error('All order book sources failed.');
+    return { books, used };
+  }
+
+  function renderLadder(books, used){
+    lastBooks = books; // kept so the Depth Chart view can re-render without refetching
+    const allBids = [], allAsks = [];
+    books.forEach(b => { allBids.push(...b.bids); allAsks.push(...b.asks); });
+    if (!allBids.length || !allAsks.length) throw new Error('Empty order book.');
+
+    // Mid = average of each market's own mid. Taking a global best-bid /
+    // best-ask across venues can "cross" (one exchange's bid above another's
+    // ask, since perp and spot prices differ slightly) and produce a
+    // negative spread -- averaging per-book mids avoids that entirely.
+    const mids = books
+      .filter(b => b.bids.length && b.asks.length)
+      .map(b => (Math.max(...b.bids.map(r => r[0])) + Math.min(...b.asks.map(r => r[0]))) / 2);
+    const mid = mids.reduce((a,b) => a + b, 0) / mids.length;
+
+    // Bin size comes from the price range the fetched books ACTUALLY cover,
+    // not a % of price -- a dense BTC book's 1000 levels might span only a
+    // few hundred dollars, and %-of-price bins collapsed everything into a
+    // single bucket. Target ~22 rows per side at Auto.
+    const lowBid = Math.min(...allBids.map(r => r[0]));
+    const highAsk = Math.max(...allAsks.map(r => r[0]));
+    const span = Math.max(highAsk - lowBid, mid * 0.0001);
+    const binSel = document.getElementById('ofLadderBin');
+    const detail = binSel ? binSel.value : 'auto';
+    const divisor = detail === 'fine' ? 88 : detail === 'coarse' ? 22 : 44;
+    const binSize = niceBinSize(span / divisor);
+
+    // Bin every raw level; anything on the wrong side of mid (crossed data
+    // between exchanges) is dropped so bids and asks can't overlap.
+    const bidBins = new Map(), askBins = new Map();
+    allBids.forEach(([p,q]) => { if (p > mid) return; const k = Math.floor(p / binSize) * binSize; bidBins.set(k, (bidBins.get(k) || 0) + q); });
+    allAsks.forEach(([p,q]) => { if (p < mid) return; const k = Math.floor(p / binSize) * binSize; askBins.set(k, (askBins.get(k) || 0) + q); });
+
+    const ROWS = 22; // bins shown per side
+    const bidRows = [...bidBins.entries()].sort((a,b) => b[0]-a[0]).slice(0, ROWS);
+    const askRowsAsc = [...askBins.entries()].sort((a,b) => a[0]-b[0]).slice(0, ROWS);
+    const askRows = askRowsAsc.slice().reverse(); // furthest ask at the top, like a DOM
+
+    const sumBid = bidRows.reduce((a,r) => a + r[1], 0);
+    const sumAsk = askRows.reduce((a,r) => a + r[1], 0);
+    const bidPct = sumBid + sumAsk > 0 ? sumBid / (sumBid + sumAsk) * 100 : 50;
+    document.getElementById('ofImbalanceFill').style.width = bidPct.toFixed(1) + '%';
+    document.getElementById('ofImbalanceLabel').textContent = `${bidPct.toFixed(1)}% bids · ${(100-bidPct).toFixed(1)}% asks (visible range)`;
+
+    // Imbalance history sparkline (~10 min of samples at the 5s refresh)
+    imbHist.push({ v: bidPct });
+    if (imbHist.length > 120) imbHist.shift();
+    drawImbSpark();
+
+    const allQty = [...bidRows.map(r => r[1]), ...askRows.map(r => r[1])];
+    const maxQty = Math.max(...allQty, 1e-9);
+
+    // Wall detection is LOCAL, not global: a bin is a wall if it holds 3x+
+    // the MEDIAN of its ~6 neighbouring bins on each side (price-ordered),
+    // with a floor of 2x the whole ladder's median so tiny far-out standouts
+    // don't get flagged. A global-average threshold had a bias: bins near
+    // mid are inflated because all ~14 books overlap there, while further
+    // out only the deepest books still have data -- so genuinely large walls
+    // sitting away from price never crossed the inflated global bar.
+    const ordered = [...bidRows.slice().reverse(), ...askRowsAsc]; // ascending price order
+    const orderedQty = ordered.map(r => r[1]);
+    const medianOf = (arr) => {
+      const s = arr.slice().sort((a,b) => a - b);
+      const m = Math.floor(s.length / 2);
+      return s.length % 2 ? s[m] : (s[m-1] + s[m]) / 2;
+    };
+    const floorQty = medianOf(orderedQty) * 2;
+    const wallSet = new Set();
+    ordered.forEach(([p, q], i) => {
+      const lo = Math.max(0, i - 6), hi = Math.min(orderedQty.length, i + 7);
+      const neigh = [];
+      for (let j = lo; j < hi; j++) if (j !== i) neigh.push(orderedQty[j]);
+      if (neigh.length && q >= medianOf(neigh) * 3 && q >= floorQty) wallSet.add(p);
+    });
+
+    // Wall age tracking: keyed on side + bin start price, so the same wall
+    // keeps its first-seen time across refreshes. A persistent wall (minutes
+    // old) is far more meaningful than one that appeared seconds ago -- fresh
+    // flickering walls are often spoofed liquidity. Changing the bin size
+    // (Detail selector) re-keys the bins, so ages reset then; that's fine.
+    const now = Date.now();
+    const seen = new Map();
+    function wallAge(side, price){
+      const key = side + ':' + price.toFixed(8);
+      const first = wallSeen.get(key) || now;
+      seen.set(key, first);
+      const ms = now - first;
+      if (ms < 60000) return 'new';
+      if (ms < 3600000) return Math.floor(ms / 60000) + 'm';
+      return Math.floor(ms / 3600000) + 'h' + Math.floor((ms % 3600000) / 60000) + 'm';
+    }
+
+    function row(price, qty, side){
+      const wall = wallSet.has(price);
+      let tag = '';
+      if (wall){
+        const dist = (price - mid) / mid * 100;
+        tag = `<span class="ltag">${fmtCompact(qty)} · $${fmtCompact(qty * mid)} · ${dist >= 0 ? '+' : ''}${dist.toFixed(2)}% · ${wallAge(side, price)}</span>`;
+      }
+      // Confluence overlay: mark bins that contain a Fib / EMA50 / session
+      // VWAP level -- a wall sitting ON one of these levels matters far more.
+      const conf = confLevels.filter(l => l.price >= price && l.price < price + binSize);
+      const confNames = conf.slice(0, 2).map(l => l.label).join(' · ') + (conf.length > 2 ? ` +${conf.length - 2}` : '');
+      const confTag = conf.length ? `<span class="lconf" title="${conf.map(l => l.label).join(', ')}">${confNames}</span>` : '';
+      return `<div class="of-lad-row ${side}${wall ? ' wall' : ''}${conf.length ? ' conf' : ''}">` +
+        `<span class="lp">${fmtPrice(price)}</span>` +
+        `<div class="lbar-wrap"><div class="lbar" style="width:${(qty/maxQty*100).toFixed(1)}%;"></div>${tag}${confTag}</div>` +
+        `<span class="lq">${fmtCompact(qty)}</span>` +
+      `</div>`;
+    }
+
+    const midRow = `<div class="of-lad-mid"><span>${fmtPrice(mid)}</span><i>mid (all markets)</i></div>`;
+
+    document.getElementById('ofLadder').innerHTML =
+      askRows.map(([p,q]) => row(p, q, 'ask')).join('') + midRow + bidRows.map(([p,q]) => row(p, q, 'bid')).join('');
+    wallSeen = seen; // prune walls that vanished this refresh
+
+    const lo = bidRows.length ? bidRows[bidRows.length-1][0] : mid;
+    const hi = askRowsAsc.length ? askRowsAsc[askRowsAsc.length-1][0] : mid;
+    document.getElementById('ofLadderMeta').textContent =
+      `Aggregated ${used.length} markets (${used.join(', ')}) · bin ${fmtPrice(binSize)} · covers ${fmtPrice(lo)} – ${fmtPrice(hi)} · auto-refresh 5s · updated ${new Date().toLocaleTimeString()}`;
+
+    if (ladderView === 'chart') renderDepthChart();
+    return { bidPct };
+  }
+
+  function drawImbSpark(){
+    const el = document.getElementById('ofImbSpark');
+    if (!el || imbHist.length < 2) return;
+    const w = 90, h = 18;
+    const pts = imbHist.map((p, i) => `${(i / (imbHist.length - 1) * w).toFixed(1)},${(h - p.v / 100 * h).toFixed(1)}`).join(' ');
+    el.innerHTML = `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><line x1="0" y1="${h/2}" x2="${w}" y2="${h/2}" stroke="rgba(124,137,152,.35)" stroke-dasharray="3,3" stroke-width="1"/><polyline points="${pts}" fill="none" stroke="#E8A63C" stroke-width="1.5"/></svg>`;
+  }
+
+  // Classic cumulative depth chart -- same data as the ladder, different
+  // view. Walls show up as vertical "cliffs" in the green/red mountains.
+  function renderDepthChart(){
+    if (!lastBooks) return;
+    const canvas = document.getElementById('ofDepthChart');
+    if (!canvas) return;
+    const allBids = [], allAsks = [];
+    lastBooks.forEach(b => { allBids.push(...b.bids); allAsks.push(...b.asks); });
+    const mids = lastBooks
+      .filter(b => b.bids.length && b.asks.length)
+      .map(b => (Math.max(...b.bids.map(r => r[0])) + Math.min(...b.asks.map(r => r[0]))) / 2);
+    const mid = mids.reduce((a,b) => a + b, 0) / mids.length;
+    const bids = allBids.filter(r => r[0] <= mid).sort((a,b) => b[0]-a[0]);
+    const asks = allAsks.filter(r => r[0] >= mid).sort((a,b) => a[0]-b[0]);
+    let cum = 0; const bidPts = []; bids.forEach(([p,q]) => { cum += q; bidPts.push({ x: p, y: cum }); });
+    cum = 0; const askPts = []; asks.forEach(([p,q]) => { cum += q; askPts.push({ x: p, y: cum }); });
+    const ds = (arr) => { const step = Math.max(1, Math.floor(arr.length / 250)); return arr.filter((_, i) => i % step === 0); };
+    if (depthChart) depthChart.destroy();
+    depthChart = new Chart(canvas, {
+      type: 'line',
+      data: { datasets: [
+        { data: ds(bidPts).reverse(), borderColor: '#2FD8A6', backgroundColor: 'rgba(47,216,166,.15)', fill: true, pointRadius: 0, stepped: true, borderWidth: 1.5 },
+        { data: ds(askPts), borderColor: '#FF6259', backgroundColor: 'rgba(255,98,89,.15)', fill: true, pointRadius: 0, stepped: true, borderWidth: 1.5 },
+      ]},
+      options: {
+        responsive: true, animation: false,
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => fmtPrice(ctx.parsed.x) + ' → ' + fmtCompact(ctx.parsed.y) } } },
+        scales: {
+          x: { type: 'linear', ticks: { color: '#7C8998', font: { family: 'JetBrains Mono', size: 9 }, callback: (v) => fmtPrice(v) }, grid: { color: '#1A2029' } },
+          y: { ticks: { color: '#7C8998', font: { family: 'JetBrains Mono', size: 9 }, callback: (v) => fmtCompact(v) }, grid: { color: '#1A2029' } },
+        },
+      },
+    });
+  }
+
+  function startLadderAutoRefresh(){
+    if (ladderTimer) return;
+    ladderTimer = setInterval(() => { loadOrderBook(); }, 5000);
+  }
+
+  function disconnectLiveOrderBook(){
+    // Name kept from the old WebSocket order book so the existing page-switch
+    // cleanup hook (__closeOrderFlowLiveSocket) keeps working -- it now just
+    // stops the 5s auto-refresh timer.
+    if (ladderTimer){ clearInterval(ladderTimer); ladderTimer = null; }
+  }
+
+  // --- Live Trade Tape: raw executed trades, not candle-based approximation ---
+  let tapeSockets = []; // one WebSocket per exchange, merged into one feed
+  const LARGE_NOTIONAL = 50000, WHALE_NOTIONAL = 250000;
+
+  function disconnectTradeTape(){
+    tapeSockets.forEach(ws => { try { ws.close(); } catch(e){} });
+    tapeSockets = [];
+  }
+
+  let tapePaused = false;
+  let tapeQueue = []; // buffered trades while hovering/paused, flushed on mouse-leave
+
+  function renderTapeRow(price, qty, side, timeMs, notional, exch){
+    const tapeEl = document.getElementById('ofTape');
+    if (!tapeEl) return;
+    let sizeTag = '';
+    let rowClass = side;
+    if (notional >= WHALE_NOTIONAL){ sizeTag = '<span class="t-tag whale">Whale</span>'; rowClass += ' whale'; }
+    else if (notional >= LARGE_NOTIONAL){ sizeTag = '<span class="t-tag large">Large</span>'; rowClass += ' large'; }
+
+    const timeStr = new Date(timeMs).toLocaleTimeString(undefined, { hour12:false, hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    const row = document.createElement('div');
+    row.className = 'of-tape-row ' + rowClass;
+    row.dataset.notional = notional;
+    row.innerHTML = `
+      <span class="t-time">${timeStr} <span class="t-exch">${exch}</span></span>
+      <span class="t-price ${side}">${fmtPrice(price)}</span>
+      <span>${fmtCompact(qty)} (${fmtCompact(notional)})</span>
+      ${sizeTag || '<span></span>'}
+    `;
+    tapeEl.insertBefore(row, tapeEl.firstChild);
+    while (tapeEl.children.length > 60) tapeEl.removeChild(tapeEl.lastChild);
+  }
+
+  let tapeWindow = []; // rolling window of ALL real trades (unfiltered), across all exchanges, for the read below
+  const TAPE_WINDOW_MAX = 60;
+
+  function updateTapeRead(){
+    const readEl = document.getElementById('ofTapeRead');
+    if (!readEl) return;
+    if (tapeWindow.length < 8){
+      readEl.innerHTML = 'Collecting trades…';
+      readEl.className = 'of-read';
+      return;
+    }
+    const buyVol = tapeWindow.filter(t => t.side === 'buy').reduce((a,t) => a+t.notional, 0);
+    const sellVol = tapeWindow.filter(t => t.side === 'sell').reduce((a,t) => a+t.notional, 0);
+    const totalVol = buyVol + sellVol;
+    const buyPct = totalVol > 0 ? buyVol / totalVol * 100 : 50;
+
+    let text, cls = '';
+    if (buyPct >= 62){
+      text = `<b>Mostly buying right now</b> (${buyPct.toFixed(0)}% of the last ${tapeWindow.length} trades across Binance + Bybit + OKX were buys) — buyers are paying the asking price instead of waiting for it to go lower.`;
+      cls = 'bull';
+    } else if (buyPct <= 38){
+      text = `<b>Mostly selling right now</b> (${(100-buyPct).toFixed(0)}% of the last ${tapeWindow.length} trades across Binance + Bybit + OKX were sells) — sellers are accepting the buyer's price instead of waiting for it to go higher.`;
+      cls = 'bear';
+    } else {
+      text = `Buying and selling are close to even right now (${buyPct.toFixed(0)}% buy / ${(100-buyPct).toFixed(0)}% sell over the last ${tapeWindow.length} trades, all exchanges combined) — no clear side winning at the moment.`;
+    }
+
+    // Most recent whale in the window, if any, called out specifically.
+    const recentWhale = [...tapeWindow].reverse().find(t => t.notional >= WHALE_NOTIONAL);
+    if (recentWhale){
+      const secsAgo = Math.max(0, Math.round((Date.now() - recentWhale.timeMs) / 1000));
+      text += ` A <b>big ${recentWhale.side === 'buy' ? 'buy' : 'sell'} order</b> (${fmtCompact(recentWhale.notional)}) happened about ${secsAgo}s ago on ${recentWhale.exch} — keep an eye out for the price reacting to it.`;
+      cls = 'warn';
+    }
+
+    readEl.innerHTML = text;
+    readEl.className = 'of-read' + (cls ? ' ' + cls : '');
+  }
+
+  function addTapeRow(price, qty, side, timeMs, exch){
+    const notional = price * qty;
+
+    // The read reflects ALL real flow, independent of the display filter --
+    // filtering the tape is a viewing preference, not a change in what
+    // actually traded.
+    tapeWindow.push({ side, notional, timeMs, exch });
+    if (tapeWindow.length > TAPE_WINDOW_MAX) tapeWindow.shift();
+    updateTapeRead();
+
+    const minSize = +(document.getElementById('ofTapeMinSize').value || 0);
+    if (notional < minSize) return; // filtered out of the visible list -- too small to matter right now
+
+    if (tapePaused){
+      // Hovering to read -- don't yank the feed out from under the mouse.
+      // Buffer it and catch up once the mouse leaves.
+      tapeQueue.push([price, qty, side, timeMs, notional, exch]);
+      if (tapeQueue.length > 60) tapeQueue.shift();
+      return;
+    }
+    renderTapeRow(price, qty, side, timeMs, notional, exch);
+  }
+
+  const ofTapeEl = document.getElementById('ofTape');
+  if (ofTapeEl){
+    ofTapeEl.addEventListener('mouseenter', () => {
+      tapePaused = true;
+      ofTapeEl.classList.add('paused');
+    });
+    ofTapeEl.addEventListener('mouseleave', () => {
+      tapePaused = false;
+      ofTapeEl.classList.remove('paused');
+      // Oldest buffered trade first, so the feed reads in the correct order.
+      tapeQueue.forEach(([p,q,s,t,n,e]) => renderTapeRow(p,q,s,t,n,e));
+      tapeQueue = [];
+    });
+  }
+
+  const ofTapeMinSizeEl = document.getElementById('ofTapeMinSize');
+  if (ofTapeMinSizeEl){
+    ofTapeMinSizeEl.addEventListener('change', () => {
+      const minSize = +(ofTapeMinSizeEl.value || 0);
+      // Existing rows were rendered under whatever filter was active at the
+      // time -- raising the threshold now must also drop anything already
+      // on screen that no longer qualifies, not just filter new trades.
+      if (ofTapeEl){
+        [...ofTapeEl.children].forEach(row => {
+          if (+row.dataset.notional < minSize) row.remove();
+        });
+      }
+      tapeQueue = tapeQueue.filter(([,,,,n]) => n >= minSize);
+    });
+  }
+
+  function connectTradeTape(){
+    disconnectTradeTape();
+    const symbol = currentSymbol();
+    if (!symbol) return;
+
+    // Binance futures
+    const wsBase = 'wss://fstream.binance.com/ws';
+    const binanceWs = new WebSocket(`${wsBase}/${symbol.toLowerCase()}@aggTrade`);
+    binanceWs.onmessage = (ev) => {
+      let msg; try { msg = JSON.parse(ev.data); } catch(e){ return; }
+      if (msg.e !== 'aggTrade') return;
+      // m = true means the buyer was the resting maker -> the SELLER was
+      // the aggressor (taker sell). m = false -> taker buy.
+      addTapeRow(parseFloat(msg.p), parseFloat(msg.q), msg.m ? 'sell' : 'buy', msg.T, 'Binance');
+    };
+    tapeSockets.push(binanceWs);
+
+    // Bybit linear
+    const bybitWs = new WebSocket(`wss://stream.bybit.com/v5/public/linear`);
+    bybitWs.onopen = () => {
+      bybitWs.send(JSON.stringify({ op:'subscribe', args:[`publicTrade.${symbol}`] }));
+    };
+    bybitWs.onmessage = (ev) => {
+      let msg; try { msg = JSON.parse(ev.data); } catch(e){ return; }
+      if (!msg.topic || !msg.topic.startsWith('publicTrade') || !Array.isArray(msg.data)) return;
+      msg.data.forEach(t => {
+        addTapeRow(parseFloat(t.p), parseFloat(t.v), t.S === 'Buy' ? 'buy' : 'sell', +t.T, 'Bybit');
+      });
+    };
+    tapeSockets.push(bybitWs);
+
+    // OKX perpetual swap
+    const okxInstIdVal = okxInstId(symbol);
+    const okxWs = new WebSocket('wss://ws.okx.com:8443/ws/v5/public');
+    okxWs.onopen = () => {
+      okxWs.send(JSON.stringify({ op:'subscribe', args:[{ channel:'trades', instId: okxInstIdVal }] }));
+    };
+    okxWs.onmessage = (ev) => {
+      let msg; try { msg = JSON.parse(ev.data); } catch(e){ return; }
+      if (!msg.arg || msg.arg.channel !== 'trades' || !Array.isArray(msg.data)) return;
+      msg.data.forEach(t => {
+        addTapeRow(parseFloat(t.px), parseFloat(t.sz), t.side === 'buy' ? 'buy' : 'sell', +t.ts, 'OKX');
+      });
+    };
+    tapeSockets.push(okxWs);
+
+    // If any one drops, only that one reconnects (the others keep running).
+    [binanceWs, bybitWs, okxWs].forEach(ws => {
+      ws.onclose = () => {
+        if (document.getElementById('ofTapeToggle').checked && tapeSockets.includes(ws)){
+          tapeSockets = tapeSockets.filter(s => s !== ws);
+          setTimeout(() => { if (document.getElementById('ofTapeToggle').checked) connectTradeTape(); }, 2000);
+        }
+      };
+    });
+  }
+
+  document.getElementById('ofTapeToggle').addEventListener('change', (e) => {
+    if (e.target.checked) connectTradeTape();
+    else disconnectTradeTape();
+  });
+
+  async function loadOrderBook(){
+    const symbol = currentSymbol();
+    if (!symbol) return null;
+    if (ladderBusy) return null; // don't stack a refresh on top of a slow fetch
+    ladderBusy = true;
+    try {
+      await ensureConfLevels(symbol); // cached 60s -- only refetches once a minute
+      const { books, used } = await fetchDepthAll(symbol);
+      const res = renderLadder(books, used);
+      updateBookRead(res.bidPct);
+      startLadderAutoRefresh();
+      return res;
+    } catch (e) {
+      document.getElementById('ofImbalanceLabel').textContent = e.message || 'Failed to load order book.';
+      return null;
+    } finally {
+      ladderBusy = false;
+    }
+  }
+
+  window.__closeOrderFlowLiveSocket = () => { disconnectLiveOrderBook(); disconnectTradeTape(); disconnectLiquidations(); };
+
+  document.getElementById('ofLadderBin').addEventListener('change', () => { loadOrderBook(); });
+  document.getElementById('ofViewLadder').addEventListener('click', () => {
+    ladderView = 'ladder';
+    document.getElementById('ofViewLadder').classList.add('active');
+    document.getElementById('ofViewChart').classList.remove('active');
+    document.getElementById('ofLadder').style.display = '';
+    document.getElementById('ofDepthChartWrap').style.display = 'none';
+  });
+  document.getElementById('ofViewChart').addEventListener('click', () => {
+    ladderView = 'chart';
+    document.getElementById('ofViewChart').classList.add('active');
+    document.getElementById('ofViewLadder').classList.remove('active');
+    document.getElementById('ofLadder').style.display = 'none';
+    document.getElementById('ofDepthChartWrap').style.display = '';
+    renderDepthChart();
+  });
+
+
+  // OKX uses "BTC-USDT-SWAP" style instrument IDs and reports OI/size in
+  // CONTRACTS, not base currency -- each instrument has its own contract
+  // value (ctVal) that must be looked up and multiplied in to get a number
+  // that's actually comparable to Binance/Bybit's base-currency OI.
+  function okxInstId(symbol){
+    if (symbol.endsWith('USDT')) return symbol.slice(0, -4) + '-USDT-SWAP';
+    if (symbol.endsWith('USDC')) return symbol.slice(0, -4) + '-USDC-SWAP';
+    return symbol;
+  }
+  let okxCtValCache = {};
+  async function fetchOkxCtVal(instId){
+    if (okxCtValCache[instId]) return okxCtValCache[instId];
+    const res = await fetchJson(`https://www.okx.com/api/v5/public/instruments?instType=SWAP&instId=${instId}`);
+    if (!res.data || !res.data.length) throw new Error('OKX instrument not found: ' + instId);
+    const ctVal = parseFloat(res.data[0].ctVal);
+    okxCtValCache[instId] = ctVal;
+    return ctVal;
+  }
+
+  // ---------------- Open Interest ----------------
+  async function fetchBinanceOi(symbol){
+    const [curRes, histRes] = await Promise.all([
+      fetchJson(`https://fapi.binance.com/fapi/v1/openInterest?symbol=${symbol}`),
+      fetchJson(`https://fapi.binance.com/futures/data/openInterestHist?symbol=${symbol}&period=1h&limit=48`),
+    ]);
+    const current = parseFloat(curRes.openInterest);
+    const history = histRes.map(r => ({ time:r.timestamp, oi:parseFloat(r.sumOpenInterest) }));
+    return { current, history };
+  }
+
+  async function fetchBybitOi(symbol){
+    const [curRes, histRes] = await Promise.all([
+      fetchJson(`https://api.bybit.com/v5/market/open-interest?category=linear&symbol=${symbol}&intervalTime=1h&limit=1`),
+      fetchJson(`https://api.bybit.com/v5/market/open-interest?category=linear&symbol=${symbol}&intervalTime=1h&limit=48`),
+    ]);
+    if (curRes.retCode !== 0) throw new Error(curRes.retMsg || 'Bybit error');
+    const current = parseFloat(curRes.result.list[0].openInterest);
+    const history = histRes.result.list.slice().reverse().map(r => ({ time:+r.timestamp, oi:parseFloat(r.openInterest) }));
+    return { current, history };
+  }
+
+  // OKX's public API has no easily-accessible OI history endpoint, so this
+  // contributes to the CURRENT total and breakdown, but not the trend chart
+  // or 24h-change calc (those still come from Binance + Bybit's history).
+  async function fetchOkxOi(symbol){
+    const instId = okxInstId(symbol);
+    const [oiRes, ctVal] = await Promise.all([
+      fetchJson(`https://www.okx.com/api/v5/public/open-interest?instId=${instId}`),
+      fetchOkxCtVal(instId),
+    ]);
+    if (!oiRes.data || !oiRes.data.length) throw new Error('No OKX OI data for ' + instId);
+    const current = parseFloat(oiRes.data[0].oi) * ctVal;
+    return { current, history: [] };
+  }
+
+  // OI is combined across BOTH exchanges regardless of the Exchange selector
+  // above (which only governs CVD / Order Book / Trade Tape) -- a true
+  // multi-exchange total is more representative than either one alone.
+  async function loadOpenInterest(){
+    const symbol = currentSymbol();
+    if (!symbol) return;
+    let changePct = null, currentOi = null;
+    try {
+      const [binanceRes, bybitRes, okxRes] = await Promise.allSettled([fetchBinanceOi(symbol), fetchBybitOi(symbol), fetchOkxOi(symbol)]);
+      const sources = [];
+      if (binanceRes.status === 'fulfilled') sources.push({ name:'Binance', ...binanceRes.value });
+      if (bybitRes.status === 'fulfilled') sources.push({ name:'Bybit', ...bybitRes.value });
+      if (okxRes.status === 'fulfilled') sources.push({ name:'OKX', ...okxRes.value });
+      if (!sources.length) throw new Error('OI unavailable on all exchanges for ' + symbol);
+
+      const current = sources.reduce((a,s) => a + s.current, 0);
+      currentOi = current;
+
+      const ticker = await fetchTicker(symbol);
+      const notional = current * ticker.lastPrice;
+      document.getElementById('ofOiCurrent').textContent = fmtCompact(current);
+      document.getElementById('ofOiUsd').textContent = '$' + fmtCompact(notional);
+
+      const breakdownEl = document.getElementById('ofOiBreakdown');
+      if (breakdownEl){
+        breakdownEl.textContent = sources.map(s => `${s.name}: ${fmtCompact(s.current)}`).join(' · ')
+          + (sources.length < 3 ? ` (${3 - sources.length} exchange${3-sources.length>1?'s':''} unavailable for this pair)` : '');
+      }
+
+      // Merge histories by hour-bucket so mismatched timestamps across
+      // exchanges still combine into one coherent combined series.
+      const bucketMap = new Map(); // bucketTime -> summed OI
+      sources.forEach(s => {
+        s.history.forEach(h => {
+          const bucket = Math.round(h.time / 3600000) * 3600000;
+          bucketMap.set(bucket, (bucketMap.get(bucket) || 0) + h.oi);
+        });
+      });
+      const history = [...bucketMap.entries()].sort((a,b) => a[0]-b[0]).map(([time,oi]) => ({ time, oi }));
+
+      if (history.length >= 2){
+        changePct = (history[history.length-1].oi - history[0].oi) / history[0].oi * 100;
+        const changeEl = document.getElementById('ofOiChange');
+        changeEl.textContent = (changePct >= 0 ? '+' : '') + changePct.toFixed(2) + '%';
+        changeEl.style.color = changePct >= 0 ? 'var(--bull)' : 'var(--bear)';
+      }
+
+      const canvas = document.getElementById('ofOiChart');
+      if (oiChart) oiChart.destroy();
+      const oiSeries = history.map(h => h.oi);
+      const minOi = Math.min(...oiSeries), maxOi = Math.max(...oiSeries);
+      const pad = (maxOi - minOi) * 0.15 || maxOi * 0.01;
+      oiChart = new Chart(canvas, {
+        type: 'line',
+        data: { labels: history.map((_,i)=>i), datasets: [{ data: oiSeries, borderColor:'#6C93F5', backgroundColor:'rgba(108,147,245,.12)', borderWidth:2, pointRadius:0, tension:.15, fill:true }] },
+        options: {
+          responsive:true, animation:{duration:250},
+          plugins:{legend:{display:false}},
+          scales:{
+            x:{ display:false },
+            y:{ min:minOi-pad, max:maxOi+pad, ticks:{ color:'#7C8998', font:{family:'JetBrains Mono', size:9}, callback:(v)=>fmtCompact(v) }, grid:{ color:'#1A2029' } },
+          },
+        },
+      });
+    } catch (e) {
+      document.getElementById('ofOiCurrent').textContent = 'n/a';
+      document.getElementById('ofOiUsd').textContent = 'n/a';
+      document.getElementById('ofOiChange').textContent = e.message ? 'Error' : 'n/a';
+      return null;
+    }
+    return { current: currentOi, changePct };
+  }
+
+  // ---------------- Funding Rate ----------------
+  function updateFundingCountdown(){
+    const el = document.getElementById('ofFundingCountdown');
+    if (!nextFundingTime){ el.textContent = 'n/a'; return; }
+    const diff = nextFundingTime - Date.now();
+    if (diff <= 0){ el.textContent = 'due now'; return; }
+    const h = Math.floor(diff / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+    el.textContent = `${h}h ${m}m ${s}s`;
+  }
+
+  async function loadFunding(){
+    const symbol = currentSymbol();
+    if (!symbol) return;
+    let currentRate, avgRate = null;
+    try {
+      let history; // history: [{time, rate}]
+      if (currentExchange() === 'bybit'){
+        const [tickerRes, histRes] = await Promise.all([
+          fetchJson(`https://api.bybit.com/v5/market/tickers?category=linear&symbol=${symbol}`),
+          fetchJson(`https://api.bybit.com/v5/market/funding/history?category=linear&symbol=${symbol}&limit=21`),
+        ]);
+        if (tickerRes.retCode !== 0) throw new Error(symbol + ': ' + (tickerRes.retMsg || 'Bybit error'));
+        const t = tickerRes.result.list[0];
+        currentRate = parseFloat(t.fundingRate);
+        nextFundingTime = +t.nextFundingTime;
+        history = histRes.result.list.slice().reverse().map(r => ({ time:+r.fundingRateTimestamp, rate:parseFloat(r.fundingRate) }));
+      } else {
+        const [premRes, histRes] = await Promise.all([
+          fetchJson(`https://fapi.binance.com/fapi/v1/premiumIndex?symbol=${symbol}`),
+          fetchJson(`https://fapi.binance.com/fapi/v1/fundingRate?symbol=${symbol}&limit=21`),
+        ]);
+        currentRate = parseFloat(premRes.lastFundingRate);
+        nextFundingTime = premRes.nextFundingTime;
+        history = histRes.map(r => ({ time:r.fundingTime, rate:parseFloat(r.fundingRate) }));
+      }
+
+      const rateEl = document.getElementById('ofFundingCurrent');
+      rateEl.textContent = (currentRate >= 0 ? '+' : '') + (currentRate * 100).toFixed(4) + '%';
+      rateEl.style.color = currentRate >= 0 ? 'var(--bull)' : 'var(--bear)';
+
+      if (history.length){
+        const avg = history.reduce((a,h) => a+h.rate, 0) / history.length;
+        avgRate = avg;
+        const avgEl = document.getElementById('ofFundingAvg');
+        avgEl.textContent = (avg >= 0 ? '+' : '') + (avg * 100).toFixed(4) + '%';
+        avgEl.style.color = avg >= 0 ? 'var(--bull)' : 'var(--bear)';
+      }
+
+      clearInterval(fundingCountdownTimer);
+      updateFundingCountdown();
+      fundingCountdownTimer = setInterval(updateFundingCountdown, 1000);
+
+      const canvas = document.getElementById('ofFundingChart');
+      if (fundingChart) fundingChart.destroy();
+      const rates = history.map(h => h.rate * 100);
+      fundingChart = new Chart(canvas, {
+        type: 'bar',
+        data: { labels: history.map((_,i)=>i), datasets: [{ data: rates, backgroundColor: rates.map(r => r >= 0 ? 'rgba(47,216,166,.55)' : 'rgba(255,98,89,.55)'), barPercentage:.8, categoryPercentage:.9 }] },
+        options: {
+          responsive:true, animation:{duration:250},
+          plugins:{legend:{display:false}},
+          scales:{
+            x:{ display:false },
+            y:{ ticks:{ color:'#7C8998', font:{family:'JetBrains Mono', size:9}, callback:(v)=>v.toFixed(3)+'%' }, grid:{ color:'#1A2029' } },
+          },
+        },
+      });
+    } catch (e) {
+      document.getElementById('ofFundingCurrent').textContent = 'n/a';
+      document.getElementById('ofFundingCountdown').textContent = 'n/a';
+      document.getElementById('ofFundingAvg').textContent = e.message ? 'Error' : 'n/a';
+      return null;
+    }
+    return { currentRate, avgRate };
+  }
+
+  let lsChart = null;
+  async function loadLongShortRatio(){
+    const symbol = currentSymbol();
+    if (!symbol) return null;
+    try {
+      let longPct, shortPct, history; // history: [{time, longPct}]
+      if (currentExchange() === 'bybit'){
+        const res = await fetchJson(`https://api.bybit.com/v5/market/account-ratio?category=linear&symbol=${symbol}&period=1h&limit=48`);
+        if (res.retCode !== 0) throw new Error(res.retMsg || 'Bybit error');
+        const list = res.result.list.slice().reverse();
+        if (!list.length) throw new Error('No long/short data for ' + symbol);
+        const latest = list[list.length - 1];
+        longPct = parseFloat(latest.buyRatio) * 100;
+        shortPct = parseFloat(latest.sellRatio) * 100;
+        history = list.map(r => ({ time:+r.timestamp, longPct: parseFloat(r.buyRatio) * 100 }));
+      } else {
+        const res = await fetchJson(`https://fapi.binance.com/futures/data/globalLongShortAccountRatio?symbol=${symbol}&period=1h&limit=48`);
+        if (!Array.isArray(res) || !res.length) throw new Error('No long/short data for ' + symbol);
+        const latest = res[res.length - 1];
+        longPct = parseFloat(latest.longAccount) * 100;
+        shortPct = parseFloat(latest.shortAccount) * 100;
+        history = res.map(r => ({ time:r.timestamp, longPct: parseFloat(r.longAccount) * 100 }));
+      }
+
+      document.getElementById('ofLsLong').textContent = longPct.toFixed(1) + '%';
+      document.getElementById('ofLsShort').textContent = shortPct.toFixed(1) + '%';
+      const ratioEl = document.getElementById('ofLsRatio');
+      const ratio = shortPct > 0 ? longPct / shortPct : null;
+      ratioEl.textContent = ratio !== null ? ratio.toFixed(2) : 'n/a';
+      ratioEl.style.color = longPct >= shortPct ? 'var(--bull)' : 'var(--bear)';
+
+      const canvas = document.getElementById('ofLsChart');
+      if (lsChart) lsChart.destroy();
+      const series = history.map(h => h.longPct);
+      lsChart = new Chart(canvas, {
+        type: 'line',
+        data: { labels: history.map((_,i)=>i), datasets: [{ data: series, borderColor:'#2FD8A6', backgroundColor:'rgba(47,216,166,.10)', borderWidth:2, pointRadius:0, tension:.15, fill:true }] },
+        options: {
+          responsive:true, animation:{duration:250},
+          plugins:{legend:{display:false}},
+          scales:{
+            x:{ display:false },
+            y:{ min:0, max:100, ticks:{ color:'#7C8998', font:{family:'JetBrains Mono', size:9}, callback:(v)=>v+'%' }, grid:{ color:'#1A2029' } },
+          },
+        },
+      });
+      return { longPct, shortPct };
+    } catch (e) {
+      document.getElementById('ofLsLong').textContent = 'n/a';
+      document.getElementById('ofLsShort').textContent = 'n/a';
+      document.getElementById('ofLsRatio').textContent = 'n/a';
+      return null;
+    }
+  }
+
+  // Basis = how far the futures price sits from spot, in %. Positive means
+  // futures trade at a premium (leveraged long demand); negative means a
+  // discount (leveraged short / hedging demand).
+  async function loadPremiumBasis(){
+    const symbol = currentSymbol();
+    if (!symbol) return null;
+    try {
+      let spotPrice, futuresPrice;
+      if (currentExchange() === 'bybit'){
+        const [spotRes, futRes] = await Promise.all([
+          fetchJson(`https://api.bybit.com/v5/market/tickers?category=spot&symbol=${symbol}`),
+          fetchJson(`https://api.bybit.com/v5/market/tickers?category=linear&symbol=${symbol}`),
+        ]);
+        if (spotRes.retCode !== 0 || !spotRes.result.list.length) throw new Error('No spot data');
+        if (futRes.retCode !== 0 || !futRes.result.list.length) throw new Error('No futures data');
+        spotPrice = parseFloat(spotRes.result.list[0].lastPrice);
+        futuresPrice = parseFloat(futRes.result.list[0].lastPrice);
+      } else {
+        const [spotRes, futRes] = await Promise.all([
+          fetchJson(`https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`),
+          fetchJson(`https://fapi.binance.com/fapi/v1/ticker/price?symbol=${symbol}`),
+        ]);
+        spotPrice = parseFloat(spotRes.price);
+        futuresPrice = parseFloat(futRes.price);
+      }
+      const basisPct = (futuresPrice - spotPrice) / spotPrice * 100;
+      document.getElementById('ofBasisSpot').textContent = fmtPrice(spotPrice);
+      document.getElementById('ofBasisFutures').textContent = fmtPrice(futuresPrice);
+      const basisEl = document.getElementById('ofBasisPct');
+      basisEl.textContent = (basisPct >= 0 ? '+' : '') + basisPct.toFixed(3) + '%';
+      basisEl.style.color = basisPct >= 0 ? 'var(--bull)' : 'var(--bear)';
+      return { basisPct };
+    } catch (e) {
+      document.getElementById('ofBasisSpot').textContent = 'n/a';
+      document.getElementById('ofBasisFutures').textContent = 'n/a';
+      document.getElementById('ofBasisPct').textContent = 'n/a';
+      return null;
+    }
+  }
+
+  // --- Live Liquidations: real, confirmed forced closures (not a modeled estimate) ---
+  let liqSockets = []; // one per exchange, merged into one feed
+  let liqPaused = false, liqQueue = [];
+  let liqWindow = []; // rolling window for the read
+  const LIQ_WINDOW_MAX = 40;
+  const LIQ_LARGE_NOTIONAL = 100000;
+
+  function updateLiqRead(){
+    const readEl = document.getElementById('ofLiqRead');
+    if (!readEl) return;
+    if (liqWindow.length < 3){
+      readEl.textContent = 'Waiting for liquidations…';
+      readEl.className = 'of-read';
+      return;
+    }
+    const longLiqVol = liqWindow.filter(l => l.side === 'sell').reduce((a,l) => a+l.notional, 0); // forced SELL = a LONG got liquidated
+    const shortLiqVol = liqWindow.filter(l => l.side === 'buy').reduce((a,l) => a+l.notional, 0); // forced BUY = a SHORT got liquidated
+    const total = longLiqVol + shortLiqVol;
+    const longPct = total > 0 ? longLiqVol / total * 100 : 50;
+    let text, cls = '';
+    if (longPct >= 65){
+      text = `<b>Long traders are getting wiped out</b> (${longPct.toFixed(0)}% of the last ${liqWindow.length} liquidations across Binance + Bybit + OKX were long positions being force-closed) — this is pushing price down further. Sharp bursts like this often mean the sellers are running out of steam soon, not that a new downtrend is just starting.`;
+      cls = 'bear';
+    } else if (longPct <= 35){
+      text = `<b>Short traders are getting squeezed out</b> (${(100-longPct).toFixed(0)}% of the last ${liqWindow.length} liquidations across Binance + Bybit + OKX were short positions being force-closed) — this is pushing price up further. Sharp bursts like this often mean the buyers are running out of steam soon, not that a new uptrend is just starting.`;
+      cls = 'bull';
+    } else {
+      text = `Longs and shorts are getting liquidated in roughly equal amounts over the last ${liqWindow.length} events, all exchanges combined — no one-sided flush happening right now.`;
+    }
+    readEl.innerHTML = text;
+    readEl.className = 'of-read' + (cls ? ' ' + cls : '');
+    renderLiqClusters();
+  }
+
+  // Groups recent liquidations into price bins and shows where the biggest
+  // clusters happened -- "$2.3M of longs got wiped at 64,800" is far more
+  // useful than watching individual prints scroll by.
+  function renderLiqClusters(){
+    const el = document.getElementById('ofLiqClusters');
+    if (!el) return;
+    const priced = liqWindow.filter(l => l.price > 0);
+    if (priced.length < 3){ el.innerHTML = ''; return; }
+    const ref = priced[priced.length - 1].price;
+    const binSize = niceBinSize(ref * 0.0025);
+    const map = new Map();
+    priced.forEach(l => {
+      const k = Math.floor(l.price / binSize) * binSize;
+      const o = map.get(k) || { long: 0, short: 0 };
+      if (l.side === 'sell') o.long += l.notional; else o.short += l.notional; // forced sell = long liquidated
+      map.set(k, o);
+    });
+    const top = [...map.entries()]
+      .map(([k, o]) => ({ k, total: o.long + o.short, long: o.long, short: o.short }))
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 3);
+    el.innerHTML = 'Biggest liquidation clusters (recent): ' + top.map(r => {
+      const side = r.long >= r.short
+        ? `$${fmtCompact(r.long)} longs wiped`
+        : `$${fmtCompact(r.short)} shorts squeezed`;
+      return `<b>${fmtPrice(r.k)}</b> — ${side}`;
+    }).join(' · ');
+  }
+
+  function renderLiqRow(side, price, notional, timeMs, exch){
+    const feedEl = document.getElementById('ofLiqFeed');
+    if (!feedEl) return;
+    const large = notional >= LIQ_LARGE_NOTIONAL;
+    const timeStr = new Date(timeMs).toLocaleTimeString(undefined, { hour12:false, hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    const label = side === 'sell' ? 'Long liq' : 'Short liq';
+    const row = document.createElement('div');
+    row.className = 'of-tape-row ' + side + (large ? ' whale' : '');
+    row.innerHTML = `
+      <span class="t-time">${timeStr} <span class="t-exch">${exch}</span></span>
+      <span class="t-price ${side}">${label} @ ${fmtPrice(price)}</span>
+      <span>${fmtCompact(notional)}</span>
+      ${large ? '<span class="t-tag whale">Large</span>' : '<span></span>'}
+    `;
+    feedEl.insertBefore(row, feedEl.firstChild);
+    while (feedEl.children.length > 50) feedEl.removeChild(feedEl.lastChild);
+  }
+
+  function addLiquidation(side, price, qty, timeMs, exch){
+    const notional = price * qty;
+    liqWindow.push({ side, price, notional, timeMs, exch });
+    if (liqWindow.length > LIQ_WINDOW_MAX) liqWindow.shift();
+    updateLiqRead();
+
+    if (liqPaused){
+      liqQueue.push([side, price, notional, timeMs, exch]);
+      if (liqQueue.length > 50) liqQueue.shift();
+      return;
+    }
+    renderLiqRow(side, price, notional, timeMs, exch);
+  }
+
+  const ofLiqFeedEl = document.getElementById('ofLiqFeed');
+  if (ofLiqFeedEl){
+    ofLiqFeedEl.addEventListener('mouseenter', () => { liqPaused = true; ofLiqFeedEl.classList.add('paused'); });
+    ofLiqFeedEl.addEventListener('mouseleave', () => {
+      liqPaused = false;
+      ofLiqFeedEl.classList.remove('paused');
+      liqQueue.forEach(([s,p,n,t,e]) => renderLiqRow(s,p,n,t,e));
+      liqQueue = [];
+    });
+  }
+
+  function disconnectLiquidations(){
+    liqSockets.forEach(ws => { try { ws.close(); } catch(e){} });
+    liqSockets = [];
+  }
+
+  function connectLiquidations(){
+    disconnectLiquidations();
+    const symbol = currentSymbol();
+    if (!symbol) return;
+
+    // Binance futures
+    const binanceWs = new WebSocket(`wss://fstream.binance.com/ws/${symbol.toLowerCase()}@forceOrder`);
+    binanceWs.onmessage = (ev) => {
+      let msg; try { msg = JSON.parse(ev.data); } catch(e){ return; }
+      if (msg.e !== 'forceOrder' || !msg.o) return;
+      const o = msg.o;
+      // S = "SELL" -> forced sell -> a long was liquidated. "BUY" -> a short was liquidated.
+      addLiquidation(o.S === 'BUY' ? 'buy' : 'sell', parseFloat(o.ap || o.p), parseFloat(o.q), msg.E, 'Binance');
+    };
+    liqSockets.push(binanceWs);
+
+    // Bybit linear
+    const bybitWs = new WebSocket(`wss://stream.bybit.com/v5/public/linear`);
+    bybitWs.onopen = () => {
+      bybitWs.send(JSON.stringify({ op:'subscribe', args:[`allLiquidation.${symbol}`] }));
+    };
+    bybitWs.onmessage = (ev) => {
+      let msg; try { msg = JSON.parse(ev.data); } catch(e){ return; }
+      if (!msg.topic || !msg.topic.startsWith('allLiquidation') || !Array.isArray(msg.data)) return;
+      msg.data.forEach(d => {
+        // side = the side of the forced liquidation order itself: Sell = a long got liquidated, Buy = a short got liquidated.
+        addLiquidation(d.side === 'Buy' ? 'buy' : 'sell', parseFloat(d.price), parseFloat(d.size), +d.updatedTime, 'Bybit');
+      });
+    };
+    liqSockets.push(bybitWs);
+
+    // OKX perpetual swap -- subscribes by instType (all SWAP instruments), so
+    // we filter client-side down to just the instId matching this symbol.
+    const okxInstIdVal = okxInstId(symbol);
+    const okxWs = new WebSocket('wss://ws.okx.com:8443/ws/v5/public');
+    okxWs.onopen = () => {
+      okxWs.send(JSON.stringify({ op:'subscribe', args:[{ channel:'liquidation-orders', instType:'SWAP' }] }));
+    };
+    okxWs.onmessage = (ev) => {
+      let msg; try { msg = JSON.parse(ev.data); } catch(e){ return; }
+      if (!msg.arg || msg.arg.channel !== 'liquidation-orders' || !Array.isArray(msg.data)) return;
+      msg.data.forEach(batch => {
+        if (batch.instId !== okxInstIdVal || !Array.isArray(batch.details)) return;
+        batch.details.forEach(d => {
+          addLiquidation(d.side === 'buy' ? 'buy' : 'sell', parseFloat(d.bkPx), parseFloat(d.sz), +d.ts, 'OKX');
+        });
+      });
+    };
+    liqSockets.push(okxWs);
+
+    [binanceWs, bybitWs, okxWs].forEach(ws => {
+      ws.onclose = () => {
+        if (document.getElementById('ofLiqToggle').checked && liqSockets.includes(ws)){
+          liqSockets = liqSockets.filter(s => s !== ws);
+          setTimeout(() => { if (document.getElementById('ofLiqToggle').checked) connectLiquidations(); }, 2000);
+        }
+      };
+    });
+  }
+
+  document.getElementById('ofLiqToggle').addEventListener('change', (e) => {
+    if (e.target.checked) connectLiquidations();
+    else disconnectLiquidations();
+  });
+
+  // Cross-references CVD, order book, OI, and funding the way a professional
+  // order-flow trader would -- not just reporting each number, but flagging
+  // where they agree (confirmation) or disagree (divergence / squeeze risk).
+  let lastCvdBias = null; // set by generateReads(), referenced by live order-book updates too
+
+  // Standalone so it can run both after the initial Load AND on every live
+  // WebSocket order-book tick -- the read should track the book in real time,
+  // not just freeze at whatever it said when Load was clicked.
+  function updateBookRead(bidPct){
+    const obReadEl = document.getElementById('ofBookRead');
+    if (!obReadEl) return;
+    let obText, obClass = '';
+    if (bidPct !== null && bidPct !== undefined && !isNaN(bidPct)){
+      const skew = bidPct - 50;
+      if (Math.abs(skew) < 8){
+        obText = `The order book is fairly even (${bidPct.toFixed(1)}% buy orders) — no strong lean either way right now.`;
+      } else if (skew > 0){
+        obText = `<b>More buy orders waiting</b> (${bidPct.toFixed(1)}% of the book). This gives some light support just below price — but these orders can be pulled or cancelled any second, so don't rely on this too much.`;
+        obClass = 'bull';
+      } else {
+        obText = `<b>More sell orders waiting</b> (${(100-bidPct).toFixed(1)}% of the book). This gives some light resistance just above price — same warning applies, these orders can disappear fast.`;
+        obClass = 'bear';
+      }
+      if (lastCvdBias && ((skew > 8 && lastCvdBias === 'Bearish') || (skew < -8 && lastCvdBias === 'Bullish'))){
+        obText += ` Heads up: this disagrees with the ${lastCvdBias.toLowerCase()} reading from CVD — the waiting orders and the actual trades are pointing different ways. When this happens, the actual trades (CVD) usually win out.`;
+        obClass = 'warn';
+      }
+    } else {
+      obText = 'Order book unavailable right now.';
+    }
+    obReadEl.innerHTML = obText;
+    obReadEl.className = 'of-read' + (obClass ? ' ' + obClass : '');
+  }
+
+  function generateReads(ticker, cvd, ob, oi, funding, ls, basis){
+    const priceChg = ticker.change1dPct;
+
+    // --- CVD ---
+    let cvdText, cvdClass = '';
+    if (cvd){
+      if (cvd.bias === 'Bullish' && priceChg > 0){
+        cvdText = `<b>Uptrend looks real.</b> More buying than selling (CVD is bullish) and price is up ${priceChg.toFixed(2)}% -- actual buying is pushing this move, not just price drifting up on its own.`;
+        cvdClass = 'bull';
+      } else if (cvd.bias === 'Bullish'){
+        cvdText = `<b>Buying is happening, but price isn't moving up yet.</b> There's more buying than selling, but price is ${priceChg===0?'flat':'down ' + Math.abs(priceChg).toFixed(2) + '%'}. This could mean price is about to go up, or sellers are quietly absorbing all that buying. Worth watching closely rather than assuming either way.`;
+        cvdClass = 'warn';
+      } else if (cvd.bias === 'Bearish' && priceChg < 0){
+        cvdText = `<b>Downtrend looks real.</b> More selling than buying (CVD is bearish) and price is down ${Math.abs(priceChg).toFixed(2)}% -- actual selling is pushing this move, not just a random price dip.`;
+        cvdClass = 'bear';
+      } else if (cvd.bias === 'Bearish'){
+        cvdText = `<b>Selling is happening even though price is going up.</b> There's more selling than buying, but price is ${priceChg===0?'flat':'up ' + priceChg.toFixed(2) + '%'}. This can mean someone is quietly selling into the rise. If you're long, be a bit careful here.`;
+        cvdClass = 'warn';
+      } else {
+        cvdText = `Buying and selling are about even right now -- no clear direction from the actual trades.`;
+      }
+    } else {
+      cvdText = 'CVD unavailable right now.';
+    }
+    if (cvd && cvd.divergence === 'bearish'){
+      cvdText += ` <b>Warning -- bearish divergence:</b> price pushed to a higher high recently, but CVD did not -- the rise isn't backed by real net buying, and moves like this often run out of fuel.`;
+      cvdClass = 'bear';
+    } else if (cvd && cvd.divergence === 'bullish'){
+      cvdText += ` <b>Note -- bullish divergence:</b> price dipped to a lower low recently, but CVD held higher -- the drop isn't backed by real net selling, and dips like this often get bought back up.`;
+      cvdClass = 'bull';
+    }
+    const cvdReadEl = document.getElementById('ofCvdRead');
+    cvdReadEl.innerHTML = cvdText;
+    cvdReadEl.className = 'of-read' + (cvdClass ? ' ' + cvdClass : '');
+
+    // --- Order book (also called live on every WebSocket update -- see updateBookRead) ---
+    lastCvdBias = cvd ? cvd.bias : null;
+    updateBookRead(ob ? ob.bidPct : null);
+
+    // --- Open Interest ---
+    let oiText, oiClass = '';
+    if (oi && oi.changePct !== null && oi.changePct !== undefined){
+      const oiUp = oi.changePct > 1, oiDown = oi.changePct < -1;
+      const priceUp = priceChg > 0.3, priceDown = priceChg < -0.3;
+      if (oiUp && priceUp){
+        oiText = `<b>New buyers are jumping in.</b> Open Interest is up ${oi.changePct.toFixed(2)}% while price rose ${priceChg.toFixed(2)}% -- this means new money is opening fresh long positions, not just old shorts closing out. This move has real backing behind it.`;
+        oiClass = 'bull';
+      } else if (oiUp && priceDown){
+        oiText = `<b>New sellers are jumping in.</b> Open Interest is up ${oi.changePct.toFixed(2)}% while price fell ${Math.abs(priceChg).toFixed(2)}% -- new short positions are opening, meaning this drop has real backing, not just people taking profit.`;
+        oiClass = 'bear';
+      } else if (oiDown && priceUp){
+        oiText = `<b>Shorts are buying back to close out.</b> Open Interest fell ${Math.abs(oi.changePct).toFixed(2)}% while price rose ${priceChg.toFixed(2)}% -- part of this rally is short-sellers covering their positions, not fresh buyers coming in. This kind of move can run out of steam once the covering is done.`;
+        oiClass = 'warn';
+      } else if (oiDown && priceDown){
+        oiText = `<b>Longs are closing out or getting stopped out.</b> Open Interest fell ${Math.abs(oi.changePct).toFixed(2)}% as price dropped ${Math.abs(priceChg).toFixed(2)}% -- existing long positions are closing, not new short-sellers piling in. This often looks more like the drop running out of steam than a fresh downtrend starting.`;
+        oiClass = 'warn';
+      } else {
+        oiText = `Open Interest barely changed (${oi.changePct>=0?'+':''}${oi.changePct.toFixed(2)}%) -- no big build-up of new positions right now, in either direction.`;
+      }
+    } else {
+      oiText = 'Open Interest change unavailable right now.';
+    }
+    const oiReadEl = document.getElementById('ofOiRead');
+    oiReadEl.innerHTML = oiText;
+    oiReadEl.className = 'of-read' + (oiClass ? ' ' + oiClass : '');
+
+    // --- Funding ---
+    let fundingText, fundingClass = '';
+    if (funding && funding.currentRate !== null && funding.currentRate !== undefined && !isNaN(funding.currentRate)){
+      const ratePct = funding.currentRate * 100;
+      const extreme = Math.abs(ratePct) > 0.05;
+      if (ratePct > 0.005){
+        fundingText = `<b>Funding is positive (+${ratePct.toFixed(4)}%).</b> Long traders are paying short traders right now -- meaning more people are betting on price going up.`;
+        fundingClass = 'bull';
+        if (extreme) fundingText += ` This is quite high, meaning a LOT of people are long right now. When too many people are on one side, a sudden move against them (a "squeeze") becomes more likely if momentum slows down.`;
+        if (cvd && cvd.bias === 'Bearish'){
+          fundingText += ` <b>Something doesn't match up:</b> lots of traders are long (paying funding), but the actual trades (CVD) are leaning toward selling. When leveraged traders and real trades disagree like this, it's a common setup for a "long squeeze" if price breaks lower.`;
+          fundingClass = 'warn';
+        }
+      } else if (ratePct < -0.005){
+        fundingText = `<b>Funding is negative (${ratePct.toFixed(4)}%).</b> Short traders are paying long traders right now -- meaning more people are betting on price going down.`;
+        fundingClass = 'bear';
+        if (extreme) fundingText += ` This is quite low, meaning a LOT of people are short right now. When too many people are on one side, a sudden move against them (a "squeeze") becomes more likely if price catches a bid.`;
+        if (cvd && cvd.bias === 'Bullish'){
+          fundingText += ` <b>Something doesn't match up:</b> lots of traders are short (paying funding), but the actual trades (CVD) are leaning toward buying. Watch for a "short squeeze" (price jumping up and forcing shorts to buy back) if this continues.`;
+          fundingClass = 'warn';
+        }
+      } else {
+        fundingText = `Funding is close to zero (${ratePct>=0?'+':''}${ratePct.toFixed(4)}%) -- no strong bias toward longs or shorts using leverage right now.`;
+      }
+    } else {
+      fundingText = 'Funding rate unavailable right now.';
+    }
+    const fundingReadEl = document.getElementById('ofFundingRead');
+    fundingReadEl.innerHTML = fundingText;
+    fundingReadEl.className = 'of-read' + (fundingClass ? ' ' + fundingClass : '');
+
+    // --- Long/Short Ratio ---
+    let lsText, lsClass = '';
+    if (ls){
+      const skew = ls.longPct - ls.shortPct;
+      if (Math.abs(skew) < 10){
+        lsText = `Traders are fairly split (${ls.longPct.toFixed(1)}% long / ${ls.shortPct.toFixed(1)}% short) -- no strong lean toward either side.`;
+      } else if (skew > 0){
+        lsText = `<b>Most traders are long</b> (${ls.longPct.toFixed(1)}% long vs ${ls.shortPct.toFixed(1)}% short).`;
+        lsClass = 'bull';
+        if (skew > 30){
+          lsText += ` This is a very one-sided crowd -- when almost everyone bets the same way, it's often worth being a little cautious, especially if this matches the funding reading above.`;
+          lsClass = 'warn';
+        }
+      } else {
+        lsText = `<b>Most traders are short</b> (${ls.shortPct.toFixed(1)}% short vs ${ls.longPct.toFixed(1)}% long).`;
+        lsClass = 'bear';
+        if (-skew > 30){
+          lsText += ` This is a very one-sided crowd -- when almost everyone bets the same way, it's often worth being a little cautious, especially if this matches the funding reading above.`;
+          lsClass = 'warn';
+        }
+      }
+    } else {
+      lsText = 'Long/short ratio unavailable right now.';
+    }
+    const lsReadEl = document.getElementById('ofLsRead');
+    lsReadEl.innerHTML = lsText;
+    lsReadEl.className = 'of-read' + (lsClass ? ' ' + lsClass : '');
+
+    // --- Futures Premium / Basis ---
+    let basisText, basisClass = '';
+    if (basis && basis.basisPct !== undefined && !isNaN(basis.basisPct)){
+      const b = basis.basisPct;
+      if (Math.abs(b) < 0.02){
+        basisText = `Futures price and spot price are almost the same (${b>=0?'+':''}${b.toFixed(3)}%) -- no real gap between the two markets right now.`;
+      } else if (b > 0){
+        basisText = `<b>Futures are more expensive than spot</b> (+${b.toFixed(3)}%). Traders using leverage are paying extra to be long here, which matches more people betting on price going up.`;
+        basisClass = 'bull';
+        if (funding && funding.currentRate > 0.0005 && b > 0.05){
+          basisText += ` This matches the positive funding reading too -- both signs are pointing the same way: more people betting long.`;
+        }
+      } else {
+        basisText = `<b>Futures are cheaper than spot</b> (${b.toFixed(3)}%). Traders using leverage are accepting a discount to be short (or hedged) here, which matches more people betting on price going down.`;
+        basisClass = 'bear';
+        if (funding && funding.currentRate < -0.0005 && b < -0.05){
+          basisText += ` This matches the negative funding reading too -- both signs are pointing the same way: more people betting short.`;
+        }
+      }
+    } else {
+      basisText = 'Basis unavailable right now.';
+    }
+    const basisReadEl = document.getElementById('ofBasisRead');
+    basisReadEl.innerHTML = basisText;
+    basisReadEl.className = 'of-read' + (basisClass ? ' ' + basisClass : '');
+  }
+
+  async function loadAll(){
+    const symbol = currentSymbol();
+    if (!symbol){
+      tickerEl.innerHTML = '<span style="color:var(--bear);">Enter a valid symbol.</span>';
+      return;
+    }
+    loadBtn.disabled = true;
+    loadBtn.textContent = 'Loading…';
+    tickerEl.innerHTML = '<span style="color:var(--muted);">Loading…</span>';
+    try {
+      const ticker = await fetchTicker(symbol);
+      tickerEl.innerHTML = `
+        <span class="of-ticker-dot"></span>
+        <span class="of-ticker-sym">${displaySymbol(symbol)}</span>
+        <span class="of-ticker-price">${fmtPrice(ticker.lastPrice)}</span>
+        <span class="of-ticker-pct ${ticker.change1dPct>=0?'up':'down'}">${ticker.change1dPct>=0?'▲':'▼'} ${ticker.change1dPct>=0?'+':''}${ticker.change1dPct.toFixed(2)}%</span>
+        <span class="of-ticker-meta">${exchangeSelect.value === 'bybit' ? 'Bybit' : 'Binance'} · ${marketSelect.value === 'futures' ? 'Futures' : 'Spot'}</span>
+      `;
+      const [cvd, ob, oi, funding, ls, basis] = await Promise.all([
+        loadCvd(), loadOrderBook(), loadOpenInterest(), loadFunding(), loadLongShortRatio(), loadPremiumBasis(),
+      ]);
+      generateReads(ticker, cvd, ob, oi, funding, ls, basis);
+      if (document.getElementById('ofTapeToggle').checked) connectTradeTape();
+      if (document.getElementById('ofLiqToggle').checked) connectLiquidations();
+    } catch (e) {
+      tickerEl.innerHTML = `<span style="color:var(--bear);">${e.message || 'Failed to load data.'}</span>`;
+    } finally {
+      loadBtn.disabled = false;
+      loadBtn.textContent = 'Load';
+    }
+  }
+
+})();
+</script>
+</body>
+</html>
