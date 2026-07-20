@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trend Screener — Ali Faisal Trades</title>
+<meta name="theme-color" content="#080B10">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Manrope:wght@400;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#0A0D12; --surface:#121821; --surface-2:#171E28; --surface-3:#1D2531;
+    --border:#242C38; --text:#EAEEF3; --muted:#7C8998;
+    --bull:#2FD8A6; --bear:#FF6259; --obv-color:#E8A63C; --ema-color:#6C93F5;
+    --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --sans: 'Manrope', -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    --display: 'Space Grotesk', var(--sans);
+  }
+  * {box-sizing:border-box;}
+  html, body {margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--sans);}
+  a.back-link{position:fixed;top:16px;left:20px;font-family:var(--mono);font-size:12px;color:var(--muted);text-decoration:none;z-index:50;}
+  a.back-link:hover{color:var(--obv-color);}
+  .app {max-width:1400px;margin:0 auto;padding:52px 0 60px;}
+
+  /* Header bar */
+  .topbar {
+    display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;
+    background:var(--surface);border-bottom:1px solid var(--border);padding:12px 18px;
+  }
+  .topbar-left {display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+  .logo {display:flex;align-items:center;gap:8px;font-family:var(--display);font-weight:700;letter-spacing:.03em;font-size:15px;}
+  .logo .mark {width:20px;height:20px;border-radius:4px;background:linear-gradient(135deg,var(--obv-color),var(--ema-color));display:inline-block;}
+  .pill {
+    font-family:var(--mono);font-size:11px;color:var(--muted);background:var(--surface-2);
+    border:1px solid var(--border);border-radius:5px;padding:5px 10px;display:flex;gap:6px;align-items:center;white-space:nowrap;
+  }
+  .pill b {color:var(--text);font-size:12px;}
+  .pill.up b {color:var(--bull);} .pill.down b{color:var(--bear);}
+  .topbar-right {display:flex;gap:8px;}
+  button {
+    background:var(--obv-color);color:#0A0D12;border:none;border-radius:5px;
+    padding:9px 16px;font-family:var(--mono);font-size:11.5px;font-weight:700;
+    letter-spacing:.05em;text-transform:uppercase;cursor:pointer;white-space:nowrap;
+  }
+  button.blue {background:var(--ema-color);color:#fff;}
+  button.green {background:transparent;color:var(--bull);border:1px solid rgba(61,220,151,.4);}
+  button.secondary {background:var(--surface-3);color:var(--text);border:1px solid var(--border);}
+  button:hover {opacity:.88;}
+  button:disabled {opacity:.45;cursor:wait;}
+
+  .filters {padding:14px 18px 0;}
+  .filter-row {display:flex;flex-wrap:wrap;gap:22px;align-items:flex-end;margin-bottom:12px;}
+  .field {display:flex;flex-direction:column;gap:4px;}
+  .field label {font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-family:var(--mono);}
+  select, input[type=text], input[type=number] {
+    background:var(--surface-2);border:1px solid var(--border);color:var(--text);
+    padding:7px 9px;border-radius:4px;font-family:var(--mono);font-size:12.5px;
+  }
+  select:focus, input:focus {outline:1px solid var(--obv-color);outline-offset:0;}
+
+  .toggle-group {display:flex;gap:6px;}
+  .toggle-group button {
+    background:transparent;color:var(--muted);border:1px solid var(--border);
+    padding:6px 12px;font-size:11px;text-transform:none;letter-spacing:0;font-weight:600;
+  }
+  .toggle-group button.active {border-color:var(--obv-color);color:var(--text);background:rgba(216,166,75,.1);}
+
+  .chip-row {display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:0 18px 14px;}
+  .chip-row .row-label {font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-family:var(--mono);margin-right:4px;}
+  .chip {
+    font-family:var(--mono);font-size:11px;color:var(--muted);background:var(--surface-2);
+    border:1px solid var(--border);border-radius:16px;padding:5px 13px;cursor:pointer;white-space:nowrap;
+    display:flex;align-items:center;gap:6px;
+  }
+  .chip:hover {color:var(--text);}
+  .chip.active {border-color:var(--obv-color);color:var(--text);background:rgba(216,166,75,.1);}
+  .chip .dot {width:8px;height:8px;border-radius:50%;display:inline-block;}
+
+  .status-line {display:flex;align-items:center;gap:8px;padding:0 18px 14px;font-family:var(--mono);font-size:12px;color:var(--muted);}
+  .status-line .dot {width:8px;height:8px;border-radius:50%;background:var(--muted);}
+  .status-line.ok .dot {background:var(--bull);}
+  .status-line.busy .dot {background:var(--obv-color);animation:pulse 1s infinite;}
+  .status-line.err .dot {background:var(--bear);}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+  .table-wrap {padding:0 18px;overflow-x:auto;}
+  table {width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px;min-width:900px;}
+  thead th {
+    text-align:left;color:var(--muted);font-size:10px;letter-spacing:.07em;text-transform:uppercase;
+    padding:8px 10px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);cursor:pointer;user-select:none;
+  }
+  thead th:hover {color:var(--text);}
+  tbody td {padding:9px 10px;border-bottom:1px solid var(--border);white-space:nowrap;}
+  tbody tr {cursor:pointer;}
+  tbody tr:hover {background:var(--surface-2);}
+  tbody tr.expanded {background:var(--surface-3);}
+  .sym {font-weight:700;}
+  .up {color:var(--bull);} .down{color:var(--bear);}
+  .yn {font-size:10px;font-weight:700;letter-spacing:.05em;padding:3px 8px;border-radius:3px;text-transform:uppercase;}
+  .yn.yes {background:rgba(61,220,151,.12);color:var(--bull);border:1px solid rgba(61,220,151,.3);}
+  .yn.no {background:rgba(255,93,93,.12);color:var(--bear);border:1px solid rgba(255,93,93,.3);}
+  .cats {display:flex;gap:4px;flex-wrap:wrap;white-space:normal;max-width:220px;}
+  .cat-tag {font-size:9.5px;background:var(--surface-3);border:1px solid var(--border);color:var(--muted);padding:2px 6px;border-radius:3px;}
+
+  .detail-row td {padding:0;cursor:default;background:var(--surface);}
+  .detail-inner {padding:16px 18px;border-bottom:1px solid var(--border);}
+  .detail-charts {display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .chart-box {background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:12px;}
+  .chart-box h4 {margin:0 0 8px;font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;}
+  .detail-stats {display:flex;gap:18px;flex-wrap:wrap;margin-bottom:12px;font-family:var(--mono);font-size:11.5px;color:var(--muted);}
+  .detail-stats b {color:var(--text);}
+
+  .caption {font-family:var(--mono);font-size:10px;color:var(--muted);padding:10px 18px 0;opacity:.75;}
+  footer {margin-top:24px;text-align:center;font-family:var(--mono);font-size:10.5px;color:var(--muted);letter-spacing:.04em;padding:0 18px;}
+  footer span {color:var(--obv-color);}
+</style>
+</head>
+<body>
+
+<a href="/" class="back-link">&larr; Ali Faisal Trades</a>
+
+<div id="page-obv">
+<div class="app">
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="logo"><span class="mark"></span>TREND SCREENER</div>
+      <div class="pill">Loaded <b id="statLoaded">0</b></div>
+      <div class="pill up">Price &#9650; EMA <b id="statPriceUp">0</b></div>
+      <div class="pill down">Price &#9660; EMA <b id="statPriceDown">0</b></div>
+      <div class="pill up">OBV &#9650; EMA <b id="statObvUp">0</b></div>
+      <div class="pill down">OBV &#9660; EMA <b id="statObvDown">0</b></div>
+      <div class="pill">Both Bullish <b id="statBothYes">0</b></div>
+    </div>
+    <div class="topbar-right">
+      <button class="green" id="testApiBtn">Check Connection</button>
+      <button class="blue" id="runScanBtn">&#9654; Run Scan</button>
+    </div>
+  </div>
+
+  <div class="filters">
+    <div class="filter-row">
+      <div class="field">
+        <label>Timeframe</label>
+        <select id="intervalSelect">
+          <option value="15m">15m</option>
+          <option value="30m">30m</option>
+          <option value="1h" selected>1H</option>
+          <option value="4h">4H</option>
+          <option value="1d">1D</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>EMA period</label>
+        <input type="number" id="emaPeriod" value="200" min="10" max="300" style="width:70px;" />
+      </div>
+      <div class="field">
+        <label>Search</label>
+        <input type="text" id="searchInput" placeholder="BTC, ETH…" style="width:160px;" />
+      </div>
+      <div class="field">
+        <label>Price vs EMA</label>
+        <div class="toggle-group" data-group="price">
+          <button data-val="all" class="active">All</button>
+          <button data-val="yes">YES only</button>
+          <button data-val="no">NO only</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>OBV vs EMA</label>
+        <div class="toggle-group" data-group="obv">
+          <button data-val="all" class="active">All</button>
+          <button data-val="yes">YES only</button>
+          <button data-val="no">NO only</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Combined</label>
+        <div class="toggle-group" data-group="combined">
+          <button data-val="all" class="active">All</button>
+          <button data-val="bothyes">Both Bullish</button>
+          <button data-val="bothno">Both Bearish</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="chip-row" id="categoryRow">
+    <span class="row-label">Category:</span>
+  </div>
+  <div class="chip-row" id="marketCapRow">
+    <span class="row-label">Market cap:</span>
+  </div>
+
+  <div class="status-line" id="statusLine"><span class="dot"></span><span id="statusText">Idle — press Run Scan to load the Binance USDT universe.</span></div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th data-sort="symbol">Symbol</th>
+          <th data-sort="price">Price</th>
+          <th data-sort="ema">EMA <span id="emaHeaderLabel">200</span></th>
+          <th data-sort="vsEma">vs EMA %</th>
+          <th data-sort="priceAbove">Price above EMA?</th>
+          <th data-sort="obvEma">OBV EMA</th>
+          <th data-sort="obvAbove">OBV above EMA?</th>
+          <th data-sort="marketCap">Market cap</th>
+          <th>Categories</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody">
+        <tr><td colspan="9" style="color:var(--muted);padding:16px;">No data yet — press Run Scan.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="caption">Categories are a best-effort static tag set (Binance/CoinGecko don't expose category data at this scale via free API) — treat as approximate. Market cap from CoinGecko, matched by ticker.</div>
+
+  <footer>Data via Binance public API + CoinGecko · not financial advice · <span>#AliFaisalTrades</span></footer>
+</div>
+</div>
+
+<script>
+(function(){
+
+/* ---------- Static category map (best-effort) ---------- */
+const CATEGORY_MAP = {
+  // Majors / L1s
+  BTC:['POW'], ETH:['L1/L2'], BNB:['BNB Chain'], SOL:['L1/L2','Solana'],
+  XRP:['PAYMENTS'], ADA:['L1/L2'], DOGE:['MEME','POW'], AVAX:['L1/L2','RWA'],
+  DOT:['L1/L2','POLKADOT'], TRX:['PAYMENTS','L1/L2'], TON:['L1/L2'],
+  MATIC:['L1/L2'], POL:['L1/L2'], LTC:['PAYMENTS','POW'], BCH:['PAYMENTS','POW'],
+  NEAR:['L1/L2'], APT:['L1/L2'], SUI:['L1/L2'], SEI:['L1/L2'],
+  ATOM:['L1/L2'], ALGO:['L1/L2'], FTM:['L1/L2'], EGLD:['L1/L2'], ICP:['L1/L2','RWA'],
+  HBAR:['L1/L2'], KAS:['L1/L2','POW'], CFX:['L1/L2'], VET:['L1/L2','RWA'],
+  ETC:['POW'], ZEC:['POW','PAYMENTS'], DASH:['POW','PAYMENTS'], RVN:['POW'], DGB:['POW'],
+  ZIL:['L1/L2'], ONT:['L1/L2'], QTUM:['L1/L2','POW'], WAVES:['L1/L2'], ICX:['L1/L2'],
+  ONE:['L1/L2'], CELO:['L1/L2','PAYMENTS'], KAVA:['L1/L2','DEFI'], ROSE:['L1/L2'],
+  XTZ:['L1/L2'], THETA:['L1/L2','METAVERSE'], ZEN:['L1/L2','POW'], MINA:['L1/L2'],
+  FLOW:['L1/L2','NFT'], STX:['L1/L2'], NKN:['L1/L2','INFRASTRUCTURE'],
+  NEO:['L1/L2'], GAS:['L1/L2'], ONG:['L1/L2'], IOST:['L1/L2'], SYS:['L1/L2'],
+  CKB:['L1/L2'], LSK:['L1/L2'], ARDR:['L1/L2'], STRAX:['L1/L2'], HIVE:['L1/L2'],
+  KDA:['L1/L2','POW'], OM:['L1/L2','RWA'], BB:['L1/L2','MEGADROP','RWA'],
+
+  // Layer2 / rollups / scaling
+  ARB:['L1/L2'], OP:['L1/L2'], STRK:['L1/L2'], MANTA:['L1/L2','MEGADROP'],
+  ZK:['L1/L2','MEGADROP'], METIS:['L1/L2'], IMX:['GAMING','L1/L2'],
+  TIA:['L1/L2','INFRASTRUCTURE'], DYM:['MEGADROP','L1/L2'], SKL:['L1/L2','INFRASTRUCTURE'],
+  BEAM:['GAMING','L1/L2'],
+
+  // DeFi
+  UNI:['DEFI'], AAVE:['DEFI'], MKR:['DEFI'], CRV:['DEFI'], COMP:['DEFI'],
+  SNX:['DEFI','RWA'], SUSHI:['DEFI'], '1INCH':['DEFI'], LDO:['DEFI','LIQUID STAKING'],
+  DYDX:['DEFI'], GMX:['DEFI'], CAKE:['DEFI','BNB Chain'], RUNE:['DEFI'],
+  JOE:['DEFI'], PENDLE:['DEFI','LAUNCHPOOL','RWA'], JUP:['DEFI','Solana'], RAY:['DEFI','Solana'],
+  YFI:['DEFI'], BAL:['DEFI'], KNC:['DEFI'], BAND:['DEFI','INFRASTRUCTURE'],
+  ALPHA:['DEFI'], BADGER:['DEFI'], BEL:['DEFI'], BLZ:['DEFI'], DODO:['DEFI'],
+  ELF:['DEFI'], FXS:['DEFI','LIQUID STAKING'], LINA:['DEFI'], MDX:['DEFI'],
+  MIR:['DEFI'], ORCA:['DEFI','Solana'], OSMO:['DEFI','L1/L2'], PERP:['DEFI'],
+  QUICK:['DEFI'], RAD:['DEFI'], REEF:['DEFI'], ROOK:['DEFI'], SFP:['DEFI','BNB Chain'],
+  SPELL:['DEFI'], SXP:['DEFI'], UMA:['DEFI','INFRASTRUCTURE'], WING:['DEFI'],
+  XVS:['DEFI','BNB Chain'], ALPACA:['DEFI','BNB Chain','LAUNCHPOOL'],
+  C98:['DEFI'], DAR:['DEFI','GAMING'], ORBS:['DEFI','INFRASTRUCTURE'],
+  USUAL:['DEFI','LAUNCHPOOL','RWA'], ETHFI:['DEFI','LIQUID STAKING'],
+  EIGEN:['DEFI','INFRASTRUCTURE'], MORPHO:['DEFI'], SYRUP:['DEFI','RWA'],
+  SKY:['DEFI','RWA'], LISTA:['BNB Chain','MEGADROP','DEFI'], LUMIA:['DEFI','L1/L2','RWA'],
+
+  // BNB Chain ecosystem
+  TWT:['BNB Chain'], BAKE:['BNB Chain','LAUNCHPOOL'], BURGER:['BNB Chain'],
+
+  // Fan tokens
+  CHZ:['FAN TOKENS'], PORTO:['FAN TOKENS'], LAZIO:['FAN TOKENS'], JUV:['FAN TOKENS'],
+  PSG:['FAN TOKENS'], ATM:['FAN TOKENS'], BAR:['FAN TOKENS'], ACM:['FAN TOKENS'],
+  CITY:['FAN TOKENS'], ALPINE:['FAN TOKENS'], OG:['FAN TOKENS'], ASR:['FAN TOKENS'],
+  SANTOS:['FAN TOKENS'], NAP:['FAN TOKENS'],
+
+  // Gaming
+  AXS:['GAMING','METAVERSE'], SAND:['GAMING','METAVERSE'], MANA:['GAMING','METAVERSE'],
+  GALA:['GAMING'], ENJ:['GAMING','NFT'], ILV:['GAMING','METAVERSE'], YGG:['GAMING'],
+  ALICE:['GAMING'], TLM:['GAMING'], MAGIC:['GAMING'], PIXEL:['GAMING','MEGADROP'],
+  RONIN:['GAMING'], GHST:['GAMING','NFT'], HIGH:['GAMING','METAVERSE'],
+  WEMIX:['GAMING','METAVERSE'], EPIC:['L1/L2','RWA'], MBOX:['GAMING'],
+  SUPER:['GAMING','METAVERSE'], VOXEL:['GAMING','METAVERSE'], PORTAL:['GAMING','MEGADROP'],
+  XAI:['GAMING','MEGADROP'], LOKA:['GAMING'], REVV:['GAMING'], SLP:['GAMING'],
+  GMT:['GAMING'], UOS:['GAMING'],
+
+  // Infrastructure / oracles / data
+  LINK:['INFRASTRUCTURE'], GRT:['INFRASTRUCTURE','AI'], IOTX:['INFRASTRUCTURE'],
+  ANKR:['INFRASTRUCTURE','LIQUID STAKING'], API3:['INFRASTRUCTURE'], TRB:['INFRASTRUCTURE','DEFI'],
+  DIA:['INFRASTRUCTURE'], FLUX:['INFRASTRUCTURE'], GLM:['INFRASTRUCTURE','AI'],
+  CTSI:['INFRASTRUCTURE','L1/L2'], AXL:['INFRASTRUCTURE'], W:['INFRASTRUCTURE'],
+  ZRO:['INFRASTRUCTURE'], STG:['INFRASTRUCTURE','DEFI'], SYN:['INFRASTRUCTURE','DEFI'],
+  CELR:['INFRASTRUCTURE'], OMNI:['INFRASTRUCTURE','MEGADROP'], PLUME:['INFRASTRUCTURE','L1/L2','RWA'],
+  DUSK:['INFRASTRUCTURE','RWA'], POLYX:['INFRASTRUCTURE','L1/L2','RWA'],
+  ONDO:['INFRASTRUCTURE','RWA'],
+
+  // AI
+  FET:['AI'], AGIX:['AI'], TAO:['AI'], WLD:['AI'], ARKM:['AI'], NMR:['AI'],
+  RENDER:['AI','INFRASTRUCTURE'], RNDR:['AI','INFRASTRUCTURE'], AKT:['AI','INFRASTRUCTURE'],
+  OCEAN:['AI','INFRASTRUCTURE'], PHB:['AI'], IO:['AI'], VIRTUAL:['AI'], GRASS:['AI'],
+  CHR:['AI','L1/L2','NFT','RWA'],
+
+  // Liquid staking / restaking
+  RPL:['LIQUID STAKING'], SD:['LIQUID STAKING'], PSTAKE:['LIQUID STAKING'], WBETH:['LIQUID STAKING'],
+  JTO:['Solana','LIQUID STAKING'], REZ:['MEGADROP','LIQUID STAKING'],
+
+  // Megadrop history
+  ALT:['MEGADROP'],
+
+  // Meme
+  SHIB:['MEME'], PEPE:['MEME'], FLOKI:['MEME'], BONK:['MEME','Solana'], WIF:['MEME','Solana'],
+  MEME:['MEME'], BOME:['MEME','Solana'], TURBO:['MEME'], NEIRO:['MEME'], PEOPLE:['MEME'],
+  '1000SATS':['MEME','POW'], ORDI:['MEME','POW'],
+
+  // Metaverse / NFT
+  APE:['NFT','METAVERSE'], BLUR:['NFT'], LOOKS:['NFT'],
+
+  // Polkadot ecosystem
+  ASTR:['POLKADOT','L1/L2'], ACA:['POLKADOT','DEFI'], GLMR:['POLKADOT','L1/L2'],
+  MOVR:['POLKADOT','L1/L2'], KSM:['POLKADOT','L1/L2'], PHA:['POLKADOT','AI'],
+
+  // RWA
+  CFG:['RWA'], TRU:['DEFI','RWA'], RSR:['DEFI','RWA'], EDEN:['RWA'],
+  INJ:['AI','BNB Chain','DEFI','L1/L2','LAUNCHPAD','RWA'],
+
+  // Storage
+  FIL:['STORAGE','INFRASTRUCTURE'], AR:['STORAGE','INFRASTRUCTURE'], STORJ:['STORAGE'],
+  SC:['STORAGE'], RIF:['STORAGE','INFRASTRUCTURE'],
+
+  // Solana ecosystem extras
+  PYTH:['Solana','INFRASTRUCTURE'],
+
+  // Payments / older majors
+  DENT:['PAYMENTS'], WIN:['PAYMENTS'],
+
+  // Broader alt coverage (mostly infra/DeFi/L1 misc) to reduce SEED overflow
+  ZRX:['DEFI'], BAT:['INFRASTRUCTURE'], COTI:['PAYMENTS','INFRASTRUCTURE'], CVC:['INFRASTRUCTURE'],
+  OGN:['DEFI'], CTK:['INFRASTRUCTURE'], MDT:['AI','INFRASTRUCTURE'], FLM:['DEFI'],
+  MASK:['INFRASTRUCTURE'], LPT:['INFRASTRUCTURE','AI'], GTC:['INFRASTRUCTURE'],
+  BICO:['INFRASTRUCTURE'], ID:['INFRASTRUCTURE'], EDU:['INFRASTRUCTURE'],
+  ACE:['GAMING'], NFP:['FAN TOKENS'], WOO:['DEFI','INFRASTRUCTURE'],
+  SSV:['INFRASTRUCTURE','LIQUID STAKING'], LQTY:['DEFI'],
+};
+function categoriesFor(baseAsset){ return CATEGORY_MAP[baseAsset] || []; }
+
+const ALL_CATEGORIES = ['All','AI','BNB Chain','DEFI','FAN TOKENS','GAMING','INFRASTRUCTURE','L1/L2','LAUNCHPAD',
+  'LAUNCHPOOL','LIQUID STAKING','MEGADROP','MEME','METAVERSE','NFT','PAYMENTS','POLKADOT','POW','RWA','SEED','STORAGE','Solana','YZI'];
+
+const MARKET_CAP_BUCKETS = [
+  {key:'all', label:'All', dot:null},
+  {key:'1b', label:'$1B+', dot:'var(--cap1)', min:1e9, max:Infinity},
+  {key:'100m1b', label:'$100M – $1B', dot:'var(--cap2)', min:1e8, max:1e9},
+  {key:'50m100m', label:'$50M – $100M', dot:'var(--cap3)', min:5e7, max:1e8},
+  {key:'under50m', label:'Under $50M', dot:'var(--cap4)', min:0, max:5e7},
+];
+
+const STABLE_BASES = new Set(['USDC','FDUSD','TUSD','BUSD','DAI','USDP','EUR','GBP','AEUR','USTC','PAX','GUSD','SUSD']);
+
+/* ---------- State ---------- */
+let screenerRows = [];
+let filters = { price:'all', obv:'all', combined:'all', category:'All', marketCap:'all', search:'' };
+let sortState = { key:null, dir:1 };
+let expandedSymbol = null;
+let scanning = false;
+
+/* ---------- DOM refs ---------- */
+const intervalSelect = document.getElementById('intervalSelect');
+const emaPeriodInput = document.getElementById('emaPeriod');
+const emaHeaderLabel = document.getElementById('emaHeaderLabel');
+const searchInput = document.getElementById('searchInput');
+const runScanBtn = document.getElementById('runScanBtn');
+const testApiBtn = document.getElementById('testApiBtn');
+const statusLine = document.getElementById('statusLine');
+const statusText = document.getElementById('statusText');
+const tableBody = document.getElementById('tableBody');
+const categoryRow = document.getElementById('categoryRow');
+const marketCapRow = document.getElementById('marketCapRow');
+
+emaPeriodInput.addEventListener('change', () => { emaHeaderLabel.textContent = emaPeriodInput.value; });
+
+/* build category chips */
+ALL_CATEGORIES.forEach(cat => {
+  const chip = document.createElement('button');
+  chip.className = 'chip' + (cat === 'All' ? ' active' : '');
+  chip.textContent = cat;
+  chip.style.border = 'none';
+  chip.addEventListener('click', () => {
+    filters.category = cat;
+    categoryRow.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    renderTable();
+  });
+  categoryRow.appendChild(chip);
+});
+
+/* build market cap chips */
+MARKET_CAP_BUCKETS.forEach(b => {
+  const chip = document.createElement('button');
+  chip.className = 'chip' + (b.key === 'all' ? ' active' : '');
+  chip.style.border = 'none';
+  chip.innerHTML = (b.dot ? `<span class="dot" style="background:${b.dot}"></span>` : '') + b.label;
+  chip.addEventListener('click', () => {
+    filters.marketCap = b.key;
+    marketCapRow.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    renderTable();
+  });
+  marketCapRow.appendChild(chip);
+});
+
+/* toggle groups */
+document.querySelectorAll('.toggle-group').forEach(group => {
+  const key = group.dataset.group;
+  group.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      filters[key] = btn.dataset.val;
+      group.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderTable();
+    });
+  });
+});
+
+searchInput.addEventListener('input', () => { filters.search = searchInput.value.trim().toUpperCase(); renderTable(); });
+
+document.querySelectorAll('thead th[data-sort]').forEach(th => {
+  th.addEventListener('click', () => {
+    const key = th.dataset.sort;
+    sortState.dir = (sortState.key === key) ? -sortState.dir : 1;
+    sortState.key = key;
+    renderTable();
+  });
+});
+
+runScanBtn.addEventListener('click', runScan);
+
+testApiBtn.addEventListener('click', async () => {
+  setStatus('busy', 'Testing API connectivity…');
+  const start = performance.now();
+  try {
+    const [bin, cg] = await Promise.allSettled([
+      fetch('https://api.binance.com/api/v3/time').then(r => r.json()),
+      fetch('https://api.coingecko.com/api/v3/ping').then(r => r.json()),
+    ]);
+    const ms = Math.round(performance.now() - start);
+    const binOk = bin.status === 'fulfilled';
+    const cgOk = cg.status === 'fulfilled';
+    setStatus(binOk && cgOk ? 'ok' : 'err',
+      `Binance: ${binOk ? 'OK' : 'FAIL'} · CoinGecko: ${cgOk ? 'OK' : 'FAIL'} · ${ms}ms`);
+  } catch (e) {
+    setStatus('err', 'API test failed: ' + e.message);
+  }
+});
+
+function setStatus(state, text){
+  statusLine.className = 'status-line ' + state;
+  statusText.textContent = text;
+}
+
+/* ---------- Data fetching ---------- */
+async function fetchExchangeInfo(){
+  const res = await fetch('https://api.binance.com/api/v3/exchangeInfo');
+  if (!res.ok) throw new Error('exchangeInfo failed: ' + res.status);
+  const data = await res.json();
+  return data.symbols.filter(s =>
+    s.status === 'TRADING' &&
+    s.quoteAsset === 'USDT' &&
+    s.isSpotTradingAllowed !== false &&
+    !STABLE_BASES.has(s.baseAsset) &&
+    !/^(.+)(UP|DOWN|BULL|BEAR)$/.test(s.baseAsset)
+  );
+}
+
+async function fetchMarketCaps(){
+  const map = {};
+  try {
+    for (const page of [1,2]){
+      const res = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=${page}&sparkline=false`);
+      if (!res.ok) continue;
+      const data = await res.json();
+      data.forEach(coin => {
+        const sym = (coin.symbol || '').toUpperCase();
+        if (!(sym in map)) map[sym] = coin.market_cap || null;
+      });
+    }
+  } catch (e) { /* market cap is best-effort; ignore failures */ }
+  return map;
+}
+
+function computeOBV(closes, volumes){
+  const obv = [0];
+  for (let i=1;i<closes.length;i++){
+    if (closes[i] > closes[i-1]) obv.push(obv[i-1] + volumes[i]);
+    else if (closes[i] < closes[i-1]) obv.push(obv[i-1] - volumes[i]);
+    else obv.push(obv[i-1]);
+  }
+  return obv;
+}
+function computeEMA(values, period){
+  const k = 2/(period+1);
+  const ema = [values[0]];
+  for (let i=1;i<values.length;i++) ema.push(values[i]*k + ema[i-1]*(1-k));
+  return ema;
+}
+function detectCrosses(a, b){
+  const crosses = [];
+  for (let i=1;i<a.length;i++){
+    const prevDiff = a[i-1]-b[i-1], diff = a[i]-b[i];
+    if (prevDiff <= 0 && diff > 0) crosses.push({index:i, type:'bull'});
+    else if (prevDiff >= 0 && diff < 0) crosses.push({index:i, type:'bear'});
+  }
+  return crosses;
+}
+function findPivots(values, left, right){
+  const pivots = [];
+  for (let i=left;i<values.length-right;i++){
+    const w = values.slice(i-left, i+right+1);
+    const v = values[i];
+    if (v === Math.max(...w)) pivots.push({index:i, value:v, type:'high'});
+    else if (v === Math.min(...w)) pivots.push({index:i, value:v, type:'low'});
+  }
+  return pivots;
+}
+function detectDivergence(candles, obv){
+  const highs = candles.map(c=>c.high), lows = candles.map(c=>c.low);
+  const pHigh = findPivots(highs,3,3).filter(p=>p.type==='high');
+  const pLow = findPivots(lows,3,3).filter(p=>p.type==='low');
+  const out = [];
+  for (let i=1;i<pHigh.length;i++){
+    const a=pHigh[i-1], b=pHigh[i];
+    if (b.value > a.value && obv[b.index] < obv[a.index]) out.push({index:b.index, type:'bearish'});
+  }
+  for (let i=1;i<pLow.length;i++){
+    const a=pLow[i-1], b=pLow[i];
+    if (b.value < a.value && obv[b.index] > obv[a.index]) out.push({index:b.index, type:'bullish'});
+  }
+  return out.sort((x,y)=>x.index-y.index);
+}
+
+async function fetchKlines(symbol, interval, limit){
+  const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(symbol + ': HTTP ' + res.status);
+  const data = await res.json();
+  if (!Array.isArray(data) || !data.length) throw new Error(symbol + ': no data');
+  return data.map(c => ({ time:c[0], open:+c[1], high:+c[2], low:+c[3], close:+c[4], volume:+c[5] }));
+}
+
+async function poolMap(items, worker, concurrency, onEach){
+  let idx = 0;
+  async function next(){
+    while (idx < items.length){
+      const cur = idx++;
+      try { const r = await worker(items[cur], cur); onEach(r, null, cur); }
+      catch (e) { onEach(null, e, cur); }
+    }
+  }
+  await Promise.all(Array.from({length: Math.min(concurrency, items.length)}, next));
+}
+
+async function runScan(){
+  if (scanning) return;
+  scanning = true;
+  runScanBtn.disabled = true;
+  screenerRows = [];
+  expandedSymbol = null;
+  setStatus('busy', 'Loading Binance symbol list…');
+  updateStats();
+  tableBody.innerHTML = '<tr><td colspan="9" style="color:var(--muted);padding:16px;">Scanning…</td></tr>';
+
+  const interval = intervalSelect.value;
+  const emaPeriod = Math.max(10, Math.min(300, parseInt(emaPeriodInput.value) || 200));
+  const klineLimit = Math.min(1000, emaPeriod + 100);
+
+  let symbols;
+  try {
+    const info = await fetchExchangeInfo();
+    symbols = info.map(s => ({ symbol: s.symbol, baseAsset: s.baseAsset }));
+  } catch (e) {
+    setStatus('err', 'Failed to load symbol list: ' + e.message);
+    scanning = false; runScanBtn.disabled = false;
+    return;
+  }
+
+  setStatus('busy', `Fetching market caps…`);
+  const capMap = await fetchMarketCaps();
+
+  let loaded = 0, unavailable = 0;
+  setStatus('busy', `Scanning 0 / ${symbols.length} loaded…`);
+
+  await poolMap(symbols, async (s) => {
+    const candles = await fetchKlines(s.symbol, interval, klineLimit);
+    const closes = candles.map(c => c.close);
+    const volumes = candles.map(c => c.volume);
+    const obv = computeOBV(closes, volumes);
+    const emaPrice = computeEMA(closes, emaPeriod);
+    const emaObv = computeEMA(obv, emaPeriod);
+    const lastPrice = closes[closes.length-1];
+    const lastEmaPrice = emaPrice[emaPrice.length-1];
+    const lastObv = obv[obv.length-1];
+    const lastEmaObv = emaObv[emaObv.length-1];
+    return {
+      symbol: s.symbol, baseAsset: s.baseAsset,
+      price: lastPrice, emaPrice: lastEmaPrice,
+      vsEmaPct: (lastPrice - lastEmaPrice) / lastEmaPrice * 100,
+      priceAbove: lastPrice > lastEmaPrice,
+      obv: lastObv, emaObv: lastEmaObv, obvAbove: lastObv > lastEmaObv,
+      marketCap: capMap[s.baseAsset] || null,
+      categories: categoriesFor(s.baseAsset),
+      candles, closes, obvSeries: obv, emaObvSeries: emaObv, emaPriceSeries: emaPrice,
+    };
+  }, 10, (result, err) => {
+    if (result) { screenerRows.push(result); loaded++; }
+    else unavailable++;
+    if ((loaded+unavailable) % 15 === 0 || (loaded+unavailable) === symbols.length){
+      setStatus('busy', `Scanning ${loaded+unavailable} / ${symbols.length} loaded…`);
+      updateStats(); renderTable();
+    }
+  });
+
+  emaHeaderLabel.textContent = emaPeriod;
+  setStatus('ok', `Complete — ${loaded} coins loaded, ${unavailable} unavailable`);
+  updateStats();
+  renderTable();
+  scanning = false; runScanBtn.disabled = false;
+}
+
+function updateStats(){
+  document.getElementById('statLoaded').textContent = screenerRows.length;
+  document.getElementById('statPriceUp').textContent = screenerRows.filter(r=>r.priceAbove).length;
+  document.getElementById('statPriceDown').textContent = screenerRows.filter(r=>!r.priceAbove).length;
+  document.getElementById('statObvUp').textContent = screenerRows.filter(r=>r.obvAbove).length;
+  document.getElementById('statObvDown').textContent = screenerRows.filter(r=>!r.obvAbove).length;
+  document.getElementById('statBothYes').textContent = screenerRows.filter(r=>r.priceAbove && r.obvAbove).length;
+}
+
+function fmtNum(v, digits){
+  if (v === null || v === undefined || isNaN(v)) return 'n/a';
+  return v.toLocaleString(undefined, {maximumFractionDigits: digits ?? 6});
+}
+function fmtCompact(v){
+  if (v === null || v === undefined || isNaN(v)) return 'n/a';
+  if (Math.abs(v) >= 1e9) return '$' + (v/1e9).toFixed(2) + 'B';
+  if (Math.abs(v) >= 1e6) return '$' + (v/1e6).toFixed(2) + 'M';
+  if (Math.abs(v) >= 1e3) return '$' + (v/1e3).toFixed(1) + 'K';
+  return '$' + v.toFixed(0);
+}
+function marketCapBucketKey(mc){
+  if (mc === null || mc === undefined) return null;
+  if (mc >= 1e9) return '1b';
+  if (mc >= 1e8) return '100m1b';
+  if (mc >= 5e7) return '50m100m';
+  return 'under50m';
+}
+
+function getFilteredRows(){
+  return screenerRows.filter(r => {
+    if (filters.price === 'yes' && !r.priceAbove) return false;
+    if (filters.price === 'no' && r.priceAbove) return false;
+    if (filters.obv === 'yes' && !r.obvAbove) return false;
+    if (filters.obv === 'no' && r.obvAbove) return false;
+    if (filters.combined === 'bothyes' && !(r.priceAbove && r.obvAbove)) return false;
+    if (filters.combined === 'bothno' && (r.priceAbove || r.obvAbove)) return false;
+    if (filters.category !== 'All' && !r.categories.includes(filters.category)) return false;
+    if (filters.marketCap !== 'all' && marketCapBucketKey(r.marketCap) !== filters.marketCap) return false;
+    if (filters.search){
+      const terms = filters.search.split(',').map(t=>t.trim()).filter(Boolean);
+      if (terms.length && !terms.some(t => r.symbol.includes(t))) return false;
+    }
+    return true;
+  });
+}
+
+function sortRows(rows){
+  if (!sortState.key) return rows;
+  const key = sortState.key;
+  const dir = sortState.dir;
+  const map = { symbol:'symbol', price:'price', ema:'emaPrice', vsEma:'vsEmaPct',
+    priceAbove:'priceAbove', obvEma:'emaObv', obvAbove:'obvAbove', marketCap:'marketCap' };
+  const field = map[key];
+  return [...rows].sort((a,b) => {
+    let av = a[field], bv = b[field];
+    if (av === null || av === undefined) av = -Infinity;
+    if (bv === null || bv === undefined) bv = -Infinity;
+    if (typeof av === 'string') return av.localeCompare(bv) * dir;
+    if (typeof av === 'boolean') return ((av===bv)?0:(av?1:-1)) * dir;
+    return (av - bv) * dir;
+  });
+}
+
+function renderTable(){
+  const rows = sortRows(getFilteredRows());
+  tableBody.innerHTML = '';
+  if (!rows.length){
+    tableBody.innerHTML = '<tr><td colspan="9" style="color:var(--muted);padding:16px;">No symbols match the current filters.</td></tr>';
+    return;
+  }
+  rows.forEach(r => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="sym">${r.symbol}</td>
+      <td>${fmtNum(r.price)}</td>
+      <td>${fmtNum(r.emaPrice)}</td>
+      <td class="${r.vsEmaPct>=0?'up':'down'}">${(r.vsEmaPct>=0?'+':'')+r.vsEmaPct.toFixed(2)}%</td>
+      <td><span class="yn ${r.priceAbove?'yes':'no'}">${r.priceAbove?'Yes':'No'}</span></td>
+      <td>${fmtCompact(r.emaObv)}</td>
+      <td><span class="yn ${r.obvAbove?'yes':'no'}">${r.obvAbove?'Yes':'No'}</span></td>
+      <td>${r.marketCap ? fmtCompact(r.marketCap) : 'n/a'}</td>
+      <td><div class="cats">${r.categories.length ? r.categories.map(c=>`<span class="cat-tag">${c}</span>`).join('') : '<span class="cat-tag">Uncategorized</span>'}</div></td>
+    `;
+    tr.addEventListener('click', () => {
+      expandedSymbol = expandedSymbol === r.symbol ? null : r.symbol;
+      renderTable();
+      if (expandedSymbol === r.symbol) setTimeout(() => renderDetailCharts(r), 0);
+    });
+    if (expandedSymbol === r.symbol) tr.classList.add('expanded');
+    tableBody.appendChild(tr);
+
+    if (expandedSymbol === r.symbol){
+      const detailTr = document.createElement('tr');
+      detailTr.className = 'detail-row';
+      detailTr.innerHTML = `<td colspan="9"><div class="detail-inner">
+        <div class="detail-stats">
+          <span>Last cross: <b id="detCross-${r.symbol}">—</b></span>
+          <span>Divergence: <b id="detDiv-${r.symbol}">—</b></span>
+        </div>
+        <div class="detail-charts">
+          <div class="chart-box"><h4>Price vs EMA ${emaPeriodInput.value}</h4><canvas id="priceCanvas-${r.symbol}" height="180"></canvas></div>
+          <div class="chart-box"><h4>OBV vs EMA ${emaPeriodInput.value}</h4><canvas id="obvCanvas-${r.symbol}" height="180"></canvas></div>
+        </div>
+      </div></td>`;
+      tableBody.appendChild(detailTr);
+    }
+  });
+}
+
+let detailCharts = {};
+function renderDetailCharts(r){
+  const interval = intervalSelect.value;
+  const labels = r.candles.map(c => {
+    const d = new Date(c.time);
+    return interval === '1d' ? d.toLocaleDateString(undefined,{month:'short',day:'numeric'})
+      : d.toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  });
+  const priceCrosses = detectCrosses(r.closes, r.emaPriceSeries);
+  const obvCrosses = detectCrosses(r.obvSeries, r.emaObvSeries);
+  const divergences = detectDivergence(r.candles, r.obvSeries);
+
+  const lastCross = obvCrosses[obvCrosses.length-1];
+  document.getElementById(`detCross-${r.symbol}`).textContent = lastCross ? `${labels[lastCross.index]} (${lastCross.type})` : 'None in range';
+  const lastDiv = divergences[divergences.length-1];
+  document.getElementById(`detDiv-${r.symbol}`).textContent = lastDiv ? `${lastDiv.type} @ ${labels[lastDiv.index]}` : 'None detected';
+
+  const scales = { x:{ ticks:{color:'#7C8998',maxTicksLimit:6,font:{family:'ui-monospace, monospace',size:9}}, grid:{color:'#242C38'} },
+                   y:{ ticks:{color:'#7C8998',font:{family:'ui-monospace, monospace',size:9}}, grid:{color:'#242C38'} } };
+
+  const pctx = document.getElementById(`priceCanvas-${r.symbol}`);
+  if (detailCharts[r.symbol+'-price']) detailCharts[r.symbol+'-price'].destroy();
+  detailCharts[r.symbol+'-price'] = new Chart(pctx, {
+    type:'line',
+    data:{ labels, datasets:[
+      { label:'Close', data:r.closes, borderColor:'#EAEEF3', borderWidth:1.3, pointRadius:0, tension:.15 },
+      { label:'EMA', data:r.emaPriceSeries, borderColor:'#6C93F5', borderWidth:1.3, pointRadius:0, tension:.15 },
+    ]},
+    options:{ responsive:true, plugins:{legend:{display:false}}, scales }
+  });
+
+  const octx = document.getElementById(`obvCanvas-${r.symbol}`);
+  if (detailCharts[r.symbol+'-obv']) detailCharts[r.symbol+'-obv'].destroy();
+  detailCharts[r.symbol+'-obv'] = new Chart(octx, {
+    type:'line',
+    data:{ labels, datasets:[
+      { label:'OBV', data:r.obvSeries, borderColor:'#E8A63C', borderWidth:1.3, pointRadius:0, tension:.15 },
+      { label:'EMA(OBV)', data:r.emaObvSeries, borderColor:'#6C93F5', borderWidth:1.3, pointRadius:0, tension:.15 },
+    ]},
+    options:{ responsive:true, plugins:{legend:{display:false}}, scales }
+  });
+}
+
+})();
+
+</script>
+</body>
+</html>
