@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RSI Checker — Ali Faisal Trades</title>
+<meta name="theme-color" content="#080B10">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Manrope:wght@400;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#0A0D12; --surface:#121821; --surface-2:#171E28;
+    --border:#242C38; --text:#EAEEF3; --muted:#7C8998;
+    --bull:#2FD8A6; --bear:#FF6259; --tape:#E8A63C;
+    --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --sans: 'Manrope', -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    --display: 'Space Grotesk', var(--sans);
+    --r-sm:6px; --r-lg:14px;
+    --shadow-1:0 1px 2px rgba(0,0,0,.4);
+    --shadow-2:0 8px 24px -12px rgba(0,0,0,.55);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--sans);}
+  body{padding:60px 20px;}
+  a.back-link{position:fixed;top:20px;left:20px;font-family:var(--mono);font-size:12px;color:var(--muted);text-decoration:none;}
+  a.back-link:hover{color:var(--tape);}
+
+  .rsi-wrap{max-width:1200px;margin:0 auto;}
+  .rsi-header h1{margin:0;font-family:var(--display);font-size:28px;font-weight:700;color:var(--text);letter-spacing:-.02em;line-height:1.15;}
+  .rsi-header p{
+    display:inline-block;margin-top:8px;margin-bottom:22px;
+    padding:4px 10px;border:1px solid var(--border);border-radius:20px;
+    background:var(--surface);color:var(--muted);font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;
+  }
+  .rsi-controls{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-bottom:16px;}
+  .rsi-field{display:flex;flex-direction:column;gap:4px;}
+  .rsi-field label{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-family:var(--mono);}
+  select, input[type=text]{
+    background:var(--surface-2);border:1px solid var(--border);color:var(--text);
+    padding:8px 10px;border-radius:5px;font-family:var(--mono);font-size:12.5px;min-width:90px;
+  }
+  select:focus, input:focus{outline:1px solid var(--tape);outline-offset:0;}
+  #rsiLoadBtn{
+    background:linear-gradient(180deg, #F2B44E, #E19A28);
+    color:#151006;border:none;border-radius:var(--r-sm);
+    padding:10px 20px;font-family:var(--mono);font-size:12px;font-weight:700;
+    letter-spacing:.04em;cursor:pointer;box-shadow:var(--shadow-1), inset 0 1px 0 rgba(255,255,255,.22);
+    transition:transform .12s, box-shadow .15s, filter .15s;
+  }
+  #rsiLoadBtn:hover{opacity:1;filter:brightness(1.06);transform:translateY(-1px);box-shadow:var(--shadow-2), inset 0 1px 0 rgba(255,255,255,.22);}
+  #rsiLoadBtn:active{transform:translateY(0);filter:brightness(.97);}
+  #rsiLoadBtn:disabled{opacity:.55;cursor:default;transform:none;filter:none;}
+
+  .rsi-ticker{
+    font-family:var(--mono);font-size:15px;display:flex;gap:16px;align-items:baseline;flex-wrap:wrap;
+    margin-bottom:16px;padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  }
+  .rsi-ticker .up{color:var(--bull);} .rsi-ticker .down{color:var(--bear);}
+
+  .rsi-summary{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;}
+  .rsi-summary-chip{
+    font-family:var(--mono);font-size:13px;background:var(--surface);border:1px solid var(--border);
+    border-radius:7px;padding:8px 12px;display:flex;flex-direction:column;align-items:center;min-width:66px;
+  }
+  .rsi-summary-chip .tf{color:var(--muted);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;margin-bottom:4px;font-weight:600;}
+  .rsi-summary-chip .val{font-weight:800;font-size:16px;}
+  .rsi-summary-chip.ob{background:rgba(255,98,89,.12);border-color:rgba(255,98,89,.4);}
+  .rsi-summary-chip.os{background:rgba(47,216,166,.12);border-color:rgba(47,216,166,.4);}
+  .rsi-summary-chip .val.ob{color:var(--bear);}
+  .rsi-summary-chip .val.os{color:var(--bull);}
+  .rsi-summary-chip .val.neutral{color:var(--text);}
+
+  .rsi-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:16px;}
+  @media (max-width:640px){ .rsi-grid{grid-template-columns:1fr;} }
+  .rsi-box{
+    background:linear-gradient(180deg, var(--surface), var(--surface) 60%, rgba(16,21,29,.92));
+    border:1px solid var(--border);border-radius:var(--r-lg);
+    box-shadow:var(--shadow-1);padding:14px;
+  }
+  .rsi-box.ob{border-color:rgba(255,98,89,.35);}
+  .rsi-box.os{border-color:rgba(47,216,166,.35);}
+  .rsi-box-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;}
+  .rsi-box-tf{font-family:var(--display);font-size:15px;font-weight:700;color:var(--text);}
+  .rsi-box-val{font-family:var(--mono);font-size:20px;font-weight:800;}
+  .rsi-box-val.ob{color:var(--bear);} .rsi-box-val.os{color:var(--bull);} .rsi-box-val.neutral{color:var(--tape);}
+  .rsi-box-status{font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:right;margin-top:-6px;margin-bottom:8px;}
+  .rsi-caption{font-family:var(--mono);font-size:10px;color:var(--muted);opacity:.75;margin-top:16px;}
+</style>
+</head>
+<body>
+
+<a href="/" class="back-link">&larr; Ali Faisal Trades</a>
+
+<div id="page-rsi">
+<div class="rsi-wrap">
+  <div class="rsi-header">
+    <h1>RSI Checker</h1>
+    <p>RSI(14) across every timeframe, at a glance</p>
+  </div>
+
+  <div class="rsi-controls">
+    <div class="rsi-field">
+      <label>Exchange</label>
+      <select id="rsiExchangeSelect">
+        <option value="binance">Binance</option>
+        <option value="bybit" selected>Bybit</option>
+      </select>
+    </div>
+    <div class="rsi-field">
+      <label>Market</label>
+      <select id="rsiMarketSelect">
+        <option value="spot">Spot</option>
+        <option value="futures" selected>Futures (USDT-M)</option>
+      </select>
+    </div>
+    <div class="rsi-field">
+      <label>Symbol</label>
+      <select id="rsiSymbolSelect">
+        <option value="BTCUSDT">BTCUSDT</option>
+        <option value="ETHUSDT">ETHUSDT</option>
+        <option value="SOLUSDT">SOLUSDT</option>
+        <option value="BNBUSDT">BNBUSDT</option>
+        <option value="XRPUSDT">XRPUSDT</option>
+        <option value="DOGEUSDT">DOGEUSDT</option>
+        <option value="ADAUSDT">ADAUSDT</option>
+        <option value="__custom">Custom…</option>
+      </select>
+    </div>
+    <div class="rsi-field" id="rsiCustomWrap" style="display:none;">
+      <label>Custom pair</label>
+      <input type="text" id="rsiCustomSymbol" placeholder="e.g. LTCUSDT" />
+    </div>
+    <button id="rsiLoadBtn">Load</button>
+  </div>
+
+  <div class="rsi-ticker" id="rsiTicker"><span style="color:var(--muted);">Loading…</span></div>
+
+  <div class="rsi-summary" id="rsiSummary"></div>
+
+  <div class="rsi-grid" id="rsiGrid"></div>
+
+  <div class="rsi-caption">RSI(14), Wilder's smoothing. Bybit's 3D candles are synthesized by combining 3 daily candles (Bybit has no native 3-day interval).</div>
+</div>
+</div>
+
+<script>
+(function(){
+  const exchangeSelect = document.getElementById('rsiExchangeSelect');
+  const marketSelect = document.getElementById('rsiMarketSelect');
+  const symbolSelect = document.getElementById('rsiSymbolSelect');
+  const customWrap = document.getElementById('rsiCustomWrap');
+  const customSymbol = document.getElementById('rsiCustomSymbol');
+  const loadBtn = document.getElementById('rsiLoadBtn');
+  const tickerEl = document.getElementById('rsiTicker');
+  const summaryEl = document.getElementById('rsiSummary');
+  const gridEl = document.getElementById('rsiGrid');
+
+  let miniCharts = {};
+
+  if (!window.__rsiZonesRegistered){
+    window.__rsiZonesRegistered = true;
+    Chart.register({
+      id: 'rsiZones',
+      beforeDatasetsDraw(chart, args, opts){
+        if (!opts || !opts.enabled) return;
+        const { ctx, chartArea, scales } = chart;
+        const y = scales.y;
+        const yTop = y.getPixelForValue(100);
+        const y70 = y.getPixelForValue(70);
+        const y30 = y.getPixelForValue(30);
+        const yBottom = y.getPixelForValue(0);
+        ctx.save();
+        ctx.fillStyle = 'rgba(255,98,89,.07)';
+        ctx.fillRect(chartArea.left, yTop, chartArea.right - chartArea.left, y70 - yTop);
+        ctx.fillStyle = 'rgba(47,216,166,.07)';
+        ctx.fillRect(chartArea.left, y30, chartArea.right - chartArea.left, yBottom - y30);
+        ctx.restore();
+      },
+      afterDatasetsDraw(chart, args, opts){
+        if (!opts || !opts.enabled) return;
+        const { ctx, chartArea, scales } = chart;
+        const y = scales.y;
+        ctx.save();
+        ctx.font = "700 10px 'JetBrains Mono', monospace";
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#FF6259';
+        ctx.fillText('70', chartArea.left + 4, y.getPixelForValue(70) - 7);
+        ctx.fillStyle = '#2FD8A6';
+        ctx.fillText('30', chartArea.left + 4, y.getPixelForValue(30) + 7);
+        ctx.restore();
+      },
+    });
+  }
+
+  const TIMEFRAMES = [
+    { key:'1m',  label:'1m',  biI:'1m',  byI:'1'   },
+    { key:'3m',  label:'3m',  biI:'3m',  byI:'3'   },
+    { key:'5m',  label:'5m',  biI:'5m',  byI:'5'   },
+    { key:'15m', label:'15m', biI:'15m', byI:'15'  },
+    { key:'30m', label:'30m', biI:'30m', byI:'30'  },
+    { key:'1h',  label:'1H',  biI:'1h',  byI:'60'  },
+    { key:'2h',  label:'2H',  biI:'2h',  byI:'120' },
+    { key:'4h',  label:'4H',  biI:'4h',  byI:'240' },
+    { key:'6h',  label:'6H',  biI:'6h',  byI:'360' },
+    { key:'12h', label:'12H', biI:'12h', byI:'720' },
+    { key:'1d',  label:'D',   biI:'1d',  byI:'D'   },
+    { key:'3d',  label:'3D',  biI:'3d',  byI:'D', bybitAggregate:3 },
+    { key:'1w',  label:'W',   biI:'1w',  byI:'W'   },
+    { key:'1M',  label:'M',   biI:'1M',  byI:'M'   },
+  ];
+
+  symbolSelect.addEventListener('change', () => {
+    customWrap.style.display = symbolSelect.value === '__custom' ? 'flex' : 'none';
+  });
+  loadBtn.addEventListener('click', loadRsi);
+
+  function currentSymbol(){
+    if (symbolSelect.value === '__custom') return (customSymbol.value || '').trim().toUpperCase();
+    return symbolSelect.value;
+  }
+  function currentExchange(){ return exchangeSelect.value; }
+  function isFutures(){ return marketSelect.value === 'futures'; }
+  function displaySymbol(symbol){ return isFutures() ? symbol + '.P' : symbol; }
+
+  async function fetchJson(url, retries){
+    retries = retries === undefined ? 2 : retries;
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return await res.json();
+    } catch (e) {
+      if (retries > 0) { await new Promise(r => setTimeout(r, 400)); return fetchJson(url, retries - 1); }
+      throw e;
+    }
+  }
+
+  async function fetchTicker(symbol){
+    if (currentExchange() === 'bybit'){
+      const category = isFutures() ? 'linear' : 'spot';
+      const data = await fetchJson(`https://api.bybit.com/v5/market/tickers?category=${category}&symbol=${symbol}`);
+      if (data.retCode !== 0) throw new Error(symbol + ': ' + (data.retMsg || 'Bybit error'));
+      const t = data.result && data.result.list && data.result.list[0];
+      if (!t) throw new Error(symbol + ': no ticker data on Bybit.');
+      return { lastPrice: parseFloat(t.lastPrice), change1dPct: parseFloat(t.price24hPcnt) * 100 };
+    }
+    const base = isFutures() ? 'https://fapi.binance.com' : 'https://api.binance.com';
+    const path = isFutures() ? '/fapi/v1/ticker/24hr' : '/api/v3/ticker/24hr';
+    const t = await fetchJson(`${base}${path}?symbol=${symbol}`);
+    return { lastPrice: parseFloat(t.lastPrice), change1dPct: parseFloat(t.priceChangePercent) };
+  }
+
+  async function fetchCloses(symbol, tf){
+    const limit = 100;
+    if (currentExchange() === 'bybit'){
+      const category = isFutures() ? 'linear' : 'spot';
+      if (tf.bybitAggregate){
+        const need = Math.min(1000, limit * tf.bybitAggregate + 6);
+        const data = await fetchJson(`https://api.bybit.com/v5/market/kline?category=${category}&symbol=${symbol}&interval=D&limit=${need}`);
+        if (data.retCode !== 0) throw new Error(symbol + ': ' + (data.retMsg || 'Bybit error'));
+        const closes = data.result.list.slice().reverse().map(c => +c[4]);
+        const grouped = [];
+        for (let i = closes.length % tf.bybitAggregate; i < closes.length; i += tf.bybitAggregate){
+          const chunk = closes.slice(i, i + tf.bybitAggregate);
+          if (chunk.length) grouped.push(chunk[chunk.length - 1]);
+        }
+        return grouped;
+      }
+      const data = await fetchJson(`https://api.bybit.com/v5/market/kline?category=${category}&symbol=${symbol}&interval=${tf.byI}&limit=${limit}`);
+      if (data.retCode !== 0) throw new Error(symbol + ': ' + (data.retMsg || 'Bybit error'));
+      return data.result.list.slice().reverse().map(c => +c[4]);
+    }
+    const base = isFutures() ? 'https://fapi.binance.com' : 'https://api.binance.com';
+    const path = isFutures() ? '/fapi/v1/klines' : '/api/v3/klines';
+    const data = await fetchJson(`${base}${path}?symbol=${symbol}&interval=${tf.biI}&limit=${limit}`);
+    return data.map(c => +c[4]);
+  }
+
+  function computeRSI(closes, period){
+    period = period || 14;
+    const rsi = new Array(closes.length).fill(null);
+    if (closes.length <= period) return rsi;
+    let gains = 0, losses = 0;
+    for (let i = 1; i <= period; i++){
+      const diff = closes[i] - closes[i-1];
+      if (diff >= 0) gains += diff; else losses -= diff;
+    }
+    let avgGain = gains / period, avgLoss = losses / period;
+    rsi[period] = avgLoss === 0 ? 100 : 100 - 100 / (1 + avgGain / avgLoss);
+    for (let i = period + 1; i < closes.length; i++){
+      const diff = closes[i] - closes[i-1];
+      const gain = diff > 0 ? diff : 0, loss = diff < 0 ? -diff : 0;
+      avgGain = (avgGain * (period - 1) + gain) / period;
+      avgLoss = (avgLoss * (period - 1) + loss) / period;
+      rsi[i] = avgLoss === 0 ? 100 : 100 - 100 / (1 + avgGain / avgLoss);
+    }
+    return rsi;
+  }
+
+  function statusFor(v){
+    if (v === null || v === undefined) return 'neutral';
+    if (v >= 70) return 'ob';
+    if (v <= 30) return 'os';
+    return 'neutral';
+  }
+
+  async function loadRsi(){
+    const symbol = currentSymbol();
+    if (!symbol){
+      tickerEl.innerHTML = '<span style="color:var(--bear);">Enter a valid symbol.</span>';
+      return;
+    }
+    loadBtn.disabled = true;
+    loadBtn.textContent = 'Loading…';
+    tickerEl.innerHTML = '<span style="color:var(--muted);">Loading…</span>';
+    summaryEl.innerHTML = '';
+    gridEl.innerHTML = '<div style="color:var(--muted);font-family:var(--mono);font-size:12px;">Fetching RSI across timeframes…</div>';
+
+    try {
+      const ticker = await fetchTicker(symbol);
+      tickerEl.innerHTML = `<span>${displaySymbol(symbol)}</span><span>${ticker.lastPrice.toLocaleString(undefined,{maximumFractionDigits: ticker.lastPrice<1?6:2})}</span><span class="${ticker.change1dPct>=0?'up':'down'}">${ticker.change1dPct>=0?'+':''}${ticker.change1dPct.toFixed(2)}%</span>`;
+
+      const results = await Promise.allSettled(TIMEFRAMES.map(tf => fetchCloses(symbol, tf)));
+
+      summaryEl.innerHTML = '';
+      gridEl.innerHTML = '';
+
+      results.forEach((r, i) => {
+        const tf = TIMEFRAMES[i];
+        if (r.status !== 'fulfilled' || !r.value || r.value.length < 16){
+          const chip = document.createElement('div');
+          chip.className = 'rsi-summary-chip';
+          chip.innerHTML = `<span class="tf">${tf.label}</span><span class="val neutral">n/a</span>`;
+          summaryEl.appendChild(chip);
+          return;
+        }
+        const closes = r.value;
+        const rsiSeries = computeRSI(closes, 14);
+        const current = rsiSeries[rsiSeries.length - 1];
+        const status = statusFor(current);
+        const statusLabel = status === 'ob' ? 'Overbought' : status === 'os' ? 'Oversold' : 'Neutral';
+        const lineColor = status === 'ob' ? '#FF6259' : status === 'os' ? '#2FD8A6' : '#E8A63C';
+
+        const chip = document.createElement('div');
+        chip.className = 'rsi-summary-chip ' + status;
+        chip.innerHTML = `<span class="tf">${tf.label}</span><span class="val ${status}">${current !== null ? current.toFixed(1) : 'n/a'}</span>`;
+        summaryEl.appendChild(chip);
+
+        const box = document.createElement('div');
+        box.className = 'rsi-box ' + status;
+        box.innerHTML = `
+          <div class="rsi-box-head">
+            <span class="rsi-box-tf">${tf.label}</span>
+            <span class="rsi-box-val ${status}">${current !== null ? current.toFixed(1) : 'n/a'}</span>
+          </div>
+          <div class="rsi-box-status">${statusLabel}</div>
+          <canvas id="rsiChart-${tf.key}" height="160"></canvas>
+        `;
+        gridEl.appendChild(box);
+
+        const labels = rsiSeries.map((_, idx) => idx);
+        if (miniCharts[tf.key]) miniCharts[tf.key].destroy();
+        miniCharts[tf.key] = new Chart(document.getElementById('rsiChart-' + tf.key), {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [
+              { data: rsiSeries, borderColor:lineColor, borderWidth:2, pointRadius:0, tension:.15, spanGaps:true },
+              { data: labels.map(() => 70), borderColor:'#FF6259', borderWidth:1, borderDash:[4,3], pointRadius:0 },
+              { data: labels.map(() => 30), borderColor:'#2FD8A6', borderWidth:1, borderDash:[4,3], pointRadius:0 },
+            ],
+          },
+          options: {
+            responsive: true,
+            animation: { duration:400 },
+            plugins: { legend:{ display:false }, rsiZones:{ enabled:true } },
+            scales: {
+              x: { display:false },
+              y: { min:0, max:100, ticks:{ color:'#9AA6B2', stepSize:25, font:{family:'JetBrains Mono', size:10, weight:'600'} }, grid:{ color:'#1A2029' } },
+            },
+          },
+        });
+      });
+    } catch (e) {
+      tickerEl.innerHTML = `<span style="color:var(--bear);">${e.message || 'Failed to load data.'}</span>`;
+      gridEl.innerHTML = '';
+    } finally {
+      loadBtn.disabled = false;
+      loadBtn.textContent = 'Load';
+    }
+  }
+
+  loadRsi();
+})();
+
+</script>
+</body>
+</html>
