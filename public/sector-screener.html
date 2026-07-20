@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sector Screener — Ali Faisal Trades</title>
+<meta name="theme-color" content="#080B10">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Manrope:wght@400;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0D12; --surface:#121821; --surface-2:#171E28; --surface-3:#1D2531;
+    --border:#242C38; --text:#EAEEF3; --muted:#7C8998;
+    --bull:#2FD8A6; --bear:#FF6259; --tape:#E8A63C; --cyan:#E8A63C;
+    --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --sans: 'Manrope', -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    --display: 'Space Grotesk', var(--sans);
+    --r-sm:6px; --r-md:10px; --r-lg:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--sans);}
+  a.back-link{position:fixed;top:16px;left:20px;font-family:var(--mono);font-size:12px;color:var(--muted);text-decoration:none;z-index:50;}
+  a.back-link:hover{color:var(--tape);}
+
+  .app {max-width:1400px;margin:0 auto;padding:52px 0 60px;}
+  .header {padding:22px 20px 14px;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:14px;}
+  .scan-progress-track{height:2px;background:var(--border);margin:0 20px 14px;border-radius:2px;overflow:hidden;}
+  .scan-progress-fill{height:100%;width:0%;background:var(--tape);transition:width .25s ease;}
+  .titles h1 {margin:0;font-family:var(--display);font-size:28px;letter-spacing:.01em;color:var(--tape);font-weight:700;}
+  .titles p {margin:4px 0 0;font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);}
+  .status-pills {display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+  .pill {
+    font-family:var(--mono);font-size:11px;color:var(--muted);background:var(--surface-2);
+    border:1px solid var(--border);border-radius:5px;padding:7px 12px;display:flex;gap:6px;align-items:center;white-space:nowrap;
+  }
+  .pill b {color:var(--text);}
+  .live-dot {width:7px;height:7px;border-radius:50%;background:var(--bull);display:inline-block;animation:pulse 1.4s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+  button {
+    background:transparent;color:var(--cyan);border:1px solid rgba(51,199,232,.4);border-radius:5px;
+    padding:8px 14px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.05em;
+    text-transform:uppercase;cursor:pointer;white-space:nowrap;
+  }
+  button:hover {background:rgba(51,199,232,.1);}
+  button:disabled {opacity:.5;cursor:wait;}
+
+  .controls {display:flex;align-items:center;justify-content:space-between;padding:6px 20px 14px;flex-wrap:wrap;gap:12px;border-bottom:1px solid var(--border);}
+  .filter-group {display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10.5px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;}
+  .toggle-group {display:flex;gap:6px;}
+  .toggle-group button {border:1px solid var(--border);color:var(--muted);text-transform:none;letter-spacing:0;font-size:11.5px;padding:6px 12px;}
+  .toggle-group button.active {border-color:var(--cyan);color:var(--text);background:rgba(51,199,232,.1);}
+  .hide-meta {display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;color:var(--muted);}
+  .hide-meta input {accent-color:var(--cyan);}
+
+  .ticker-strip {display:flex;flex-wrap:wrap;gap:26px;padding:12px 20px;font-family:var(--mono);font-size:13px;border-bottom:1px solid var(--border);}
+  .ticker-strip .tk-sym {color:var(--muted);margin-right:6px;}
+  .ticker-strip .tk-price {color:var(--text);margin-right:8px;}
+
+  .table-wrap {padding:6px 20px;overflow-x:auto;}
+  table {width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12.5px;min-width:900px;}
+  thead th {
+    text-align:left;color:var(--muted);font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+    padding:10px;border-bottom:1px solid var(--border);cursor:pointer;user-select:none;
+  }
+  thead th:hover {color:var(--text);}
+  tbody td {padding:12px 10px;border-bottom:1px solid var(--border);vertical-align:middle;}
+  tbody tr.sector-row {cursor:pointer;}
+  tbody tr.sector-row:hover {background:var(--surface-2);}
+  tbody tr.sector-row.expanded {background:var(--surface-3);}
+  .rank {color:var(--muted);}
+  .sector-name {font-weight:700;display:flex;align-items:center;gap:8px;}
+  .sector-count {color:var(--muted);font-weight:400;font-size:11px;}
+  .ticks {display:inline-flex;align-items:flex-end;gap:2px;height:14px;}
+  .ticks i {display:block;width:3px;border-radius:1px;background:var(--border);}
+  .ticks i:nth-child(1){height:5px;}
+  .ticks i:nth-child(2){height:7px;}
+  .ticks i:nth-child(3){height:9px;}
+  .ticks i:nth-child(4){height:11px;}
+  .ticks i:nth-child(5){height:14px;}
+  .ticks i.filled {background:var(--tape);}
+  .up {color:var(--bull);} .down{color:var(--bear);}
+  .tape-bar {display:flex;align-items:center;gap:9px;}
+  .tape-ticks {display:inline-flex;gap:1.5px;height:14px;}
+  .tape-ticks i {display:block;width:3px;border-radius:1px;}
+  .tape-ticks i.up {background:var(--bull);}
+  .tape-ticks i.down {background:var(--bear);}
+  .tape-count {color:var(--muted);font-size:11px;white-space:nowrap;font-family:var(--mono);}
+  .chevron {color:var(--muted);transition:transform .15s;display:inline-block;}
+  .chevron.open {transform:rotate(180deg);}
+  .top-gainer .sym {color:var(--tape);font-weight:700;margin-right:6px;}
+
+  .detail-row td {padding:0;background:var(--surface);}
+  .detail-inner {padding:14px 20px 18px 46px;border-bottom:1px solid var(--border);}
+  .coin-table {width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11.5px;}
+  .coin-table th {text-align:left;color:var(--muted);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;padding:6px 8px;border-bottom:1px solid var(--border);}
+  .coin-table td {padding:7px 8px;border-bottom:1px solid var(--border);}
+  .coin-table tr:last-child td {border-bottom:none;}
+
+  footer {margin-top:24px;text-align:center;font-family:var(--mono);font-size:10.5px;color:var(--muted);letter-spacing:.04em;padding:0 20px;}
+  footer span {color:var(--cyan);}
+  .caption {font-family:var(--mono);font-size:10px;color:var(--muted);padding:10px 20px 0;opacity:.75;}
+</style>
+</head>
+<body>
+
+<a href="/" class="back-link">&larr; Ali Faisal Trades</a>
+
+<div class="app">
+<div class="header">
+    <div class="titles">
+      <h1>SECTOR SCREENER</h1>
+      <p>Which Sectors Are Moving</p>
+    </div>
+    <div class="status-pills">
+      <div class="pill"><span class="live-dot"></span> LIVE · BINANCE</div>
+      <div class="pill">COINS: <b id="coinsCount">0</b></div>
+      <div class="pill">SECTORS: <b id="sectorsCount">22</b></div>
+      <div class="pill">UPDATED: <b id="updatedTime">—</b></div>
+      <button id="refreshBtn">↻ Refresh</button>
+    </div>
+  </div>
+
+  <div class="scan-progress-track"><div class="scan-progress-fill" id="scanProgressFill"></div></div>
+
+  <div class="controls">
+    <div class="filter-group">
+      FILTER
+      <div class="toggle-group" id="filterGroup">
+        <button data-val="all" class="active">All</button>
+        <button data-val="pos">▲ Positive</button>
+        <button data-val="neg">▼ Negative</button>
+      </div>
+    </div>
+    <label class="hide-meta"><input type="checkbox" id="hideMetaBox"> Hide meta tags (SEED/LAUNCHPOOL/YZI…)</label>
+  </div>
+
+  <div class="ticker-strip" id="tickerStrip">
+    <span style="color:var(--muted);">Loading market ticker…</span>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:28px;">#</th>
+          <th>Sector</th>
+          <th data-sort="avg4h">Avg 4H</th>
+          <th data-sort="avg1d">Avg 1D ▼</th>
+          <th>Green / Red</th>
+          <th data-sort="volume">Volume</th>
+          <th>Top gainer</th>
+          <th style="width:20px;"></th>
+        </tr>
+      </thead>
+      <tbody id="sectorBody">
+        <tr><td colspan="8" style="color:var(--muted);padding:16px;">Loading sectors — press Refresh if this doesn't load.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="caption">Price and 1D% come directly from Binance's own ticker (exact match, verified). 4H% is the move since the current UTC 4-hour candle opened (00:00/04:00/08:00…), not a rolling 4-hour window — matches how most sector screeners display it. SEED is a catch-all bucket for coins without a clearer sector match — hide it via the checkbox above. Categories are best-effort, not official Binance/CoinGecko data.</div>
+
+  <footer>Data via Binance public API · not financial advice · <span>#AliFaisalTrades</span></footer>
+</div>
+
+<script>
+(function(){
+
+/* ---------- Category map (shared heuristic, catch-all = SEED) ---------- */
+const CATEGORY_MAP = {
+  // Majors / L1s
+  BTC:['POW'], ETH:['L1/L2'], BNB:['BNB Chain'], SOL:['L1/L2','Solana'],
+  XRP:['PAYMENTS'], ADA:['L1/L2'], DOGE:['MEME','POW'], AVAX:['L1/L2','RWA'],
+  DOT:['L1/L2','POLKADOT'], TRX:['PAYMENTS','L1/L2'], TON:['L1/L2'],
+  MATIC:['L1/L2'], POL:['L1/L2'], LTC:['PAYMENTS','POW'], BCH:['PAYMENTS','POW'],
+  NEAR:['L1/L2'], APT:['L1/L2'], SUI:['L1/L2'], SEI:['L1/L2'],
+  ATOM:['L1/L2'], ALGO:['L1/L2'], FTM:['L1/L2'], EGLD:['L1/L2'], ICP:['L1/L2','RWA'],
+  HBAR:['L1/L2'], KAS:['L1/L2','POW'], CFX:['L1/L2'], VET:['L1/L2','RWA'],
+  ETC:['POW'], ZEC:['POW','PAYMENTS'], DASH:['POW','PAYMENTS'], RVN:['POW'], DGB:['POW'],
+  ZIL:['L1/L2'], ONT:['L1/L2'], QTUM:['L1/L2','POW'], WAVES:['L1/L2'], ICX:['L1/L2'],
+  ONE:['L1/L2'], CELO:['L1/L2','PAYMENTS'], KAVA:['L1/L2','DEFI'], ROSE:['L1/L2'],
+  XTZ:['L1/L2'], THETA:['L1/L2','METAVERSE'], ZEN:['L1/L2','POW'], MINA:['L1/L2'],
+  FLOW:['L1/L2','NFT'], STX:['L1/L2'], NKN:['L1/L2','INFRASTRUCTURE'],
+  NEO:['L1/L2'], GAS:['L1/L2'], ONG:['L1/L2'], IOST:['L1/L2'], SYS:['L1/L2'],
+  CKB:['L1/L2'], LSK:['L1/L2'], ARDR:['L1/L2'], STRAX:['L1/L2'], HIVE:['L1/L2'],
+  KDA:['L1/L2','POW'], OM:['L1/L2','RWA'], BB:['L1/L2','MEGADROP','RWA'],
+
+  // Layer2 / rollups / scaling
+  ARB:['L1/L2'], OP:['L1/L2'], STRK:['L1/L2'], MANTA:['L1/L2','MEGADROP'],
+  ZK:['L1/L2','MEGADROP'], METIS:['L1/L2'], IMX:['GAMING','L1/L2'],
+  TIA:['L1/L2','INFRASTRUCTURE'], DYM:['MEGADROP','L1/L2'], SKL:['L1/L2','INFRASTRUCTURE'],
+  BEAM:['GAMING','L1/L2'],
+
+  // DeFi
+  UNI:['DEFI'], AAVE:['DEFI'], MKR:['DEFI'], CRV:['DEFI'], COMP:['DEFI'],
+  SNX:['DEFI','RWA'], SUSHI:['DEFI'], '1INCH':['DEFI'], LDO:['DEFI','LIQUID STAKING'],
+  DYDX:['DEFI'], GMX:['DEFI'], CAKE:['DEFI','BNB Chain'], RUNE:['DEFI'],
+  JOE:['DEFI'], PENDLE:['DEFI','LAUNCHPOOL','RWA'], JUP:['DEFI','Solana'], RAY:['DEFI','Solana'],
+  YFI:['DEFI'], BAL:['DEFI'], KNC:['DEFI'], BAND:['DEFI','INFRASTRUCTURE'],
+  ALPHA:['DEFI'], BADGER:['DEFI'], BEL:['DEFI'], BLZ:['DEFI'], DODO:['DEFI'],
+  ELF:['DEFI'], FXS:['DEFI','LIQUID STAKING'], LINA:['DEFI'], MDX:['DEFI'],
+  MIR:['DEFI'], ORCA:['DEFI','Solana'], OSMO:['DEFI','L1/L2'], PERP:['DEFI'],
+  QUICK:['DEFI'], RAD:['DEFI'], REEF:['DEFI'], ROOK:['DEFI'], SFP:['DEFI','BNB Chain'],
+  SPELL:['DEFI'], SXP:['DEFI'], UMA:['DEFI','INFRASTRUCTURE'], WING:['DEFI'],
+  XVS:['DEFI','BNB Chain'], ALPACA:['DEFI','BNB Chain','LAUNCHPOOL'],
+  C98:['DEFI'], DAR:['DEFI','GAMING'], ORBS:['DEFI','INFRASTRUCTURE'],
+  USUAL:['DEFI','LAUNCHPOOL','RWA'], ETHFI:['DEFI','LIQUID STAKING'],
+  EIGEN:['DEFI','INFRASTRUCTURE'], MORPHO:['DEFI'], SYRUP:['DEFI','RWA'],
+  SKY:['DEFI','RWA'], LISTA:['BNB Chain','MEGADROP','DEFI'], LUMIA:['DEFI','L1/L2','RWA'],
+
+  // BNB Chain ecosystem
+  TWT:['BNB Chain'], BAKE:['BNB Chain','LAUNCHPOOL'], BURGER:['BNB Chain'],
+
+  // Fan tokens
+  CHZ:['FAN TOKENS'], PORTO:['FAN TOKENS'], LAZIO:['FAN TOKENS'], JUV:['FAN TOKENS'],
+  PSG:['FAN TOKENS'], ATM:['FAN TOKENS'], BAR:['FAN TOKENS'], ACM:['FAN TOKENS'],
+  CITY:['FAN TOKENS'], ALPINE:['FAN TOKENS'], OG:['FAN TOKENS'], ASR:['FAN TOKENS'],
+  SANTOS:['FAN TOKENS'], NAP:['FAN TOKENS'],
+
+  // Gaming
+  AXS:['GAMING','METAVERSE'], SAND:['GAMING','METAVERSE'], MANA:['GAMING','METAVERSE'],
+  GALA:['GAMING'], ENJ:['GAMING','NFT'], ILV:['GAMING','METAVERSE'], YGG:['GAMING'],
+  ALICE:['GAMING'], TLM:['GAMING'], MAGIC:['GAMING'], PIXEL:['GAMING','MEGADROP'],
+  RONIN:['GAMING'], GHST:['GAMING','NFT'], HIGH:['GAMING','METAVERSE'],
+  WEMIX:['GAMING','METAVERSE'], EPIC:['L1/L2','RWA'], MBOX:['GAMING'],
+  SUPER:['GAMING','METAVERSE'], VOXEL:['GAMING','METAVERSE'], PORTAL:['GAMING','MEGADROP'],
+  XAI:['GAMING','MEGADROP'], LOKA:['GAMING'], REVV:['GAMING'], SLP:['GAMING'],
+  GMT:['GAMING'], UOS:['GAMING'],
+
+  // Infrastructure / oracles / data
+  LINK:['INFRASTRUCTURE'], GRT:['INFRASTRUCTURE','AI'], IOTX:['INFRASTRUCTURE'],
+  ANKR:['INFRASTRUCTURE','LIQUID STAKING'], API3:['INFRASTRUCTURE'], TRB:['INFRASTRUCTURE','DEFI'],
+  DIA:['INFRASTRUCTURE'], FLUX:['INFRASTRUCTURE'], GLM:['INFRASTRUCTURE','AI'],
+  CTSI:['INFRASTRUCTURE','L1/L2'], AXL:['INFRASTRUCTURE'], W:['INFRASTRUCTURE'],
+  ZRO:['INFRASTRUCTURE'], STG:['INFRASTRUCTURE','DEFI'], SYN:['INFRASTRUCTURE','DEFI'],
+  CELR:['INFRASTRUCTURE'], OMNI:['INFRASTRUCTURE','MEGADROP'], PLUME:['INFRASTRUCTURE','L1/L2','RWA'],
+  DUSK:['INFRASTRUCTURE','RWA'], POLYX:['INFRASTRUCTURE','L1/L2','RWA'],
+  ONDO:['INFRASTRUCTURE','RWA'],
+
+  // AI
+  FET:['AI'], AGIX:['AI'], TAO:['AI'], WLD:['AI'], ARKM:['AI'], NMR:['AI'],
+  RENDER:['AI','INFRASTRUCTURE'], RNDR:['AI','INFRASTRUCTURE'], AKT:['AI','INFRASTRUCTURE'],
+  OCEAN:['AI','INFRASTRUCTURE'], PHB:['AI'], IO:['AI'], VIRTUAL:['AI'], GRASS:['AI'],
+  CHR:['AI','L1/L2','NFT','RWA'],
+
+  // Liquid staking / restaking
+  RPL:['LIQUID STAKING'], SD:['LIQUID STAKING'], PSTAKE:['LIQUID STAKING'], WBETH:['LIQUID STAKING'],
+  JTO:['Solana','LIQUID STAKING'], REZ:['MEGADROP','LIQUID STAKING'],
+
+  // Megadrop history
+  ALT:['MEGADROP'],
+
+  // Meme
+  SHIB:['MEME'], PEPE:['MEME'], FLOKI:['MEME'], BONK:['MEME','Solana'], WIF:['MEME','Solana'],
+  MEME:['MEME'], BOME:['MEME','Solana'], TURBO:['MEME'], NEIRO:['MEME'], PEOPLE:['MEME'],
+  '1000SATS':['MEME','POW'], ORDI:['MEME','POW'],
+
+  // Metaverse / NFT
+  APE:['NFT','METAVERSE'], BLUR:['NFT'], LOOKS:['NFT'],
+
+  // Polkadot ecosystem
+  ASTR:['POLKADOT','L1/L2'], ACA:['POLKADOT','DEFI'], GLMR:['POLKADOT','L1/L2'],
+  MOVR:['POLKADOT','L1/L2'], KSM:['POLKADOT','L1/L2'], PHA:['POLKADOT','AI'],
+
+  // RWA
+  CFG:['RWA'], TRU:['DEFI','RWA'], RSR:['DEFI','RWA'], EDEN:['RWA'],
+  INJ:['AI','BNB Chain','DEFI','L1/L2','LAUNCHPAD','RWA'],
+
+  // Storage
+  FIL:['STORAGE','INFRASTRUCTURE'], AR:['STORAGE','INFRASTRUCTURE'], STORJ:['STORAGE'],
+  SC:['STORAGE'], RIF:['STORAGE','INFRASTRUCTURE'],
+
+  // Solana ecosystem extras
+  PYTH:['Solana','INFRASTRUCTURE'],
+
+  // Payments / older majors
+  DENT:['PAYMENTS'], WIN:['PAYMENTS'],
+
+  // Broader alt coverage (mostly infra/DeFi/L1 misc) to reduce SEED overflow
+  ZRX:['DEFI'], BAT:['INFRASTRUCTURE'], COTI:['PAYMENTS','INFRASTRUCTURE'], CVC:['INFRASTRUCTURE'],
+  OGN:['DEFI'], CTK:['INFRASTRUCTURE'], MDT:['AI','INFRASTRUCTURE'], FLM:['DEFI'],
+  MASK:['INFRASTRUCTURE'], LPT:['INFRASTRUCTURE','AI'], GTC:['INFRASTRUCTURE'],
+  BICO:['INFRASTRUCTURE'], ID:['INFRASTRUCTURE'], EDU:['INFRASTRUCTURE'],
+  ACE:['GAMING'], NFP:['FAN TOKENS'], WOO:['DEFI','INFRASTRUCTURE'],
+  SSV:['INFRASTRUCTURE','LIQUID STAKING'], LQTY:['DEFI'],
+};
+function categoriesFor(baseAsset){
+  const c = CATEGORY_MAP[baseAsset];
+  return (c && c.length) ? c : ['SEED'];
+}
+const ALL_SECTORS = ['AI','BNB Chain','DEFI','FAN TOKENS','GAMING','INFRASTRUCTURE','L1/L2','LAUNCHPAD',
+  'LAUNCHPOOL','LIQUID STAKING','MEGADROP','MEME','METAVERSE','NFT','PAYMENTS','POLKADOT','POW','RWA','SEED','STORAGE','Solana','YZI'];
+const META_TAGS = new Set(['SEED','LAUNCHPOOL','YZI']);
+const STRIP_SYMBOLS = ['BTC','ETH','BNB','SOL','XRP'];
+
+/* Curated universe: every base asset we have a category for, plus extra padding
+   so SEED (the catch-all) isn't empty. Avoids relying on the large exchangeInfo /
+   bulk ticker endpoints, which can fail to fetch from inside the sandboxed browser. */
+const EXTRA_PADDING = ['ZIL','ONT','QTUM','WAVES','ICX','ZRX','BAT','ONE','SKL','COTI','CVC',
+  'BAND','OGN','RSR','CTSI','CHR','DENT','HOT','SXP','ALPHA','MDT','FLM','DODO','C98','MASK',
+  'LPT','GTC','BICO','VOXEL','PROM','ID','EDU','ACE','NFP','MOVR','KAVA','ROSE','XTZ','VET',
+  'THETA','ZEN','KSM','MINA','FLOW','DGB','NKN','STX','WOO','SSV','LQTY','SPELL','CTK'];
+const STATIC_SYMBOLS = Array.from(new Set([...Object.keys(CATEGORY_MAP), ...EXTRA_PADDING]));
+
+/* ---------- State ---------- */
+let coinRecords = [];
+let sectorRecords = [];
+let expandedSector = null;
+let filterVal = 'all';
+let hideMeta = false;
+let sortState = { key:'avg1d', dir:-1 };
+let scanning = false;
+
+const refreshBtn = document.getElementById('refreshBtn');
+const updatedTimeEl = document.getElementById('updatedTime');
+const coinsCountEl = document.getElementById('coinsCount');
+const sectorBody = document.getElementById('sectorBody');
+const tickerStrip = document.getElementById('tickerStrip');
+const hideMetaBox = document.getElementById('hideMetaBox');
+
+
+document.querySelectorAll('#filterGroup button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    filterVal = btn.dataset.val;
+    document.querySelectorAll('#filterGroup button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderSectors();
+  });
+});
+hideMetaBox.addEventListener('change', () => { hideMeta = hideMetaBox.checked; renderSectors(); });
+document.querySelectorAll('thead th[data-sort]').forEach(th => {
+  th.addEventListener('click', () => {
+    const key = th.dataset.sort;
+    sortState.dir = (sortState.key === key) ? -sortState.dir : -1;
+    sortState.key = key;
+    renderSectors();
+  });
+});
+refreshBtn.addEventListener('click', runScan);
+
+/* ---------- Fetch helpers ---------- */
+async function fetchJson(url, retries){
+  retries = retries === undefined ? 2 : retries;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return await res.json();
+  } catch (e) {
+    if (retries > 0) {
+      await new Promise(r => setTimeout(r, 400));
+      return fetchJson(url, retries - 1);
+    }
+    throw e;
+  }
+}
+
+const STABLE_BASES = new Set(['USDC','FDUSD','TUSD','BUSD','DAI','USDP','EUR','GBP','AEUR','USTC','PAX','GUSD','SUSD']);
+
+/* Full Binance USDT universe (~400+ pairs), matching competitor coverage.
+   Falls back to the curated STATIC_SYMBOLS list if this fails for any reason. */
+async function fetchFullUniverse(){
+  const data = await fetchJson('https://api.binance.com/api/v3/exchangeInfo');
+  const symbols = data.symbols.filter(s =>
+    s.status === 'TRADING' && s.quoteAsset === 'USDT' && s.isSpotTradingAllowed !== false &&
+    !STABLE_BASES.has(s.baseAsset) && !/^(.+)(UP|DOWN|BULL|BEAR)$/.test(s.baseAsset)
+  );
+  return symbols.map(s => ({ symbol: s.symbol, baseAsset: s.baseAsset }));
+}
+
+/* 1D number comes straight from Binance's own per-symbol ticker/24hr endpoint —
+   this is exactly what Binance itself displays, no approximation. */
+async function fetchTicker24h(symbol){
+  const t = await fetchJson(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`);
+  return {
+    lastClose: parseFloat(t.lastPrice),
+    change1d: parseFloat(t.priceChangePercent),
+    quoteVolume24h: parseFloat(t.quoteVolume),
+  };
+}
+
+/* 4H matches the competitor's own display better when anchored to the current
+   UTC 4-hour candle (00:00/04:00/08:00... boundaries) rather than a rolling
+   240-minute lookback — i.e. how far price has moved since this 4h block opened. */
+async function fetch4hChange(symbol){
+  const data = await fetchJson(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=4h&limit=2`);
+  if (!Array.isArray(data) || !data.length) throw new Error(symbol + ': no 4h data');
+  const last = data[data.length - 1];
+  const open = parseFloat(last[1]);
+  const close = parseFloat(last[4]);
+  return (close - open) / open * 100;
+}
+
+async function fetchRollingStats(symbol){
+  const [t, change4h] = await Promise.all([fetchTicker24h(symbol), fetch4hChange(symbol)]);
+  return { lastClose: t.lastClose, change1d: t.change1d, change4h, quoteVolume24h: t.quoteVolume24h };
+}
+
+async function poolMap(items, worker, concurrency, onEach){
+  let idx = 0;
+  async function next(){
+    while (idx < items.length){
+      const cur = idx++;
+      try { const r = await worker(items[cur], cur); onEach(r, null, cur); }
+      catch (e) { onEach(null, e, cur); }
+    }
+  }
+  await Promise.all(Array.from({length: Math.min(concurrency, items.length)}, next));
+}
+
+async function runScan(){
+  if (scanning) return;
+  scanning = true;
+  refreshBtn.disabled = true;
+  refreshBtn.textContent = '↻ Scanning…';
+  const progressFill = document.getElementById('scanProgressFill');
+  progressFill.style.width = '0%';
+  sectorBody.innerHTML = '<tr><td colspan="8" style="color:var(--muted);padding:16px;">Scanning sectors…</td></tr>';
+  tickerStrip.innerHTML = '<span style="color:var(--muted);">Loading market ticker…</span>';
+
+  let symbols;
+  try {
+    symbols = await fetchFullUniverse();
+  } catch (e) {
+    symbols = STATIC_SYMBOLS.map(base => ({ symbol: base + 'USDT', baseAsset: base }));
+    sectorBody.innerHTML = '<tr><td colspan="8" style="color:var(--muted);padding:16px;">Full universe unavailable, using curated fallback list — scanning…</td></tr>';
+  }
+
+  renderTickerStrip(); // fires its own independent fetches, doesn't block the scan
+
+  coinRecords = [];
+  let loaded = 0, failed = 0;
+  await poolMap(symbols, async (s) => {
+    const d = await fetchRollingStats(s.symbol);
+    return {
+      symbol: s.symbol, baseAsset: s.baseAsset,
+      price: d.lastClose, change1d: d.change1d, quoteVolume: d.quoteVolume24h, change4h: d.change4h,
+      categories: categoriesFor(s.baseAsset),
+    };
+  }, 8, (result) => {
+    if (result) { coinRecords.push(result); loaded++; } else failed++;
+    progressFill.style.width = Math.min(100, Math.round((loaded + failed) / symbols.length * 100)) + '%';
+    if ((loaded + failed) % 10 === 0) coinsCountEl.textContent = loaded;
+  });
+
+  progressFill.style.width = '100%';
+  setTimeout(() => { progressFill.style.width = '0%'; }, 500);
+
+  coinsCountEl.textContent = coinRecords.length;
+  if (!coinRecords.length){
+    sectorBody.innerHTML = '<tr><td colspan="8" style="color:var(--bear);padding:16px;">Could not load any symbols — check your connection and press Refresh.</td></tr>';
+  } else {
+    buildSectors();
+    renderSectors();
+  }
+  updatedTimeEl.textContent = new Date().toLocaleTimeString();
+
+  scanning = false; refreshBtn.disabled = false; refreshBtn.textContent = '↻ Refresh';
+}
+
+async function renderTickerStrip(){
+  tickerStrip.innerHTML = '';
+  for (const base of STRIP_SYMBOLS){
+    try {
+      const d = await fetchRollingStats(base + 'USDT');
+      const span = document.createElement('span');
+      span.innerHTML = `<span class="tk-sym">${base}</span><span class="tk-price">${d.lastClose.toLocaleString(undefined,{maximumFractionDigits:d.lastClose<10?4:2})}</span><span class="${d.change1d>=0?'up':'down'}">${d.change1d>=0?'+':''}${d.change1d.toFixed(2)}%</span>`;
+      tickerStrip.appendChild(span);
+    } catch (e) { /* skip a symbol that fails, don't block the strip */ }
+  }
+  if (!tickerStrip.children.length) tickerStrip.innerHTML = '<span style="color:var(--bear);">Ticker unavailable.</span>';
+}
+
+function buildSectors(){
+  const bySector = {};
+  ALL_SECTORS.forEach(s => bySector[s] = []);
+  coinRecords.forEach(coin => {
+    coin.categories.forEach(cat => {
+      if (bySector[cat]) bySector[cat].push(coin);
+    });
+  });
+  sectorRecords = ALL_SECTORS.map(name => {
+    const coins = bySector[name];
+    if (!coins.length) return { name, coins:[], avg4h:0, avg1d:0, green:0, red:0, volume:0, topGainer:null };
+    const avg4h = coins.reduce((a,c)=>a+c.change4h,0) / coins.length;
+    const avg1d = coins.reduce((a,c)=>a+c.change1d,0) / coins.length;
+    const green = coins.filter(c=>c.change1d >= 0).length;
+    const red = coins.length - green;
+    const volume = coins.reduce((a,c)=>a+c.quoteVolume,0);
+    const topGainer = coins.reduce((best,c)=> (!best || c.change1d > best.change1d) ? c : best, null);
+    return { name, coins, avg4h, avg1d, green, red, volume, topGainer };
+  });
+}
+
+function fmtPct(v){ return (v>=0?'+':'') + v.toFixed(2) + '%'; }
+function fmtCompact(v){
+  if (v === null || v === undefined || isNaN(v)) return 'n/a';
+  if (Math.abs(v) >= 1e9) return (v/1e9).toFixed(1) + 'B';
+  if (Math.abs(v) >= 1e6) return (v/1e6).toFixed(1) + 'M';
+  if (Math.abs(v) >= 1e3) return (v/1e3).toFixed(1) + 'K';
+  return v.toFixed(0);
+}
+
+function getFilteredSectors(){
+  let rows = sectorRecords.filter(s => s.coins.length > 0);
+  if (hideMeta) rows = rows.filter(s => !META_TAGS.has(s.name));
+  if (filterVal === 'pos') rows = rows.filter(s => s.avg1d > 0);
+  if (filterVal === 'neg') rows = rows.filter(s => s.avg1d < 0);
+  return rows;
+}
+function sortSectors(rows){
+  const key = sortState.key, dir = sortState.dir;
+  return [...rows].sort((a,b) => (a[key]-b[key]) * dir);
+}
+
+function dotsForRank(value, min, max){
+  if (max === min) return 3;
+  const pct = (value - min) / (max - min);
+  return Math.max(1, Math.min(5, Math.round(pct * 4) + 1));
+}
+
+function renderSectors(){
+  const rows = sortSectors(getFilteredSectors());
+  sectorBody.innerHTML = '';
+  if (!rows.length){
+    sectorBody.innerHTML = '<tr><td colspan="8" style="color:var(--muted);padding:16px;">No sectors match the current filter — try Refresh first.</td></tr>';
+    return;
+  }
+  const avg1ds = rows.map(r => r.avg1d);
+  const minAvg1d = Math.min(...avg1ds), maxAvg1d = Math.max(...avg1ds);
+
+  rows.forEach((s, i) => {
+    const tr = document.createElement('tr');
+    tr.className = 'sector-row' + (expandedSector === s.name ? ' expanded' : '');
+    const filled = dotsForRank(s.avg1d, minAvg1d, maxAvg1d);
+    const ticks = Array.from({length:5}, (_,d) => `<i${d<filled?' class="filled"':''}></i>`).join('');
+    const total = s.green + s.red;
+    const tapeSlots = 14;
+    const greenSlots = total ? Math.round((s.green/total) * tapeSlots) : 0;
+    const tapeTicks = Array.from({length:tapeSlots}, (_,d) => `<i class="${d<greenSlots?'up':'down'}"></i>`).join('');
+
+    tr.innerHTML = `
+      <td class="rank">${i+1}</td>
+      <td class="sector-name">${s.name}<span class="sector-count">${s.coins.length}</span><span class="ticks">${ticks}</span></td>
+      <td class="${s.avg4h>=0?'up':'down'}">${fmtPct(s.avg4h)}</td>
+      <td class="${s.avg1d>=0?'up':'down'}">${fmtPct(s.avg1d)}</td>
+      <td><div class="tape-bar"><span class="tape-ticks">${tapeTicks}</span><span class="tape-count">${s.green}/${s.red}</span></div></td>
+      <td>${fmtCompact(s.volume)}</td>
+      <td class="top-gainer">${s.topGainer ? `<span class="sym">${s.topGainer.baseAsset}</span>${fmtPct(s.topGainer.change1d)}` : '—'}</td>
+      <td><span class="chevron${expandedSector===s.name?' open':''}">▾</span></td>
+    `;
+    tr.addEventListener('click', () => {
+      expandedSector = expandedSector === s.name ? null : s.name;
+      renderSectors();
+    });
+    sectorBody.appendChild(tr);
+
+    if (expandedSector === s.name){
+      const detailTr = document.createElement('tr');
+      detailTr.className = 'detail-row';
+      const coinsSorted = [...s.coins].sort((a,b) => b.change1d - a.change1d);
+      const coinRows = coinsSorted.map(c => `
+        <tr>
+          <td class="sym">${c.baseAsset}</td>
+          <td>${c.price.toLocaleString(undefined,{maximumFractionDigits: c.price<1?6:2})}</td>
+          <td class="${c.change4h>=0?'up':'down'}">${fmtPct(c.change4h)}</td>
+          <td class="${c.change1d>=0?'up':'down'}">${fmtPct(c.change1d)}</td>
+          <td>${fmtCompact(c.quoteVolume)}</td>
+        </tr>`).join('');
+      detailTr.innerHTML = `<td colspan="8"><div class="detail-inner">
+        <table class="coin-table">
+          <thead><tr><th>Symbol</th><th>Price</th><th>4H %</th><th>1D %</th><th>Volume</th></tr></thead>
+          <tbody>${coinRows}</tbody>
+        </table>
+      </div></td>`;
+      sectorBody.appendChild(detailTr);
+    }
+  });
+}
+
+runScan();
+setInterval(() => { if (!scanning) runScan(); }, 5 * 60 * 1000);
+
+})();
+
+</script>
+</body>
+</html>
