@@ -1,15 +1,16 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 
-// PHASE 1+2 of the real Order Flow tool: Aggregated Depth Ladder + CVD +
+// PHASE 1+2 of the real Order Flow tool: Aggregated Depth Ladder (14 venues)
+// + confluence overlay (Fib/EMA/VWAP/Volume-Profile tags on the ladder,
+// Bybit-sourced, same math as Confluence Zones/Lakhsmi Signals) + CVD +
 // Open Interest + Funding Rate + Long/Short Ratio + Premium/Basis, plus the
 // cross-referencing "read" text under each panel -- ported with the exact
-// same logic as the real site's page-orderflow.
+// same logic, endpoints and wording as the real site's page-orderflow.
 // NOT yet included (real site has these too, coming in a later phase):
 // live Trade Tape (WebSocket), live Liquidations feed (WebSocket), the
-// Multi-Coin Comparison scanner (100-coin scan with its own table), the
-// confluence overlay on the ladder (needs Fibonacci/VWAP/Profile logic
-// ported first), and the Depth Chart view toggle.
+// Multi-Coin Comparison scanner (100-coin scan with its own table), and
+// the Depth Chart view toggle.
 
 const SYMBOL_OPTIONS = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT', 'XRPUSDT', 'DOGEUSDT', 'ADAUSDT'];
 const ROWS = 22;
@@ -78,7 +79,7 @@ async function fetchMexcContractSize(mexcSymbol) {
   return cs;
 }
 
-// Aggregates 13 public order books (up to ~1900 raw price levels per side
+// Aggregates 14 public order books (up to ~1900 raw price levels per side
 // from free REST endpoints). Any venue that fails (CORS, pair not listed)
 // simply drops out via allSettled -- the meta line shows which markets
 // actually made it in, exactly like the real site.
@@ -188,7 +189,7 @@ function medianOf(arr) {
 // Computes the ladder rows + wall set + imbalance from raw aggregated
 // books -- same binning, same LOCAL-neighborhood (6-either-side) wall
 // detection with a global-median floor, same as the real site.
-function computeLadder(books, binDetail, wallSeenMap) {
+function computeLadder(books, binDetail, wallSeenMap, confLevels) {
   const allBids = [], allAsks = [];
   books.forEach((b) => { allBids.push(...b.bids); allAsks.push(...b.asks); });
   if (!allBids.length || !allAsks.length) throw new Error('Empty order book.');
@@ -242,10 +243,212 @@ function computeLadder(books, binDetail, wallSeenMap) {
     return Math.floor(ms / 3600000) + 'h' + Math.floor((ms % 3600000) / 60000) + 'm';
   }
 
-  const bidDisplay = bidRows.map(([p, q]) => ({ price: p, qty: q, side: 'bid', wall: wallSet.has(p), age: wallSet.has(p) ? wallAge('bid', p) : null, dist: (p - mid) / mid * 100 }));
-  const askDisplay = askRows.map(([p, q]) => ({ price: p, qty: q, side: 'ask', wall: wallSet.has(p), age: wallSet.has(p) ? wallAge('ask', p) : null, dist: (p - mid) / mid * 100 }));
+  // Confluence overlay: mark bins that contain a Fib/EMA/VWAP/Volume-Profile
+  // level from ensureConfLevels() -- a wall sitting ON one of these levels
+  // matters far more, so it's tagged with up to 2 level names (+N more).
+  const cl = confLevels || [];
+  function confFor(price) {
+    const conf = cl.filter((l) => l.price >= price && l.price < price + binSize);
+    if (!conf.length) return null;
+    const names = conf.slice(0, 2).map((l) => l.label).join(' \u00b7 ') + (conf.length > 2 ? ` +${conf.length - 2}` : '');
+    const title = conf.map((l) => l.label).join(', ');
+    return { names, title };
+  }
+
+  const buildRow = (p, q, side) => ({ price: p, qty: q, side, wall: wallSet.has(p), age: wallSet.has(p) ? wallAge(side, p) : null, dist: (p - mid) / mid * 100, conf: confFor(p) });
+  const bidDisplay = bidRows.map(([p, q]) => buildRow(p, q, 'bid'));
+  const askDisplay = askRows.map(([p, q]) => buildRow(p, q, 'ask'));
 
   return { mid, binSize, bidRows: bidDisplay, askRows: askDisplay, maxQty, bidPct, newSeen, lo: bidRows.length ? bidRows[bidRows.length - 1][0] : mid, hi: askRowsAsc.length ? askRowsAsc[askRowsAsc.length - 1][0] : mid };
+}
+
+function toBybitInterval(interval) {
+  return { '15m': '15', '1h': '60', '4h': '240', '1d': 'D' }[interval] || '60';
+}
+
+async function ladFetchBybitKlines(symbol, interval, limit) {
+  // Always Bybit linear, regardless of the page's Exchange dropdown -- the
+  // confluence overlay is intentionally Bybit-sourced only (see comment on
+  // ensureConfLevels below), so a "Monthly VAL" tag means the same thing
+  // every time, not a different number depending on what's selected.
+  const data = await fetchJson(`https://api.bybit.com/v5/market/kline?category=linear&symbol=${symbol}&interval=${toBybitInterval(interval)}&limit=${limit}`);
+  if (data.retCode !== 0) throw new Error(symbol + ': ' + (data.retMsg || 'Bybit error'));
+  const list = data.result && data.result.list;
+  if (!Array.isArray(list) || !list.length) throw new Error(symbol + ': no data on Bybit for ' + interval);
+  return list.slice().reverse().map((c) => ({ time: +c[0], open: +c[1], high: +c[2], low: +c[3], close: +c[4], volume: +c[5], quoteVolume: +c[6] }));
+}
+
+// Verbatim copies of the Fibonacci Levels tool's pivot/swing logic (the
+// site-wide reference implementation) -- local names so they shadow
+// nothing and match the tool's math exactly.
+function ladFindPivots(candles, pivotWidth) {
+  const highs = [], lows = [];
+  for (let i = pivotWidth; i < candles.length - pivotWidth; i++) {
+    let isHigh = true, isLow = true;
+    for (let k = 1; k <= pivotWidth; k++) {
+      if (candles[i].high < candles[i - k].high || candles[i].high < candles[i + k].high) isHigh = false;
+      if (candles[i].low > candles[i - k].low || candles[i].low > candles[i + k].low) isLow = false;
+      if (!isHigh && !isLow) break;
+    }
+    if (isHigh) highs.push({ idx: i, price: candles[i].high });
+    if (isLow) lows.push({ idx: i, price: candles[i].low });
+  }
+  if (!highs.length || candles[candles.length - 1].high >= Math.max(...highs.map((h) => h.price))) {
+    highs.push({ idx: candles.length - 1, price: candles[candles.length - 1].high });
+  }
+  if (!lows.length || candles[candles.length - 1].low <= Math.min(...lows.map((l) => l.price))) {
+    lows.push({ idx: candles.length - 1, price: candles[candles.length - 1].low });
+  }
+  return { highs, lows };
+}
+function ladFindSwing(candles) {
+  const pivotWidth = Math.max(2, Math.min(5, Math.floor(candles.length / 25)));
+  const { highs, lows } = ladFindPivots(candles, pivotWidth);
+  const bestHigh = highs.reduce((a, b) => (b.price > a.price ? b : a));
+  const bestLow = lows.reduce((a, b) => (b.price < a.price ? b : a));
+  return { hi: bestHigh.price, hiIdx: bestHigh.idx, lo: bestLow.price, loIdx: bestLow.idx };
+}
+function ladComputeEMA(values, period) {
+  const k = 2 / (period + 1);
+  const ema = [values[0]];
+  for (let i = 1; i < values.length; i++) ema.push(values[i] * k + ema[i - 1] * (1 - k));
+  return ema;
+}
+function ladVwapFrom(candles, startTime, endTime) {
+  let sumQuote = 0, sumBase = 0;
+  for (const c of candles) {
+    if (c.time >= startTime && (!endTime || c.time < endTime)) { sumQuote += c.quoteVolume; sumBase += c.volume; }
+  }
+  return sumBase > 0 ? sumQuote / sumBase : null;
+}
+function ladProfileFrom(candles, startTime, endTime, numBins, rangeMin, rangeMax) {
+  const set = endTime ? candles.filter((c) => c.time >= startTime && c.time < endTime) : candles.filter((c) => c.time >= startTime);
+  if (set.length < 2) return null;
+  const minLow = rangeMin !== undefined ? rangeMin : Math.min(...set.map((c) => c.low));
+  const maxHigh = rangeMax !== undefined ? rangeMax : Math.max(...set.map((c) => c.high));
+  if (maxHigh <= minLow) return null;
+  const binSize = (maxHigh - minLow) / numBins;
+  const bins = new Array(numBins).fill(0);
+  set.forEach((c) => {
+    const range = c.high - c.low;
+    if (range <= 0) {
+      const idx = Math.min(numBins - 1, Math.max(0, Math.floor((c.close - minLow) / binSize)));
+      bins[idx] += c.volume;
+      return;
+    }
+    for (let i = 0; i < numBins; i++) {
+      const binLow = minLow + i * binSize, binHigh = binLow + binSize;
+      const overlap = Math.min(binHigh, c.high) - Math.max(binLow, c.low);
+      if (overlap > 0) bins[i] += c.volume * (overlap / range);
+    }
+  });
+  const total = bins.reduce((a, b) => a + b, 0);
+  let pocIndex = 0;
+  bins.forEach((v, i) => { if (v > bins[pocIndex]) pocIndex = i; });
+  let lowIdx = pocIndex, highIdx = pocIndex, vaVol = bins[pocIndex];
+  while (vaVol < 0.7 * total && (lowIdx > 0 || highIdx < numBins - 1)) {
+    const nextLow = lowIdx > 0 ? bins[lowIdx - 1] : -1;
+    const nextHigh = highIdx < numBins - 1 ? bins[highIdx + 1] : -1;
+    if (nextHigh >= nextLow) { highIdx++; vaVol += bins[highIdx]; }
+    else { lowIdx--; vaVol += bins[lowIdx]; }
+  }
+  return { poc: minLow + pocIndex * binSize + binSize / 2, vah: minLow + (highIdx + 1) * binSize, val: minLow + lowIdx * binSize };
+}
+function ladAnchors(now) {
+  const y = now.getUTCFullYear(), m = now.getUTCMonth(), d = now.getUTCDate();
+  const dow = now.getUTCDay();
+  const daysSinceMonday = (dow + 6) % 7;
+  const dayStart = Date.UTC(y, m, d);
+  const weekStart = dayStart - daysSinceMonday * 86400000;
+  const monthStart = Date.UTC(y, m, 1);
+  const quarterStartMonth = Math.floor(m / 3) * 3;
+  const quarterStart = Date.UTC(y, quarterStartMonth, 1);
+  const halfStartMonth = m < 6 ? 0 : 6;
+  const halfStart = Date.UTC(y, halfStartMonth, 1);
+  const yearStart = Date.UTC(y, 0, 1);
+  return [
+    { key: 'daily', label: 'Daily', start: dayStart, previousStart: dayStart - 86400000 },
+    { key: 'weekly', label: 'Weekly', start: weekStart, previousStart: weekStart - 7 * 86400000 },
+    { key: 'monthly', label: 'Monthly', start: monthStart, previousStart: Date.UTC(y, m - 1, 1) },
+    { key: 'quarterly', label: 'Quarterly', start: quarterStart, previousStart: Date.UTC(y, quarterStartMonth - 3, 1) },
+    { key: 'sixmonth', label: '6-Month', start: halfStart, previousStart: Date.UTC(y, halfStartMonth - 6, 1) },
+    { key: 'yearly', label: 'Yearly', start: yearStart, previousStart: Date.UTC(y - 1, 0, 1) },
+  ];
+}
+const LAD_PROFILE_SRC = { daily: '15m', weekly: '1h', monthly: '4h', quarterly: '4h', sixmonth: '1d', yearly: '1d' };
+const LAD_VWAP_SRC = { daily: '1h', weekly: '1h', monthly: '1d', quarterly: '1d', sixmonth: '1d', yearly: '1d' };
+const LAD_PROFILE_BINS = { daily: 30, weekly: 40, monthly: 60, quarterly: 80, sixmonth: 90, yearly: 100 };
+
+// Confluence overlay for the ladder: computed from BYBIT data ONLY, using
+// the exact same helpers as Confluence Zones / Lakhsmi Signals (anchors,
+// profileFrom, vwapFrom, computeEMA copied verbatim from that engine), so
+// a "Monthly VAL" or "Yearly VWAP" tag on the ladder is the SAME number
+// those tools show. The order book itself stays aggregated across all
+// venues -- only these overlay levels are Bybit-sourced. Cached 2 minutes
+// (levels move slowly) per symbol.
+let confLevelsCache = { symbol: null, at: 0, levels: [] };
+async function ensureConfLevels(symbol) {
+  const now = Date.now();
+  if (confLevelsCache.symbol === symbol && now - confLevelsCache.at < 120000) return confLevelsCache.levels;
+  try {
+    const [k15, k1h, k4h, k1d] = await Promise.all([
+      ladFetchBybitKlines(symbol, '15m', 300),
+      ladFetchBybitKlines(symbol, '1h', 400),
+      ladFetchBybitKlines(symbol, '4h', 600),
+      ladFetchBybitKlines(symbol, '1d', 800),
+    ]);
+    const K = { '15m': k15, '1h': k1h, '4h': k4h, '1d': k1d };
+    const levels = [];
+
+    ladAnchors(new Date()).forEach((a) => {
+      const profileSource = K[LAD_PROFILE_SRC[a.key]];
+      let profile = null;
+      if (profileSource) {
+        const sharedSet = profileSource.filter((c) => c.time >= a.previousStart);
+        if (sharedSet.length >= 2) {
+          const rangeMin = Math.min(...sharedSet.map((c) => c.low));
+          const rangeMax = Math.max(...sharedSet.map((c) => c.high));
+          profile = ladProfileFrom(profileSource, a.previousStart, a.start, LAD_PROFILE_BINS[a.key] || 40, rangeMin, rangeMax);
+        }
+      }
+      if (profile) {
+        levels.push({ price: profile.poc, label: `${a.label} POC` });
+        levels.push({ price: profile.vah, label: `${a.label} VAH` });
+        levels.push({ price: profile.val, label: `${a.label} VAL` });
+      }
+      const vwapSource = K[LAD_VWAP_SRC[a.key]];
+      const anchorVwap = vwapSource ? ladVwapFrom(vwapSource, a.start) : null;
+      if (anchorVwap) levels.push({ price: anchorVwap, label: `${a.label} VWAP` });
+    });
+
+    [['1h', '1H'], ['4h', '4H']].forEach(([tf, lbl]) => {
+      const closes = K[tf].map((c) => c.close);
+      [50, 100, 200].forEach((p) => {
+        if (closes.length >= p) {
+          const e = ladComputeEMA(closes, p);
+          levels.push({ price: e[e.length - 1], label: `EMA${p} ${lbl}` });
+        }
+      });
+    });
+
+    const win = k1h.slice(-90);
+    if (win.length >= 10) {
+      const { hi, hiIdx, lo, loIdx } = ladFindSwing(win);
+      if (hi > lo) {
+        const range = hi - lo, up = hiIdx > loIdx;
+        const fib = (r) => (up ? hi - range * r : lo + range * r);
+        levels.push({ price: fib(0.5), label: 'Fib 50% 1H' });
+        levels.push({ price: fib(0.618), label: 'Fib 61.8% 1H' });
+        levels.push({ price: fib(0.65), label: 'Fib 65% 1H' });
+        levels.push({ price: fib(0.786), label: 'Fib 78.6% 1H' });
+      }
+    }
+
+    confLevelsCache = { symbol, at: now, levels };
+    return levels;
+  } catch (e) {
+    return confLevelsCache.levels; // overlay is optional -- keep whatever we had
+  }
 }
 
 function loadChartJs() {
@@ -696,8 +899,9 @@ export default function OrderFlowPage() {
     try {
       const t = await fetchTicker(sym, exchange, market === 'futures');
       setTicker(t);
+      const confLevels = await ensureConfLevels(sym); // cached 2min -- only refetches occasionally
       const { books, used } = await fetchDepthAll(sym);
-      const computed = computeLadder(books, binDetail, wallSeenRef.current);
+      const computed = computeLadder(books, binDetail, wallSeenRef.current, confLevels);
       wallSeenRef.current = computed.newSeen;
       setLadder(computed);
       setUsedVenues(used);
@@ -722,8 +926,9 @@ export default function OrderFlowPage() {
       const t = await fetchTicker(sym, exchange, market === 'futures');
       setTicker(t);
 
+      const confLevels = await ensureConfLevels(sym);
       const { books, used } = await fetchDepthAll(sym);
-      const computed = computeLadder(books, binDetail, wallSeenRef.current);
+      const computed = computeLadder(books, binDetail, wallSeenRef.current, confLevels);
       wallSeenRef.current = computed.newSeen;
       setLadder(computed);
       setUsedVenues(used);
@@ -779,7 +984,7 @@ export default function OrderFlowPage() {
       <Link to="/tools" className="back-link">&larr; Back to Tools</Link>
       <div className="of-header">
         <h1>Order Flow</h1>
-        <p>Aggregated depth ladder across up to 13 venues, with local-neighborhood wall detection</p>
+        <p>Aggregated depth ladder across up to 14 venues, with local-neighborhood wall detection</p>
       </div>
 
       <div className="of-controls">
@@ -846,7 +1051,7 @@ export default function OrderFlowPage() {
 
         <div className="of-panel">
           <div className="of-panel-title" style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
-            <span>Order Book &mdash; Aggregated Depth Ladder (up to 13 markets)</span>
+            <span>Order Book &mdash; Aggregated Depth Ladder (up to 14 markets)</span>
             <label className="of-tape-filter">Detail
               <select value={binDetail} onChange={(e) => setBinDetail(e.target.value)}>
                 <option value="fine">Fine (more rows)</option>
@@ -877,22 +1082,24 @@ export default function OrderFlowPage() {
 
               <div className="of-ladder">
                 {ladder.askRows.map((r) => (
-                  <div key={'a' + r.price} className={`of-lad-row ask${r.wall ? ' wall' : ''}`}>
+                  <div key={'a' + r.price} className={`of-lad-row ask${r.wall ? ' wall' : ''}${r.conf ? ' conf' : ''}`}>
                     <span className="lp">{fmtPrice(r.price)}</span>
                     <div className="lbar-wrap">
                       <div className="lbar" style={{ width: `${(r.qty / ladder.maxQty * 100).toFixed(1)}%` }}></div>
                       {r.wall && <span className="ltag">{fmtCompact(r.qty)} &middot; ${fmtCompact(r.qty * ladder.mid)} &middot; {r.dist >= 0 ? '+' : ''}{r.dist.toFixed(2)}% &middot; {r.age}</span>}
+                      {r.conf && <span className="lconf" title={r.conf.title}>{r.conf.names}</span>}
                     </div>
                     <span className="lq">{fmtCompact(r.qty)}</span>
                   </div>
                 ))}
                 <div className="of-lad-mid"><span>{fmtPrice(ladder.mid)}</span><i>mid (all markets)</i></div>
                 {ladder.bidRows.map((r) => (
-                  <div key={'b' + r.price} className={`of-lad-row bid${r.wall ? ' wall' : ''}`}>
+                  <div key={'b' + r.price} className={`of-lad-row bid${r.wall ? ' wall' : ''}${r.conf ? ' conf' : ''}`}>
                     <span className="lp">{fmtPrice(r.price)}</span>
                     <div className="lbar-wrap">
                       <div className="lbar" style={{ width: `${(r.qty / ladder.maxQty * 100).toFixed(1)}%` }}></div>
                       {r.wall && <span className="ltag">{fmtCompact(r.qty)} &middot; ${fmtCompact(r.qty * ladder.mid)} &middot; {r.dist >= 0 ? '+' : ''}{r.dist.toFixed(2)}% &middot; {r.age}</span>}
+                      {r.conf && <span className="lconf" title={r.conf.title}>{r.conf.names}</span>}
                     </div>
                     <span className="lq">{fmtCompact(r.qty)}</span>
                   </div>
@@ -957,15 +1164,30 @@ export default function OrderFlowPage() {
       </div>
 
       <div className="of-caption">
-        Combines up to 13 public order books into one aggregated depth ladder (wall = 3x+ the median of ~6 neighbouring
-        bins, floored at 2x the whole ladder's median; wall age tracked across refreshes). CVD combines Binance's exact
-        taker-buy split with trade-based approximations from Bybit and OKX, with basic bullish/bearish divergence
-        detection against price. Open Interest, Funding, Long/Short Ratio and Basis are combined across exchanges the
-        same way. Each panel's "read" cross-references it against the others (e.g. funding vs CVD, OI vs price) the way
-        a professional order-flow trader would. The ladder auto-refreshes every 5s; everything else reloads on Load or
-        whenever you change Exchange/Market/Symbol/Timeframe. NOT yet included: live Trade Tape, live Liquidations feed,
-        the Multi-Coin Comparison scanner, the confluence overlay on the ladder (needs Fibonacci/VWAP/Profile logic from
-        other unported tools), and the Depth Chart view toggle -- these are the next phase.
+        CVD, Open Interest, the Trade Tape, and Live Liquidations all combine Binance + Bybit + OKX automatically &mdash;
+        regardless of which Exchange is selected above. Order Book, Funding Rate, Long/Short Ratio, and Basis remain per
+        the selected Exchange (Binance or Bybit) since order books are separate liquidity pools per venue and those three
+        are inherently single-exchange metrics, not additive ones. CVD sums each exchange's taker buy/sell volume into
+        shared time buckets &mdash; Binance's split comes straight from its klines (exact), Bybit and OKX don't expose a
+        taker split in candles so theirs is approximated from recent trade prints instead. The Trade Tape and Live
+        Liquidations merge all three exchanges' real-time streams into one feed, each row tagged with its source
+        exchange; trades over $50K notional are marked "Large" and over $250K "Whale", liquidations over $100K "Large".
+        A forced sell liquidation means a long got closed out, a forced buy means a short did. Open Interest sums each
+        exchange's current OI (OKX reports its own OI in contracts, converted to base-currency using that instrument's
+        contract value) &mdash; OKX has no easily-accessible public OI history endpoint, so its number counts toward the
+        current total but not the trend chart or 24h-change calc, which stay Binance + Bybit only. If a pair is missing
+        on one exchange, everything above falls back to whichever ones have it and says so. None of this is a modeled
+        liquidation-heatmap estimate &mdash; that needs assumed leverage distributions that aren't public data, a
+        separate and harder problem. Funding/Open Interest/Basis/Long-Short all use futures-only endpoints (spot has
+        neither) &mdash; Market is forced to Futures for the relevant panels regardless of the Market selector above.
+        Multi-Coin Comparison pulls the exchange's full USDT-M perpetual symbol list, keeps the top 100 by market cap
+        (via CoinGecko), then scans each one's CVD (single-exchange proxy &mdash; exact taker-split on Binance, a
+        price-momentum proxy on Bybit), funding rate, and 24H change to build a Score. This uses the currently-selected
+        Exchange only, not the 3-exchange combine, to keep a 100-coin scan reasonably fast. All data is live and public
+        &mdash; no API key. Not financial advice.
+        <br /><br />
+        <b style={{ color: 'var(--tape)' }}>Still coming in the next phase (not yet on this page):</b> live Trade Tape,
+        live Liquidations feed, Multi-Coin Comparison scanner, and the Depth Chart view toggle.
       </div>
     </div>
   );
