@@ -143,7 +143,14 @@ const HOMEPAGE_CSS = `
 
   /* ---- tool grid ---- */
   .tool-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1px;background:var(--border-soft);border:1px solid var(--border-soft);border-radius:var(--radius);overflow:hidden;}
-  .tool-card{background:var(--surface);padding:26px 24px;transition:background .18s ease;}
+  .tool-card{background:var(--surface);padding:26px 24px;transition:background .18s ease;position:relative;display:block;text-decoration:none;color:inherit;}
+  .tool-card.live{cursor:pointer;}
+  .tool-card.live:hover{background:var(--surface-2);}
+  .tool-live-badge{
+    position:absolute;top:20px;right:20px;font-family:var(--mono);font-size:9px;letter-spacing:.04em;
+    color:var(--bull);background:var(--bull-soft);border:1px solid rgba(47,216,166,.3);
+    padding:3px 8px;border-radius:20px;white-space:nowrap;
+  }
   .tool-card:hover{background:var(--surface-2);}
   .tool-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;font-family:var(--mono);font-weight:700;font-size:13px;}
   .tool-card h3{font-size:15.5px;font-weight:600;margin-bottom:8px;}
@@ -244,19 +251,20 @@ const PART1_BEFORE = `
 <header class="hero">
   <div class="wrap hero-grid">
     <div>
-      <div class="eyebrow">Institutional Order Flow &middot; Crypto</div>
+      <div class="eyebrow">16 Tools &middot; One Login &middot; Zero Guesswork</div>
       <h1>Price shows what happened.<br><span class="accent">Order flow shows who did it.</span></h1>
       <p class="hero-sub">
-        AFT Tools is a <b>seven-tool confluence suite</b> for spotting institutional footprints across
-        crypto markets &mdash; screeners, volume and order flow, VWAPs and Fibonacci structure, unified
-        into one live confluence dashboard so you're not reading eight tabs to make one decision.
+        AFT Tools is a <b>16-tool institutional trading suite</b> &mdash; screeners, order flow, volume,
+        VWAPs, Fibonacci structure, live signals and a paper-trading bot &mdash; all unified into one
+        confluence engine. Log in once, and every tool talks to every other tool. No more juggling eight tabs
+        just to decide if a trade is even worth taking.
       </p>
       <div class="cta-row">
-        <a class="btn-primary" href="#suite">Open Toolkit &rarr;</a>
-        <a class="btn-secondary" href="#confluence">See how confluence works</a>
+        <a class="btn-primary" href="/login">Login &amp; Start Trading &rarr;</a>
+        <a class="btn-secondary" href="#suite">See all 16 tools</a>
       </div>
       <div class="trust-row">
-        <span><b>7</b> integrated tools</span>
+        <span><b>16</b> tools, one login</span>
         <span><b>14</b> exchanges aggregated</span>
         <span><b>Real-time</b> order book data</span>
       </div>
@@ -322,57 +330,115 @@ const PART1_BEFORE = `
 <section id="suite">
   <div class="wrap">
     <div class="section-head">
-      <div class="eyebrow">The suite</div>
-      <h2>Not seven separate tabs. One confluence stack.</h2>
+      <div class="eyebrow">The full suite &middot; 16 tools</div>
+      <h2>Not sixteen separate tabs. One confluence stack.</h2>
       <p class="section-desc">
         Each tool answers a different question &mdash; where's the crowd, where's the real size, where's
-        the level that matters. Used together, they stop agreeing by accident and start agreeing on purpose.
+        the level that matters, who's already positioned. Used together, they stop agreeing by accident
+        and start agreeing on purpose. Three are open right now, no login needed &mdash; try them below.
       </p>
     </div>
 
     <div class="tool-grid">
-      <div class="tool-card">
-        <div class="tool-icon" style="background:var(--tape-soft);color:var(--tape);">S</div>
+      <a href="/sector-screener.html" class="tool-card live">
+        <div class="tool-icon" style="background:var(--tape-soft);color:var(--tape);">Se</div>
+        <span class="tool-live-badge">Try it now &middot; no login</span>
         <h3>Sector Screener</h3>
         <p>Ranks crypto sectors (L1s, DeFi, AI, memecoins) by relative strength so you know which basket the money is actually rotating into before you pick a symbol inside it.</p>
         <span class="tool-tag">rotation &middot; relative strength</span>
+      </a>
+      <div class="tool-card">
+        <div class="tool-icon" style="background:var(--bull-soft);color:var(--bull);">Tr</div>
+        <h3>Trend Screener</h3>
+        <p>Price vs EMA200 combined with OBV vs its own EMA &mdash; a dual-confirmation scan that only flags a trend when both price and real volume flow agree.</p>
+        <span class="tool-tag">dual-confirmation</span>
       </div>
       <div class="tool-card">
-        <div class="tool-icon" style="background:var(--bull-soft);color:var(--bull);">R</div>
+        <div class="tool-icon" style="background:var(--violet-soft);color:var(--violet);">Fu</div>
+        <h3>Futures Screener</h3>
+        <p>Every USDT-M perpetual pair with 1H/4H/12H/24H change side by side in one table &mdash; find what's actually moving right now, not what moved yesterday.</p>
+        <span class="tool-tag">multi-timeframe</span>
+      </div>
+      <div class="tool-card">
+        <div class="tool-icon" style="background:var(--bull-soft);color:var(--bull);">RS</div>
         <h3>RSI Screener</h3>
-        <p>Scans the market for overbought and oversold conditions across timeframes, filtered by a minimum market cap so you're not chasing illiquid noise.</p>
+        <p>Scans the entire market for overbought and oversold conditions across timeframes, filtered by a minimum market cap so you're not chasing illiquid noise.</p>
         <span class="tool-tag">momentum &middot; extremes</span>
       </div>
       <div class="tool-card">
-        <div class="tool-icon" style="background:var(--violet-soft);color:var(--violet);">V</div>
+        <div class="tool-icon" style="background:var(--violet-soft);color:var(--violet);">Vo</div>
         <h3>Volume Profile</h3>
         <p>Maps where volume actually traded, not just where price moved &mdash; surfacing high-volume nodes and value areas that behave like real support and resistance.</p>
         <span class="tool-tag">HVN/LVN &middot; value area</span>
       </div>
       <div class="tool-card">
-        <div class="tool-icon" style="background:var(--bear-soft);color:var(--bear);">O</div>
-        <h3>Order Flow</h3>
-        <p>An aggregated depth ladder across 14 exchanges with wall detection, CVD divergence and liquidation clusters &mdash; the closest read you'll get on where size is actually resting.</p>
-        <span class="tool-tag">depth &middot; walls &middot; CVD</span>
-      </div>
-      <div class="tool-card">
-        <div class="tool-icon" style="background:var(--tape-soft);color:var(--tape);">W</div>
-        <h3>VWAPs</h3>
+        <div class="tool-icon" style="background:var(--tape-soft);color:var(--tape);">VW</div>
+        <h3>Anchor VWAP</h3>
         <p>Daily, weekly, monthly and quarterly anchored VWAPs in one view, with a previous-levels table so you can see exactly which anchor price is currently respecting.</p>
         <span class="tool-tag">anchored &middot; multi-timeframe</span>
       </div>
       <div class="tool-card">
-        <div class="tool-icon" style="background:var(--bull-soft);color:var(--bull);">F</div>
+        <div class="tool-icon" style="background:var(--bear-soft);color:var(--bear);">CZ</div>
+        <h3>Confluence Zones</h3>
+        <p>Ranks price zones by how many independent sources (33 of them) mark the same level, so a "zone" here means real agreement, not one lucky Fibonacci line.</p>
+        <span class="tool-tag">33 sources &middot; ranked</span>
+      </div>
+      <a href="/confluence-dashboard.html" class="tool-card live">
+        <div class="tool-icon" style="background:var(--violet-soft);color:var(--violet);">CD</div>
+        <span class="tool-live-badge">Try it now &middot; no login</span>
+        <h3>Confluence Dashboard</h3>
+        <p>Pulls Trend, OBV, RSI and VWAP into one score per symbol across 5 timeframes &mdash; how many signals actually agree, right now, so a "setup" means more than one indicator's opinion.</p>
+        <span class="tool-tag">aggregated &middot; scored</span>
+      </a>
+      <div class="tool-card">
+        <div class="tool-icon" style="background:var(--bull-soft);color:var(--bull);">Fi</div>
         <h3>Fibonacci Levels</h3>
         <p>Auto-plots retracement and extension levels off the dominant swing, so the 61.8% and 78.6% zones that matter are marked before price gets there, not after.</p>
         <span class="tool-tag">retracement &middot; extension</span>
       </div>
       <div class="tool-card">
-        <div class="tool-icon" style="background:var(--violet-soft);color:var(--violet);">C</div>
-        <h3>Confluences Dashboard</h3>
-        <p>Pulls every tool above into one score per symbol &mdash; how many independent signals actually agree, right now, so a "setup" means more than one indicator's opinion.</p>
-        <span class="tool-tag">aggregated &middot; scored</span>
+        <div class="tool-icon" style="background:var(--bull-soft);color:var(--bull);">RC</div>
+        <h3>RSI Checker</h3>
+        <p>A fast, single-symbol RSI read across every timeframe at once &mdash; the quick sanity check before you commit to a full screener scan.</p>
+        <span class="tool-tag">single symbol</span>
       </div>
+      <div class="tool-card">
+        <div class="tool-icon" style="background:var(--violet-soft);color:var(--violet);">CB</div>
+        <h3>Cipher B Checker</h3>
+        <p>Money-flow and wave-trend signal checker &mdash; a second, independent lens for spotting momentum shifts that pure price-action screeners miss.</p>
+        <span class="tool-tag">money flow &middot; wave trend</span>
+      </div>
+      <div class="tool-card">
+        <div class="tool-icon" style="background:var(--bear-soft);color:var(--bear);">OF</div>
+        <h3>Order Flow</h3>
+        <p>An aggregated depth ladder across 14 exchanges with wall detection, CVD divergence and liquidation clusters &mdash; the closest read you'll get on where size is actually resting.</p>
+        <span class="tool-tag">depth &middot; walls &middot; CVD</span>
+      </div>
+      <div class="tool-card">
+        <div class="tool-icon" style="background:var(--tape-soft);color:var(--tape);">LS</div>
+        <h3>Lakhsmi Signals</h3>
+        <p>The core AFT signal engine &mdash; the same confluence logic that powers the automated trading bots, available here as an on-demand read for any symbol.</p>
+        <span class="tool-tag">core engine</span>
+      </div>
+      <div class="tool-card">
+        <div class="tool-icon" style="background:var(--bull-soft);color:var(--bull);">PT</div>
+        <h3>Paper Trading</h3>
+        <p>Simulated order tracking against real live market data &mdash; test a setup, a size, a stop, without risking a single dollar until you're actually ready.</p>
+        <span class="tool-tag">simulated &middot; real data</span>
+      </div>
+      <div class="tool-card">
+        <div class="tool-icon" style="background:var(--bear-soft);color:var(--bear);">Al</div>
+        <h3>Alerts</h3>
+        <p>Set it, forget it, get notified &mdash; price and confluence alerts so you're not staring at charts all day waiting for a level to hit.</p>
+        <span class="tool-tag">price &middot; confluence</span>
+      </div>
+      <a href="/position-size-calculator.html" class="tool-card live">
+        <div class="tool-icon" style="background:var(--tape-soft);color:var(--tape);">$</div>
+        <span class="tool-live-badge">Try it now &middot; no login</span>
+        <h3>Position Size Calculator</h3>
+        <p>Portfolio size, risk %, stop-loss % in &mdash; exact position size out. The single most-skipped step in every losing trade, solved in three fields.</p>
+        <span class="tool-tag">risk-based sizing</span>
+      </a>
     </div>
   </div>
 </section>
@@ -419,8 +485,8 @@ const PART3_AFTER = `
     </div>
 
     <div class="faq-item">
-      <h4>Do I need to use all seven tools together?</h4>
-      <p>No. Each tool works standalone, but the Confluences Dashboard is what turns "four separate signals" into one visible score &mdash; that's where the suite compounds.</p>
+      <h4>Do I need to use all 16 tools together?</h4>
+      <p>No. Each tool works standalone, but the Confluence Dashboard is what turns separate signals into one visible score &mdash; that's where the suite compounds.</p>
     </div>
     <div class="faq-item">
       <h4>What counts as a high-confluence setup?</h4>
@@ -440,10 +506,10 @@ const PART3_AFTER = `
 <section>
   <div class="wrap">
     <div class="final-cta">
-      <h2>Stop reading eight tabs to make one decision.</h2>
-      <p>Seven tools, one confluence score, updated live. Free to open, no install.</p>
+      <h2>16 tools. One login. Trading made easy.</h2>
+      <p>Stop reading eight tabs to make one decision. Log in once and every tool works together &mdash; free to open, no install.</p>
       <div class="cta-row">
-        <a class="btn-primary" href="#suite">Open Toolkit &rarr;</a>
+        <a class="btn-primary" href="/login">Login &amp; Start Trading &rarr;</a>
       </div>
     </div>
   </div>
@@ -470,7 +536,7 @@ const PART3_AFTER = `
 
 export default function Home() {
   useEffect(() => {
-    document.title = 'AFT Tools \u00b7 Institutional Order Flow \u0026 Confluence Suite';
+    document.title = 'AFT Tools \u00b7 16 Institutional Trading Tools \u00b7 One Login';
   }, []);
 
   return (
