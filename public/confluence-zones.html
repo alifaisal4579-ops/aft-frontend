@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Confluence Zones — Ali Faisal Trades</title>
+<meta name="theme-color" content="#080B10">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Manrope:wght@400;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0D12; --surface:#121821; --surface-2:#171E28; --surface-3:#1D2531;
+    --border:#222B38; --text:#EAEEF3; --muted:#7C8998;
+    --bull:#2FD8A6; --bear:#FF6259; --tape:#E8A63C;
+    --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --sans: 'Manrope', -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    --display: 'Space Grotesk', var(--sans);
+    --r-sm:6px; --r-lg:14px;
+    --shadow-1:0 1px 2px rgba(0,0,0,.4);
+    --shadow-2:0 8px 24px -12px rgba(0,0,0,.55);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--sans);}
+  body{padding:60px 20px;}
+  a.back-link{position:fixed;top:20px;left:20px;font-family:var(--mono);font-size:12px;color:var(--muted);text-decoration:none;}
+  a.back-link:hover{color:var(--tape);}
+
+  .cz-wrap{max-width:1040px;margin:0 auto;}
+  .cz-header h1{margin:0;font-family:var(--display);font-size:26px;font-weight:700;color:var(--text);}
+  .cz-header p{margin:4px 0 20px;font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);}
+  .cz-controls{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-bottom:16px;}
+  .cz-field{display:flex;flex-direction:column;gap:4px;}
+  .cz-field label{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-family:var(--mono);}
+  select, input[type=text]{
+    background:var(--surface-2);border:1px solid var(--border);color:var(--text);
+    padding:8px 10px;border-radius:5px;font-family:var(--mono);font-size:12.5px;min-width:90px;
+  }
+  select:focus, input:focus{outline:1px solid var(--tape);outline-offset:0;}
+  #czLoadBtn{
+    background:linear-gradient(180deg, #F2B44E, #E19A28);
+    color:#151006;border:none;border-radius:var(--r-sm);
+    padding:10px 20px;font-family:var(--mono);font-size:12px;font-weight:700;
+    letter-spacing:.04em;cursor:pointer;box-shadow:var(--shadow-1), inset 0 1px 0 rgba(255,255,255,.22);
+    transition:transform .12s, box-shadow .15s, filter .15s;
+  }
+  #czLoadBtn:hover{opacity:1;filter:brightness(1.06);transform:translateY(-1px);box-shadow:var(--shadow-2), inset 0 1px 0 rgba(255,255,255,.22);}
+  #czLoadBtn:active{transform:translateY(0);filter:brightness(.97);}
+  #czLoadBtn:disabled{opacity:.55;cursor:default;transform:none;filter:none;}
+
+  .cz-ticker{
+    font-family:var(--mono);font-size:16px;display:flex;gap:16px;align-items:baseline;
+    margin-bottom:16px;padding:15px 18px;background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  }
+  .cz-ticker > span:first-child{font-weight:700;color:var(--tape);letter-spacing:.02em;}
+  .cz-ticker .up{color:var(--bull);} .cz-ticker .down{color:var(--bear);}
+  .cz-panel{
+    background:linear-gradient(180deg, var(--surface), var(--surface) 60%, rgba(16,21,29,.92));
+    border:1px solid var(--border);border-radius:var(--r-lg);
+    box-shadow:var(--shadow-1);padding:18px;margin-bottom:16px;
+  }
+  .cz-panel-title{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--text);margin-bottom:14px;}
+  .cz-empty{color:var(--muted);font-family:var(--mono);font-size:13px;padding:8px 2px;}
+
+  /* ---- confluence zone cards ---- */
+  .cz-zone{
+    display:flex;align-items:stretch;gap:0;border-radius:10px;margin-bottom:12px;
+    background:var(--surface-2);border:1px solid var(--border);overflow:hidden;
+  }
+  .cz-zone:last-child{margin-bottom:0;}
+  .cz-zone.strong{border-color:rgba(232,166,60,.4);}
+  .cz-zone.very-strong{border-color:rgba(232,166,60,.65);box-shadow:0 0 0 1px rgba(232,166,60,.15) inset;}
+
+  .cz-zone-strength-col{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    min-width:76px;padding:16px 10px;background:var(--surface-3);border-right:1px solid var(--border);
+  }
+  .cz-zone.moderate .cz-zone-strength-col{background:rgba(108,147,245,.08);}
+  .cz-zone.strong .cz-zone-strength-col{background:rgba(232,166,60,.09);}
+  .cz-zone.very-strong .cz-zone-strength-col{background:rgba(232,166,60,.16);}
+  .cz-zone-strength{font-family:var(--display);font-size:30px;font-weight:800;line-height:1;color:var(--text);}
+  .cz-zone.moderate .cz-zone-strength{color:#6C93F5;}
+  .cz-zone.strong .cz-zone-strength, .cz-zone.very-strong .cz-zone-strength{color:var(--tape);}
+  .cz-zone-strength-label{font-family:var(--mono);font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-top:3px;}
+
+  .cz-zone-body{flex:1;padding:16px 18px;min-width:0;}
+  .cz-zone-top{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px;}
+  .cz-zone-price{font-family:var(--mono);font-size:19px;font-weight:800;color:var(--text);letter-spacing:-.01em;}
+  .cz-zone-tier{
+    font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+    padding:3px 9px;border-radius:20px;
+  }
+  .cz-zone-tier.moderate{background:rgba(108,147,245,.14);color:#6C93F5;border:1px solid rgba(108,147,245,.35);}
+  .cz-zone-tier.strong, .cz-zone-tier.very-strong{background:rgba(232,166,60,.14);color:var(--tape);border:1px solid rgba(232,166,60,.4);}
+  .cz-zone-position{
+    margin-left:auto;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+    padding:4px 11px;border-radius:5px;white-space:nowrap;
+  }
+  .cz-zone-position.above{background:rgba(47,216,166,.13);color:var(--bull);border:1px solid rgba(47,216,166,.35);}
+  .cz-zone-position.below{background:rgba(255,98,89,.13);color:var(--bear);border:1px solid rgba(255,98,89,.35);}
+  .cz-zone-position.inside{background:rgba(232,166,60,.13);color:var(--tape);border:1px solid rgba(232,166,60,.35);}
+
+  .cz-zone-tags{display:flex;flex-wrap:wrap;gap:7px;}
+  .cz-tag{
+    display:inline-flex;align-items:center;gap:6px;
+    font-family:var(--mono);font-size:11.5px;font-weight:600;
+    background:var(--surface);border:1px solid var(--border);
+    padding:5px 10px;border-radius:5px;white-space:nowrap;
+  }
+  .cz-tag-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+
+  /* ---- all source levels ---- */
+  .cz-all-levels{display:flex;flex-wrap:wrap;gap:8px;}
+  .cz-all-levels .cz-level-chip{
+    display:flex;flex-direction:column;gap:2px;
+    font-family:var(--mono);font-size:10.5px;background:var(--surface-2);
+    border:1px solid var(--border);border-left:3px solid var(--border);
+    border-radius:5px;padding:7px 11px;color:var(--muted);min-width:118px;
+  }
+  .cz-level-name{font-size:10px;letter-spacing:.02em;}
+  .cz-all-levels .cz-level-chip b{color:var(--text);font-size:13px;font-weight:700;}
+  .cz-caption{font-family:var(--mono);font-size:10px;color:var(--muted);opacity:.8;line-height:1.6;}
+
+  @media (max-width:640px){
+    .cz-zone{flex-direction:column;}
+    .cz-zone-strength-col{flex-direction:row;gap:8px;min-width:0;border-right:none;border-bottom:1px solid var(--border);padding:10px 16px;}
+    .cz-zone-strength-label{margin-top:0;}
+    .cz-zone-position{margin-left:0;}
+  }
+</style>
+</head>
+<body>
+
+<a href="/" class="back-link">&larr; Ali Faisal Trades</a>
+
+<div id="page-zones">
+<div class="cz-wrap">
+  <div class="cz-header">
+    <h1>Confluence Zones</h1>
+    <p>Where Volume Profile POCs, Anchor VWAPs, and key EMAs stack up</p>
+  </div>
+
+  <div class="cz-controls">
+    <div class="cz-field">
+      <label>Exchange</label>
+      <select id="czExchangeSelect">
+        <option value="binance">Binance</option>
+        <option value="bybit" selected>Bybit</option>
+      </select>
+    </div>
+    <div class="cz-field">
+      <label>Market</label>
+      <select id="czMarketSelect">
+        <option value="spot">Spot</option>
+        <option value="futures" selected>Futures (USDT-M)</option>
+      </select>
+    </div>
+    <div class="cz-field">
+      <label>Symbol</label>
+      <select id="czSymbolSelect">
+        <option value="BTCUSDT">BTCUSDT</option>
+        <option value="ETHUSDT">ETHUSDT</option>
+        <option value="SOLUSDT">SOLUSDT</option>
+        <option value="BNBUSDT">BNBUSDT</option>
+        <option value="XRPUSDT">XRPUSDT</option>
+        <option value="DOGEUSDT">DOGEUSDT</option>
+        <option value="ADAUSDT">ADAUSDT</option>
+        <option value="__custom">Custom…</option>
+      </select>
+    </div>
+    <div class="cz-field" id="czCustomWrap" style="display:none;">
+      <label>Custom pair</label>
+      <input type="text" id="czCustomSymbol" placeholder="e.g. LTCUSDT" />
+    </div>
+    <div class="cz-field">
+      <label>Cluster tolerance</label>
+      <select id="czToleranceSelect">
+        <option value="0.3">0.3%</option>
+        <option value="0.5" selected>0.5%</option>
+        <option value="0.75">0.75%</option>
+        <option value="1">1%</option>
+        <option value="1.5">1.5%</option>
+      </select>
+    </div>
+    <button id="czLoadBtn">Load</button>
+  </div>
+
+  <div class="cz-ticker" id="czTicker"><span style="color:var(--muted);">Loading…</span></div>
+
+  <div class="cz-panel">
+    <div class="cz-panel-title">Confluence zones (2+ levels agreeing)</div>
+    <div id="czZones"><div style="color:var(--muted);font-family:var(--mono);font-size:12px;">Press Load to build zones.</div></div>
+  </div>
+
+  <div class="cz-panel">
+    <div class="cz-panel-title">All source levels</div>
+    <div id="czAllLevels" class="cz-all-levels"></div>
+  </div>
+
+  <div class="cz-caption">Sources: Volume Profile POC/VAH/VAL from the Previous (prior completed period) and VWAP from Anchor VWAP — both across Daily/Weekly/Monthly/Quarterly/6M/Yearly — plus EMA 50/100/200 on 1H, 4H, 12H, and Daily. That's up to 36 levels, clustered wherever they fall within the chosen tolerance %.</div>
+</div>
+</div>
+
+<script>
+(function(){
+  const exchangeSelect = document.getElementById('czExchangeSelect');
+  const marketSelect = document.getElementById('czMarketSelect');
+  const symbolSelect = document.getElementById('czSymbolSelect');
+  const customWrap = document.getElementById('czCustomWrap');
+  const customSymbol = document.getElementById('czCustomSymbol');
+  const toleranceSelect = document.getElementById('czToleranceSelect');
+  const loadBtn = document.getElementById('czLoadBtn');
+  const tickerEl = document.getElementById('czTicker');
+  const zonesEl = document.getElementById('czZones');
+  const allLevelsEl = document.getElementById('czAllLevels');
+
+  symbolSelect.addEventListener('change', () => {
+    customWrap.style.display = symbolSelect.value === '__custom' ? 'flex' : 'none';
+  });
+  loadBtn.addEventListener('click', loadZones);
+
+  function currentSymbol(){
+    if (symbolSelect.value === '__custom') return (customSymbol.value || '').trim().toUpperCase();
+    return symbolSelect.value;
+  }
+  function currentExchange(){ return exchangeSelect.value; }
+  function isFutures(){ return marketSelect.value === 'futures'; }
+  function displaySymbol(symbol){ return isFutures() ? symbol + '.P' : symbol; }
+
+  async function fetchJson(url, retries){
+    retries = retries === undefined ? 2 : retries;
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return await res.json();
+    } catch (e) {
+      if (retries > 0) { await new Promise(r => setTimeout(r, 400)); return fetchJson(url, retries - 1); }
+      throw e;
+    }
+  }
+
+  async function fetchTicker(symbol){
+    if (currentExchange() === 'bybit'){
+      const category = isFutures() ? 'linear' : 'spot';
+      const data = await fetchJson(`https://api.bybit.com/v5/market/tickers?category=${category}&symbol=${symbol}`);
+      if (data.retCode !== 0) throw new Error(symbol + ': ' + (data.retMsg || 'Bybit error'));
+      const t = data.result && data.result.list && data.result.list[0];
+      if (!t) throw new Error(symbol + ': no ticker data on Bybit.');
+      return { lastPrice: parseFloat(t.lastPrice), change1dPct: parseFloat(t.price24hPcnt) * 100 };
+    }
+    const base = isFutures() ? 'https://fapi.binance.com' : 'https://api.binance.com';
+    const path = isFutures() ? '/fapi/v1/ticker/24hr' : '/api/v3/ticker/24hr';
+    const t = await fetchJson(`${base}${path}?symbol=${symbol}`);
+    return { lastPrice: parseFloat(t.lastPrice), change1dPct: parseFloat(t.priceChangePercent) };
+  }
+
+  function toBybitInterval(interval){
+    return { '1h':'60', '4h':'240', '6h':'360', '12h':'720', '1d':'D', '1w':'W', '1M':'M' }[interval] || '60';
+  }
+  // Bybit's kline endpoint has no native 8h or 3d interval -- build them by
+  // aggregating 4h (x2) or daily (x3) candles instead of asking for a bucket
+  // size Bybit doesn't support.
+  function aggregateCandles(candles, groupSize){
+    const out = [];
+    for (let i = 0; i + groupSize <= candles.length; i += groupSize){
+      const group = candles.slice(i, i + groupSize);
+      out.push({
+        time: group[0].time,
+        high: Math.max(...group.map(c => c.high)),
+        low: Math.min(...group.map(c => c.low)),
+        close: group[group.length - 1].close,
+        volume: group.reduce((a,c) => a + c.volume, 0),
+        quoteVolume: group.reduce((a,c) => a + c.quoteVolume, 0),
+      });
+    }
+    return out;
+  }
+
+  async function fetchKlines(symbol, interval, limit){
+    if (currentExchange() === 'bybit' && (interval === '8h' || interval === '3d')){
+      const [srcInterval, groupSize] = interval === '8h' ? ['4h', 2] : ['1d', 3];
+      const raw = await fetchKlines(symbol, srcInterval, limit * groupSize);
+      return aggregateCandles(raw, groupSize);
+    }
+    if (currentExchange() === 'bybit'){
+      const category = isFutures() ? 'linear' : 'spot';
+      const data = await fetchJson(`https://api.bybit.com/v5/market/kline?category=${category}&symbol=${symbol}&interval=${toBybitInterval(interval)}&limit=${limit}`);
+      if (data.retCode !== 0) throw new Error(symbol + ': ' + (data.retMsg || 'Bybit error'));
+      const list = data.result && data.result.list;
+      if (!Array.isArray(list) || !list.length) throw new Error(symbol + ': no data on Bybit for ' + interval);
+      return list.slice().reverse().map(c => ({
+        time:+c[0], high:+c[2], low:+c[3], close:+c[4], volume:+c[5], quoteVolume:+c[6],
+      }));
+    }
+    const base = isFutures() ? 'https://fapi.binance.com' : 'https://api.binance.com';
+    const path = isFutures() ? '/fapi/v1/klines' : '/api/v3/klines';
+    const data = await fetchJson(`${base}${path}?symbol=${symbol}&interval=${interval}&limit=${limit}`);
+    if (!Array.isArray(data) || !data.length) throw new Error(symbol + ': no data for ' + interval);
+    return data.map(c => ({
+      time: c[0], high:+c[2], low:+c[3], close:+c[4], volume:+c[5], quoteVolume:+c[7],
+    }));
+  }
+
+  function anchors(now){
+    const y = now.getUTCFullYear(), m = now.getUTCMonth(), d = now.getUTCDate();
+    const dow = now.getUTCDay();
+    const daysSinceMonday = (dow + 6) % 7;
+    const dayStart = Date.UTC(y, m, d);
+    const weekStart = dayStart - daysSinceMonday * 86400000;
+    const monthStart = Date.UTC(y, m, 1);
+    const quarterStartMonth = Math.floor(m / 3) * 3;
+    const quarterStart = Date.UTC(y, quarterStartMonth, 1);
+    const halfStartMonth = m < 6 ? 0 : 6;
+    const halfStart = Date.UTC(y, halfStartMonth, 1);
+    const yearStart = Date.UTC(y, 0, 1);
+    return [
+      { key:'daily', label:'Daily', start:dayStart, previousStart:dayStart - 86400000, useHourly:true },
+      { key:'weekly', label:'Weekly', start:weekStart, previousStart:weekStart - 7*86400000, useHourly:true },
+      { key:'monthly', label:'Monthly', start:monthStart, previousStart:Date.UTC(y, m-1, 1), useHourly:false },
+      { key:'quarterly', label:'Quarterly', start:quarterStart, previousStart:Date.UTC(y, quarterStartMonth-3, 1), useHourly:false },
+      { key:'sixmonth', label:'6-Month', start:halfStart, previousStart:Date.UTC(y, halfStartMonth-6, 1), useHourly:false },
+      { key:'yearly', label:'Yearly', start:yearStart, previousStart:Date.UTC(y-1, 0, 1), useHourly:false },
+    ];
+  }
+  // Matches the Volume Profile tool's own per-period interval and bin-count
+  // choices exactly, so the same anchor never shows a different POC/VAH/VAL
+  // depending on which tool you're looking at it from.
+  const PROFILE_SRC = { daily:'15m', weekly:'1h', monthly:'4h', quarterly:'4h', sixmonth:'1d', yearly:'1d' };
+  const VWAP_SRC = { daily:'1h', weekly:'1h', monthly:'1d', quarterly:'1d', sixmonth:'1d', yearly:'1d' };
+  const PROFILE_BINS = { daily:30, weekly:40, monthly:60, quarterly:80, sixmonth:90, yearly:100 };
+
+  function vwapFrom(candles, startTime){
+    let sumQuote = 0, sumBase = 0;
+    for (const c of candles) if (c.time >= startTime){ sumQuote += c.quoteVolume; sumBase += c.volume; }
+    return sumBase > 0 ? sumQuote / sumBase : null;
+  }
+
+  // Volume Profile: spread each candle's volume across its high-low range
+  // into bins, return the Point of Control plus the 70% Value Area High/Low.
+  function profileFrom(candles, startTime, endTime, numBins, rangeMin, rangeMax){
+    const set = endTime
+      ? candles.filter(c => c.time >= startTime && c.time < endTime)
+      : candles.filter(c => c.time >= startTime);
+    if (set.length < 2) return null;
+    // Matches the Volume Profile tool: Developing and Previous share the SAME
+    // bin range (computed from previousStart through "now") rather than each
+    // profile getting its own min/max -- otherwise the same 40 bins land on
+    // different price boundaries and POC/VAH/VAL come out slightly different.
+    const minLow = rangeMin !== undefined ? rangeMin : Math.min(...set.map(c => c.low));
+    const maxHigh = rangeMax !== undefined ? rangeMax : Math.max(...set.map(c => c.high));
+    if (maxHigh <= minLow) return null;
+    const binSize = (maxHigh - minLow) / numBins;
+    const bins = new Array(numBins).fill(0);
+    set.forEach(c => {
+      const range = c.high - c.low;
+      if (range <= 0){
+        const idx = Math.min(numBins - 1, Math.max(0, Math.floor((c.close - minLow) / binSize)));
+        bins[idx] += c.volume;
+        return;
+      }
+      for (let i = 0; i < numBins; i++){
+        const binLow = minLow + i * binSize, binHigh = binLow + binSize;
+        const overlap = Math.min(binHigh, c.high) - Math.max(binLow, c.low);
+        if (overlap > 0) bins[i] += c.volume * (overlap / range);
+      }
+    });
+    const total = bins.reduce((a, b) => a + b, 0);
+    let pocIndex = 0;
+    bins.forEach((v, i) => { if (v > bins[pocIndex]) pocIndex = i; });
+    let lowIdx = pocIndex, highIdx = pocIndex, vaVol = bins[pocIndex];
+    while (vaVol < 0.7 * total && (lowIdx > 0 || highIdx < numBins - 1)){
+      const nextLow = lowIdx > 0 ? bins[lowIdx - 1] : -1;
+      const nextHigh = highIdx < numBins - 1 ? bins[highIdx + 1] : -1;
+      if (nextHigh >= nextLow){ highIdx++; vaVol += bins[highIdx]; }
+      else { lowIdx--; vaVol += bins[lowIdx]; }
+    }
+    return {
+      poc: minLow + pocIndex * binSize + binSize / 2,
+      vah: minLow + (highIdx + 1) * binSize,
+      val: minLow + lowIdx * binSize,
+    };
+  }
+
+  function computeEMA(values, period){
+    const k = 2 / (period + 1);
+    const ema = [values[0]];
+    for (let i = 1; i < values.length; i++) ema.push(values[i] * k + ema[i-1] * (1-k));
+    return ema[ema.length - 1];
+  }
+
+  // Same 61.8% / 65% / 78.6% retracement math used in Lakhsmi Signals and
+  // the dedicated Fibonacci Levels tool -- high/low over a lookback window.
+  function fibLevels(candles, lookback){
+    const set = candles.slice(-lookback);
+    if (set.length < 3) return [];
+    const high = Math.max(...set.map(c => c.high));
+    const low = Math.min(...set.map(c => c.low));
+    if (high <= low) return [];
+    const range = high - low;
+    return [
+      { price: high - range * 0.618, label: 'Fib 61.8%' },
+      { price: high - range * 0.65,  label: 'Fib 65%' },
+      { price: high - range * 0.786, label: 'Fib 78.6%' },
+    ];
+  }
+
+  function fmtPrice(v){
+    if (v === null || v === undefined || isNaN(v)) return 'n/a';
+    return v.toLocaleString(undefined, {maximumFractionDigits: v < 1 ? 6 : 2});
+  }
+
+  function clusterLevels(levels, tolerancePct){
+    const sorted = [...levels].sort((a,b) => a.price - b.price);
+    const zones = [];
+    let current = [sorted[0]];
+    for (let i = 1; i < sorted.length; i++){
+      const prevAvg = current.reduce((a,l) => a + l.price, 0) / current.length;
+      const gapPct = Math.abs(sorted[i].price - prevAvg) / prevAvg * 100;
+      if (gapPct <= tolerancePct) current.push(sorted[i]);
+      else { zones.push(current); current = [sorted[i]]; }
+    }
+    zones.push(current);
+    return zones.map(group => ({
+      low: Math.min(...group.map(g => g.price)),
+      high: Math.max(...group.map(g => g.price)),
+      mid: group.reduce((a,g) => a + g.price, 0) / group.length,
+      levels: group,
+      strength: group.length,
+    }));
+  }
+
+  async function loadZones(){
+    const symbol = currentSymbol();
+    if (!symbol){
+      tickerEl.innerHTML = '<span style="color:var(--bear);">Enter a valid symbol.</span>';
+      return;
+    }
+    const tolerancePct = parseFloat(toleranceSelect.value) || 0.5;
+
+    loadBtn.disabled = true;
+    loadBtn.textContent = 'Loading…';
+    tickerEl.innerHTML = '<span style="color:var(--muted);">Loading…</span>';
+    zonesEl.innerHTML = '<div style="color:var(--muted);font-family:var(--mono);font-size:12px;">Building zones…</div>';
+    allLevelsEl.innerHTML = '';
+
+    try {
+      const now = new Date();
+      const [hourly, daily, h4, h12, fifteenMin, h6, h8, d3, weekly, monthly, ticker] = await Promise.all([
+        fetchKlines(symbol, '1h', 400),
+        fetchKlines(symbol, '1d', 800),
+        fetchKlines(symbol, '4h', 600),
+        fetchKlines(symbol, '12h', 300),
+        fetchKlines(symbol, '15m', 300),
+        fetchKlines(symbol, '6h', 400),
+        fetchKlines(symbol, '8h', 300),
+        fetchKlines(symbol, '3d', 250),
+        fetchKlines(symbol, '1w', 300),
+        fetchKlines(symbol, '1M', 250),
+        fetchTicker(symbol),
+      ]);
+      const bySrc = { '15m':fifteenMin, '1h':hourly, '4h':h4, '1d':daily };
+
+      const lastPrice = ticker.lastPrice;
+      tickerEl.innerHTML = `<span>${displaySymbol(symbol)}</span><span>${fmtPrice(lastPrice)}</span><span class="${ticker.change1dPct>=0?'up':'down'}">${ticker.change1dPct>=0?'+':''}${ticker.change1dPct.toFixed(2)}%</span>`;
+
+      const levels = [];
+      anchors(now).forEach(a => {
+        const vwapSource = bySrc[VWAP_SRC[a.key]];
+        const vwap = vwapSource ? vwapFrom(vwapSource, a.start) : null;
+        if (vwap) levels.push({ price: vwap, label: a.label + ' VWAP' });
+
+        const profileSource = bySrc[PROFILE_SRC[a.key]];
+        if (profileSource){
+          // Same shared bin range as the Volume Profile tool (previousStart
+          // through "now", not just previousStart-to-start) so the same
+          // anchor's POC/VAH/VAL always comes out identical everywhere.
+          const sharedSet = profileSource.filter(c => c.time >= a.previousStart);
+          if (sharedSet.length >= 2){
+            const rangeMin = Math.min(...sharedSet.map(c => c.low));
+            const rangeMax = Math.max(...sharedSet.map(c => c.high));
+            const bins = PROFILE_BINS[a.key] || 40;
+            const previous = profileFrom(profileSource, a.previousStart, a.start, bins, rangeMin, rangeMax);
+            if (previous){
+              levels.push({ price: previous.poc, label: a.label + ' POC' });
+              levels.push({ price: previous.vah, label: a.label + ' VAH' });
+              levels.push({ price: previous.val, label: a.label + ' VAL' });
+            }
+          }
+        }
+      });
+
+      const emaSourcesFull = [
+        { label: '1H', closes: hourly.map(c => c.close) },
+        { label: '4H', closes: h4.map(c => c.close) },
+        { label: '6H', closes: h6.map(c => c.close) },
+        { label: '8H', closes: h8.map(c => c.close) },
+        { label: '12H', closes: h12.map(c => c.close) },
+        { label: 'D', closes: daily.map(c => c.close) },
+        { label: '3D', closes: d3.map(c => c.close) },
+        { label: 'Week', closes: weekly.map(c => c.close) },
+        { label: 'Monthly', closes: monthly.map(c => c.close) },
+      ];
+      const emaSourcesLong = emaSourcesFull.filter(s => ['D','3D','Week','Monthly'].includes(s.label));
+
+      const emaPeriodsFull = [50, 100, 150, 200];
+      emaSourcesFull.forEach(src => {
+        emaPeriodsFull.forEach(period => {
+          if (src.closes.length > period + 5){
+            levels.push({ price: computeEMA(src.closes, period), label: `EMA${period} (${src.label})` });
+          }
+        });
+      });
+
+      const emaPeriodsShort = [14, 21];
+      emaSourcesLong.forEach(src => {
+        emaPeriodsShort.forEach(period => {
+          if (src.closes.length > period + 5){
+            levels.push({ price: computeEMA(src.closes, period), label: `EMA${period} (${src.label})` });
+          }
+        });
+      });
+
+      // Fibonacci 61.8% / 65% / 78.6% retracement, off the recent swing on
+      // three timeframes -- short (1H), medium (4H), long (Daily) -- same
+      // ratios Lakhsmi Signals and the dedicated Fibonacci Levels tool use.
+      const fibSources = [
+        { candles: hourly, lookback: 48,  tfLabel: '1H' },
+        { candles: h4,     lookback: 60,  tfLabel: '4H' },
+        { candles: daily,  lookback: 30,  tfLabel: 'D' },
+      ];
+      fibSources.forEach(src => {
+        fibLevels(src.candles, src.lookback).forEach(f => {
+          levels.push({ price: f.price, label: `${f.label} (${src.tfLabel})` });
+        });
+      });
+
+      // Colour-code by level type so zones are scannable at a glance.
+      function levelType(label){
+        if (label.includes('VWAP')) return 'vwap';
+        if (label.includes('POC')) return 'poc';
+        if (label.includes('VAH') || label.includes('VAL')) return 'va';
+        if (label.includes('EMA')) return 'ema';
+        if (label.includes('Fib')) return 'fib';
+        return 'other';
+      }
+      const TYPE_META = {
+        vwap:  { color:'#6C93F5', name:'VWAP' },
+        poc:   { color:'#E8A63C', name:'POC' },
+        va:    { color:'#B98CFF', name:'Value Area' },
+        ema:   { color:'#FF9F5B', name:'EMA' },
+        fib:   { color:'#2FD8A6', name:'Fibonacci' },
+        other: { color:'#8A96A5', name:'Other' },
+      };
+
+      allLevelsEl.innerHTML = levels
+        .sort((a,b) => b.price - a.price)
+        .map(l => {
+          const t = TYPE_META[levelType(l.label)];
+          return `<span class="cz-level-chip" style="border-left-color:${t.color}"><span class="cz-level-name">${l.label}</span><b>${fmtPrice(l.price)}</b></span>`;
+        })
+        .join('');
+
+      const zones = clusterLevels(levels, tolerancePct)
+        .filter(z => z.strength >= 2)
+        .sort((a,b) => b.strength - a.strength || b.mid - a.mid);
+
+      if (!zones.length){
+        zonesEl.innerHTML = '<div class="cz-empty">No confluence zones at this tolerance — try widening it.</div>';
+      } else {
+        zonesEl.innerHTML = zones.map(z => {
+          const position = lastPrice > z.high ? 'above' : lastPrice < z.low ? 'below' : 'inside';
+          const tier = z.strength >= 4 ? 'very-strong' : z.strength === 3 ? 'strong' : 'moderate';
+          const strengthLabel = z.strength >= 4 ? 'Very Strong' : z.strength === 3 ? 'Strong' : 'Moderate';
+          const rangeText = z.high - z.low < z.mid * 0.001 ? fmtPrice(z.mid) : `${fmtPrice(z.low)}–${fmtPrice(z.high)}`;
+          const sortedTags = [...z.levels].sort((a,b) => a.label.localeCompare(b.label));
+          return `
+            <div class="cz-zone ${tier}">
+              <div class="cz-zone-strength-col">
+                <div class="cz-zone-strength">${z.strength}</div>
+                <div class="cz-zone-strength-label">levels</div>
+              </div>
+              <div class="cz-zone-body">
+                <div class="cz-zone-top">
+                  <span class="cz-zone-price">${rangeText}</span>
+                  <span class="cz-zone-tier ${tier}">${strengthLabel}</span>
+                  <span class="cz-zone-position ${position}">${position}</span>
+                </div>
+                <div class="cz-zone-tags">${sortedTags.map(l => {
+                  const t = TYPE_META[levelType(l.label)];
+                  return `<span class="cz-tag" style="border-color:${t.color}55;color:${t.color}"><span class="cz-tag-dot" style="background:${t.color}"></span>${l.label}: ${fmtPrice(l.price)}</span>`;
+                }).join('')}</div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    } catch (e) {
+      tickerEl.innerHTML = `<span style="color:var(--bear);">${e.message || 'Failed to load data.'}</span>`;
+      zonesEl.innerHTML = '';
+    } finally {
+      loadBtn.disabled = false;
+      loadBtn.textContent = 'Load';
+    }
+  }
+
+  loadZones();
+})();
+</script>
+
+</script>
+</body>
+</html>
