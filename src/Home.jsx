@@ -227,8 +227,10 @@ const PART1_BEFORE = `
   <div class="nav-inner">
     <span class="logo">AFT <b>Tools</b></span>
     <div class="nav-links">
+      <a href="/sector-screener.html">Sector Screener</a>
+      <a href="/confluence-dashboard.html">Confluence Dashboard</a>
       <a href="/tools">Order Flow</a>
-      <a href="/tools">RSI Screener</a>
+      <a href="/position-size-calculator.html">Position Size Calc</a>
     </div>
     <div class="nav-cta-group">
       <a class="nav-telegram" href="https://t.me/alifaisaltrades" target="_blank" rel="noopener">
