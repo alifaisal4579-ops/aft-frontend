@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Anchor VWAP — Ali Faisal Trades</title>
+<title>VWAPs — Ali Faisal Trades</title>
 <meta name="theme-color" content="#080B10">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -107,7 +107,7 @@
 <div id="page-vwap">
 <div class="vw-wrap">
   <div class="vw-header">
-    <h1>Anchor VWAP</h1>
+    <h1>VWAPs</h1>
     <p>Volume-weighted price, anchored to key calendar levels</p>
   </div>
 
@@ -156,6 +156,16 @@
       <thead><tr><th>Anchor</th><th>Anchored from</th><th>VWAP</th><th>Distance</th><th>Bias</th></tr></thead>
       <tbody id="vwTableBody">
         <tr><td colspan="5" style="color:var(--muted);padding:14px;">Press Load to fetch anchor levels.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="vw-panel">
+    <div class="vw-panel-title">Previous Levels</div>
+    <table class="vw-table">
+      <thead><tr><th>Anchor</th><th>Period</th><th>VWAP</th><th>Distance</th><th>Bias</th></tr></thead>
+      <tbody id="vwPrevTableBody">
+        <tr><td colspan="5" style="color:var(--muted);padding:14px;">Press Load to fetch previous-session levels.</td></tr>
       </tbody>
     </table>
   </div>
@@ -263,23 +273,25 @@
     const dayStart = Date.UTC(y, m, d);
     const weekStart = dayStart - daysSinceMonday * 86400000;
     const monthStart = Date.UTC(y, m, 1);
-    const quarterStart = Date.UTC(y, Math.floor(m / 3) * 3, 1);
-    const halfStart = Date.UTC(y, m < 6 ? 0 : 6, 1);
+    const quarterStartMonth = Math.floor(m / 3) * 3;
+    const quarterStart = Date.UTC(y, quarterStartMonth, 1);
+    const halfStartMonth = m < 6 ? 0 : 6;
+    const halfStart = Date.UTC(y, halfStartMonth, 1);
     const yearStart = Date.UTC(y, 0, 1);
     return [
-      { key:'daily', label:'Daily', start: dayStart },
-      { key:'weekly', label:'Weekly', start: weekStart },
-      { key:'monthly', label:'Monthly', start: monthStart },
-      { key:'quarterly', label:'Quarterly', start: quarterStart },
-      { key:'sixmonth', label:'6-Month', start: halfStart },
-      { key:'yearly', label:'Yearly', start: yearStart },
+      { key:'daily', label:'Daily', start: dayStart, previousStart: dayStart - 86400000 },
+      { key:'weekly', label:'Weekly', start: weekStart, previousStart: weekStart - 7*86400000 },
+      { key:'monthly', label:'Monthly', start: monthStart, previousStart: Date.UTC(y, m-1, 1) },
+      { key:'quarterly', label:'Quarterly', start: quarterStart, previousStart: Date.UTC(y, quarterStartMonth-3, 1) },
+      { key:'sixmonth', label:'6-Month', start: halfStart, previousStart: Date.UTC(y, halfStartMonth-6, 1) },
+      { key:'yearly', label:'Yearly', start: yearStart, previousStart: Date.UTC(y-1, 0, 1) },
     ];
   }
 
-  function vwapFrom(candles, startTime){
+  function vwapFrom(candles, startTime, endTime){
     let sumQuote = 0, sumBase = 0;
     for (const c of candles){
-      if (c.time >= startTime){ sumQuote += c.quoteVolume; sumBase += c.volume; }
+      if (c.time >= startTime && (!endTime || c.time < endTime)){ sumQuote += c.quoteVolume; sumBase += c.volume; }
     }
     if (sumBase === 0) return null;
     return sumQuote / sumBase;
@@ -307,8 +319,8 @@
     try {
       const now = new Date();
       const [hourly, daily, ticker] = await Promise.all([
-        fetchKlines(symbol, '1h', 200),
-        fetchKlines(symbol, '1d', 400),
+        fetchKlines(symbol, '1h', 400),  // previous weekly VWAP needs up to 14 days of hourly candles
+        fetchKlines(symbol, '1d', 800),  // previous yearly VWAP needs up to 2 years of daily candles
         fetchTicker(symbol),
       ]);
 
@@ -335,6 +347,28 @@
           <td>${r.vwap ? `<span class="vw-badge ${r.distance>=0?'above':'below'}">${r.distance>=0?'Above':'Below'}</span>` : '—'}</td>
         </tr>
       `).join('');
+
+      // Previous completed period's VWAP for each anchor -- a FIXED level
+      // (that session is closed, so its VWAP never moves again), which is
+      // exactly why traders treat it as support/resistance.
+      const prevRows = levels.map(a => {
+        const source = (a.key === 'daily' || a.key === 'weekly') ? hourly : daily;
+        const vwap = vwapFrom(source, a.previousStart, a.start);
+        const distance = vwap ? (lastPrice - vwap) / vwap * 100 : null;
+        return { ...a, vwap, distance };
+      });
+      const prevBody = document.getElementById('vwPrevTableBody');
+      if (prevBody){
+        prevBody.innerHTML = prevRows.map(r => `
+          <tr>
+            <td class="anchor-name">${r.label}</td>
+            <td style="color:var(--muted);">${fmtDate(r.previousStart)} – ${fmtDate(r.start)}</td>
+            <td>${fmtPrice(r.vwap)}</td>
+            <td class="${r.distance>=0?'up':'down'}">${r.vwap ? (r.distance>=0?'+':'')+r.distance.toFixed(2)+'%' : 'n/a'}</td>
+            <td>${r.vwap ? `<span class="vw-badge ${r.distance>=0?'above':'below'}">${r.distance>=0?'Above':'Below'}</span>` : '—'}</td>
+          </tr>
+        `).join('');
+      }
 
       renderAnchorCharts(hourly, daily, rows, symbol, lastPrice);
     } catch (e) {
