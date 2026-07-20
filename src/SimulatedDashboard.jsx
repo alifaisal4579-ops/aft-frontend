@@ -14,7 +14,7 @@ export default function SimulatedDashboard() {
     api.listBots()
       .then(({ ok, body }) => {
         if (cancelled) return;
-        if (ok) setBots(body.bots);
+        if (ok) setBots(body.bots.filter((b) => b.mode !== 'real'));
         else setError(body.error || 'Could not load your bots.');
       })
       .catch(() => { if (!cancelled) setError('Could not reach the server. Please refresh.'); });
