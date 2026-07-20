@@ -1,22 +1,18 @@
-import { Link } from 'react-router-dom';
+import { useEffect } from 'react';
 
 // The real AFT Tools website (all 15 tools, its own internal navigation,
-// exact same design/behavior) served as a static file and embedded here
-// behind login. This replaces the earlier tool-by-tool manual React ports
-// (RsiScreenerPage.jsx, OrderFlowPage.jsx) as the primary way tools are
-// accessed -- guaranteed 100% visual/functional fidelity since it's
-// literally the same file, not a recreation of it.
+// exact same design/behavior) served as a static file. This page's only
+// job is the auth check (via ProtectedRoute, already applied by the router)
+// -- once that passes, it does a genuine full-page navigation to the real
+// file (not an iframe), so the URL, browser back/forward, and page-to-page
+// feel all match native navigation. A Cloudflare Worker gatekeeper
+// (worker.js) also blocks direct access to that URL without a session
+// cookie present, in case someone skips this page and types the URL
+// directly.
 export default function ToolsSuite() {
-  return (
-    <div className="tools-suite-wrap">
-      <div className="tools-suite-bar">
-        <Link to="/dashboard" className="back-link">&larr; Back to Dashboard</Link>
-      </div>
-      <iframe
-        src="/aft-tools-suite.html"
-        title="AFT Tools"
-        className="tools-suite-frame"
-      />
-    </div>
-  );
+  useEffect(() => {
+    window.location.replace('/aft-tools-suite.html');
+  }, []);
+
+  return <div className="center-loading">Opening tools&hellip;</div>;
 }
