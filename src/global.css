@@ -763,3 +763,7 @@ td.confluences {
 .of-read.bull{border-left-color:var(--bull);}
 .of-read.bear{border-left-color:var(--bear);}
 .of-read b{color:var(--tape);}
+
+/* Confluence overlay tags on the depth ladder */
+.of-lad-row .lconf{position:absolute;right:6px;top:0;font-size:9px;font-weight:700;color:var(--tape);white-space:nowrap;z-index:1;text-shadow:0 1px 4px rgba(0,0,0,.9);}
+.of-lad-row.conf{background:rgba(232,166,60,.05);}
