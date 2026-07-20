@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fibonacci Levels — Ali Faisal Trades</title>
+<meta name="theme-color" content="#080B10">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Manrope:wght@400;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#0A0D12; --surface:#121821; --surface-2:#171E28;
+    --border:#242C38; --text:#EAEEF3; --muted:#7C8998;
+    --bull:#2FD8A6; --bear:#FF6259; --tape:#E8A63C;
+    --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --sans: 'Manrope', -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    --display: 'Space Grotesk', var(--sans);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--sans);}
+  body{padding:60px 20px;}
+  a.back-link{position:fixed;top:20px;left:20px;font-family:var(--mono);font-size:12px;color:var(--muted);text-decoration:none;}
+  a.back-link:hover{color:var(--tape);}
+
+  .fib-wrap{max-width:1300px;margin:0 auto;}
+  .fib-header h1{margin:0;font-family:var(--display);font-size:26px;font-weight:700;color:var(--text);}
+  .fib-header p{margin:4px 0 20px;font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);}
+  .fib-controls{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-bottom:16px;}
+  .fib-field{display:flex;flex-direction:column;gap:4px;}
+  .fib-field label{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-family:var(--mono);}
+  select, input[type=text]{
+    background:var(--surface-2);border:1px solid var(--border);color:var(--text);
+    padding:8px 10px;border-radius:5px;font-family:var(--mono);font-size:12.5px;min-width:90px;
+  }
+  select:focus, input:focus{outline:1px solid var(--tape);outline-offset:0;}
+  button{
+    background:var(--tape);color:#0A0D12;border:none;border-radius:5px;
+    padding:9px 18px;font-family:var(--mono);font-size:12px;font-weight:700;
+    letter-spacing:.04em;cursor:pointer;
+  }
+  button:hover{opacity:.88;}
+  .fib-ticker{
+    font-family:var(--mono);font-size:15px;display:flex;gap:16px;align-items:baseline;
+    margin-bottom:16px;padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  }
+  .fib-ticker .up{color:var(--bull);} .fib-ticker .down{color:var(--bear);}
+  .fib-summary{
+    display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;font-family:var(--mono);font-size:12px;color:var(--muted);
+  }
+  .fib-summary b{color:var(--tape);}
+
+  .fib-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(420px, 1fr));gap:16px;}
+  @media (max-width:640px){ .fib-grid{grid-template-columns:1fr;} }
+  .fib-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;}
+  .fib-box.support{border-color:rgba(47,216,166,.35);}
+  .fib-box.resistance{border-color:rgba(255,98,89,.35);}
+  .fib-box-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .fib-box-tf{font-family:var(--display);font-size:15px;font-weight:700;color:var(--text);}
+  .fib-box-dir{
+    font-family:var(--mono);font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
+    padding:2px 7px;border-radius:4px;
+  }
+  .fib-box-dir.support{background:rgba(47,216,166,.14);color:var(--bull);}
+  .fib-box-dir.resistance{background:rgba(255,98,89,.14);color:var(--bear);}
+  .fib-box canvas{width:100%;margin-bottom:8px;}
+  .fib-box-status{
+    font-family:var(--mono);font-size:11px;font-weight:700;text-align:center;padding:5px;border-radius:5px;margin-bottom:8px;
+  }
+  .fib-box-levels{display:flex;flex-direction:column;gap:3px;font-family:var(--mono);font-size:10.5px;}
+  .fib-box-levels div{display:flex;justify-content:space-between;padding:2px 4px;border-radius:3px;}
+  .fib-box-levels .lvl-label{color:var(--muted);}
+  .fib-box-levels .lvl-price{color:var(--text);font-weight:600;}
+  .fib-box-levels .golden{background:rgba(232,166,60,.09);}
+  .fib-box-levels .golden .lvl-label{color:var(--tape);}
+  .fib-caption{font-family:var(--mono);font-size:10px;color:var(--muted);opacity:.75;margin-top:16px;}
+</style>
+</head>
+<body>
+
+<a href="/" class="back-link">&larr; Ali Faisal Trades</a>
+
+<div id="page-fib">
+<div class="fib-wrap">
+  <div class="fib-header">
+    <h1>Fibonacci Levels</h1>
+    <p>61.8% / 65% / 78.6% retracement, across every timeframe — futures only</p>
+  </div>
+
+  <div class="fib-controls">
+    <div class="fib-field">
+      <label>Exchange</label>
+      <select id="fibExchangeSelect">
+        <option value="binance">Binance</option>
+        <option value="bybit" selected>Bybit</option>
+      </select>
+    </div>
+    <div class="fib-field">
+      <label>Symbol</label>
+      <select id="fibSymbolSelect">
+        <option value="BTCUSDT">BTCUSDT</option>
+        <option value="ETHUSDT">ETHUSDT</option>
+        <option value="SOLUSDT">SOLUSDT</option>
+        <option value="BNBUSDT">BNBUSDT</option>
+        <option value="XRPUSDT">XRPUSDT</option>
+        <option value="DOGEUSDT">DOGEUSDT</option>
+        <option value="ADAUSDT">ADAUSDT</option>
+        <option value="__custom">Custom…</option>
+      </select>
+    </div>
+    <div class="fib-field" id="fibCustomWrap" style="display:none;">
+      <label>Custom pair</label>
+      <input type="text" id="fibCustomSymbol" placeholder="e.g. LTCUSDT" />
+    </div>
+    <button id="fibLoadBtn">Load</button>
+  </div>
+
+  <div class="fib-ticker" id="fibTicker"><span style="color:var(--muted);">Loading…</span></div>
+
+  <div class="fib-summary" id="fibSummary"></div>
+
+  <div class="fib-grid" id="fibGrid"></div>
+
+  <div class="fib-caption">Every timeframe finds its own recent swing high and swing low (lookback scaled to the timeframe), then measures the 61.8% / 65% / 78.6% retracement between them — same ratios used everywhere else on this site. If the high came after the low, it's an uptrend and the zone acts as potential support on a pullback; if the low came after the high, it's a downtrend and the zone acts as potential resistance on a bounce. "Golden Pocket" is the 61.8%–65% band specifically. Futures only (USDT-M on Binance, linear on Bybit). Bybit's 3D candles are synthesized from 3 daily candles (no native 3-day interval there). Not financial advice.</div>
+</div>
+</div>
+
+<script>
+(function(){
+  const exchangeSelect = document.getElementById('fibExchangeSelect');
+  const symbolSelect = document.getElementById('fibSymbolSelect');
+  const customWrap = document.getElementById('fibCustomWrap');
+  const customSymbol = document.getElementById('fibCustomSymbol');
+  const loadBtn = document.getElementById('fibLoadBtn');
+  const tickerEl = document.getElementById('fibTicker');
+  const summaryEl = document.getElementById('fibSummary');
+  const gridEl = document.getElementById('fibGrid');
+
+  let miniCharts = [];
+
+  symbolSelect.addEventListener('change', () => {
+    customWrap.style.display = symbolSelect.value === '__custom' ? 'flex' : 'none';
+  });
+  loadBtn.addEventListener('click', loadAll);
+
+  function currentSymbol(){
+    if (symbolSelect.value === '__custom') return (customSymbol.value || '').trim().toUpperCase();
+    return symbolSelect.value;
+  }
+  function currentExchange(){ return exchangeSelect.value; }
+  function displaySymbol(symbol){ return symbol + '.P'; }
+  function fmtPrice(v){
+    if (v === null || v === undefined || isNaN(v)) return 'n/a';
+    return v.toLocaleString(undefined, {maximumFractionDigits: v < 1 ? 6 : 2});
+  }
+
+  async function fetchJson(url, retries){
+    retries = retries === undefined ? 2 : retries;
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return await res.json();
+    } catch (e) {
+      if (retries > 0) { await new Promise(r => setTimeout(r, 400)); return fetchJson(url, retries - 1); }
+      throw e;
+    }
+  }
+
+  async function fetchTicker(symbol){
+    if (currentExchange() === 'bybit'){
+      const data = await fetchJson(`https://api.bybit.com/v5/market/tickers?category=linear&symbol=${symbol}`);
+      if (data.retCode !== 0) throw new Error(symbol + ': ' + (data.retMsg || 'Bybit error'));
+      const t = data.result && data.result.list && data.result.list[0];
+      if (!t) throw new Error(symbol + ': no ticker data on Bybit.');
+      return { lastPrice: parseFloat(t.lastPrice), change1dPct: parseFloat(t.price24hPcnt) * 100 };
+    }
+    const t = await fetchJson(`https://fapi.binance.com/fapi/v1/ticker/24hr?symbol=${symbol}`);
+    return { lastPrice: parseFloat(t.lastPrice), change1dPct: parseFloat(t.priceChangePercent) };
+  }
+
+  async function fetchKlinesRaw(symbol, biI, byI, limit){
+    if (currentExchange() === 'bybit'){
+      const data = await fetchJson(`https://api.bybit.com/v5/market/kline?category=linear&symbol=${symbol}&interval=${byI}&limit=${limit}`);
+      if (data.retCode !== 0) throw new Error(symbol + ': ' + (data.retMsg || 'Bybit error'));
+      const list = data.result && data.result.list;
+      if (!Array.isArray(list) || !list.length) throw new Error(symbol + ': no data on Bybit for ' + biI);
+      return list.slice().reverse().map(c => ({ time:+c[0], open:+c[1], high:+c[2], low:+c[3], close:+c[4] }));
+    }
+    const data = await fetchJson(`https://fapi.binance.com/fapi/v1/klines?symbol=${symbol}&interval=${biI}&limit=${limit}`);
+    if (!Array.isArray(data) || !data.length) throw new Error(symbol + ': no data for ' + biI);
+    return data.map(c => ({ time:c[0], open:+c[1], high:+c[2], low:+c[3], close:+c[4] }));
+  }
+
+  // Bybit has no native 3-day interval -- synthesize it from 3 daily candles.
+  async function fetchKlines(symbol, tf, limit){
+    if (tf.binanceOnlyAggregate){
+      if (currentExchange() === 'bybit'){
+        throw new Error('Bybit has no seconds-level candle data -- 30s only works on Binance.');
+      }
+      const raw = await fetchKlinesRaw(symbol, tf.biI, tf.byI, limit * tf.binanceOnlyAggregate);
+      const out = [];
+      for (let i = 0; i + tf.binanceOnlyAggregate <= raw.length; i += tf.binanceOnlyAggregate){
+        const group = raw.slice(i, i + tf.binanceOnlyAggregate);
+        out.push({
+          time: group[0].time,
+          open: group[0].open,
+          high: Math.max(...group.map(c => c.high)),
+          low: Math.min(...group.map(c => c.low)),
+          close: group[group.length - 1].close,
+        });
+      }
+      return out;
+    }
+    if (currentExchange() === 'bybit' && tf.bybitAggregate){
+      const raw = await fetchKlinesRaw(symbol, tf.biI, tf.byI, limit * tf.bybitAggregate);
+      const out = [];
+      for (let i = 0; i + tf.bybitAggregate <= raw.length; i += tf.bybitAggregate){
+        const group = raw.slice(i, i + tf.bybitAggregate);
+        out.push({
+          time: group[0].time,
+          open: group[0].open,
+          high: Math.max(...group.map(c => c.high)),
+          low: Math.min(...group.map(c => c.low)),
+          close: group[group.length - 1].close,
+        });
+      }
+      return out;
+    }
+    return fetchKlinesRaw(symbol, tf.biI, tf.byI, limit);
+  }
+
+  const TIMEFRAMES = [
+    { key:'30s', label:'30s', biI:'1s',  byI:null,  binanceOnlyAggregate:30, lookback:900, searchWindow:100 },
+    { key:'1m',  label:'1m',  biI:'1m',  byI:'1',   lookback:500, searchWindow:100 },
+    { key:'3m',  label:'3m',  biI:'3m',  byI:'3',   lookback:480, searchWindow:100 },
+    { key:'5m',  label:'5m',  biI:'5m',  byI:'5',   lookback:400, searchWindow:100 },
+    { key:'15m', label:'15m', biI:'15m', byI:'15',  lookback:300, searchWindow:90  },
+    { key:'30m', label:'30m', biI:'30m', byI:'30',  lookback:200, searchWindow:90  },
+    { key:'1h',  label:'1H',  biI:'1h',  byI:'60',  lookback:150, searchWindow:90  },
+    { key:'2h',  label:'2H',  biI:'2h',  byI:'120', lookback:120, searchWindow:90  },
+    { key:'4h',  label:'4H',  biI:'4h',  byI:'240', lookback:100, searchWindow:90  },
+    { key:'6h',  label:'6H',  biI:'6h',  byI:'360', lookback:90,  searchWindow:80  },
+    { key:'12h', label:'12H', biI:'12h', byI:'720', lookback:80,  searchWindow:75  },
+    { key:'1d',  label:'D',   biI:'1d',  byI:'D',   lookback:100, searchWindow:90  },
+    { key:'3d',  label:'3D',  biI:'3d',  byI:'D', bybitAggregate:3, lookback:70, searchWindow:65 },
+    { key:'1w',  label:'W',   biI:'1w',  byI:'W',   lookback:70,  searchWindow:65  },
+    { key:'1M',  label:'M',   biI:'1M',  byI:'M',   lookback:40,  searchWindow:38  },
+  ];
+
+  // Confirmed structural pivots only (needs pivotWidth candles clear on both
+  // sides) -- a single-candle wick spike is noise, not a real swing point.
+  // Among those confirmed pivots, pick the most extreme high and the most
+  // extreme low, so the retracement is measured off an actual structural
+  // swing instead of whatever the last few candles happened to wiggle to.
+  function findPivots(candles, pivotWidth){
+    const highs = [], lows = [];
+    for (let i = pivotWidth; i < candles.length - pivotWidth; i++){
+      let isHigh = true, isLow = true;
+      for (let k = 1; k <= pivotWidth; k++){
+        if (candles[i].high < candles[i-k].high || candles[i].high < candles[i+k].high) isHigh = false;
+        if (candles[i].low > candles[i-k].low || candles[i].low > candles[i+k].low) isLow = false;
+        if (!isHigh && !isLow) break;
+      }
+      if (isHigh) highs.push({ idx: i, price: candles[i].high });
+      if (isLow) lows.push({ idx: i, price: candles[i].low });
+    }
+    // Edges of the window can't be pivot-confirmed (no candles beyond them
+    // to confirm against) -- fall back to including them as candidates too,
+    // so a swing that's still developing right at "now" isn't missed.
+    if (!highs.length || candles[candles.length-1].high >= Math.max(...highs.map(h=>h.price))){
+      highs.push({ idx: candles.length-1, price: candles[candles.length-1].high });
+    }
+    if (!lows.length || candles[candles.length-1].low <= Math.min(...lows.map(l=>l.price))){
+      lows.push({ idx: candles.length-1, price: candles[candles.length-1].low });
+    }
+    return { highs, lows };
+  }
+
+  function findSwing(candles){
+    const pivotWidth = Math.max(2, Math.min(5, Math.floor(candles.length / 25)));
+    const { highs, lows } = findPivots(candles, pivotWidth);
+    const bestHigh = highs.reduce((a,b) => b.price > a.price ? b : a);
+    const bestLow = lows.reduce((a,b) => b.price < a.price ? b : a);
+    return { hi: bestHigh.price, hiIdx: bestHigh.idx, lo: bestLow.price, loIdx: bestLow.idx };
+  }
+
+  function computeFib(candles){
+    if (candles.length < 10) return null;
+    const { hi, hiIdx, lo, loIdx } = findSwing(candles);
+    if (hi <= lo) return null;
+    const range = hi - lo;
+    const uptrend = hiIdx > loIdx; // high formed after the low -> retracing down from the high
+    let level618, level65, level786;
+    if (uptrend){
+      level618 = hi - range * 0.618;
+      level65  = hi - range * 0.65;
+      level786 = hi - range * 0.786;
+    } else {
+      level618 = lo + range * 0.618;
+      level65  = lo + range * 0.65;
+      level786 = lo + range * 0.786;
+    }
+    return { hi, hiIdx, lo, loIdx, level618, level65, level786, direction: uptrend ? 'support' : 'resistance' };
+  }
+
+  function statusFor(price, fib){
+    const top = Math.max(fib.level618, fib.level786);
+    const bot = Math.min(fib.level618, fib.level786);
+    const goldTop = Math.max(fib.level618, fib.level65);
+    const goldBot = Math.min(fib.level618, fib.level65);
+    if (price > top + (top - bot) * 0.02) return { text: 'Above zone', color: fib.direction === 'support' ? '#7C8998' : '#FF6259' };
+    if (price < bot - (top - bot) * 0.02) return { text: 'Below zone', color: fib.direction === 'support' ? '#FF6259' : '#7C8998' };
+    if (price <= goldTop && price >= goldBot) return { text: 'In Golden Pocket', color: '#E8A63C' };
+    if (price > goldTop) return { text: 'Between 61.8%–zone edge', color: '#6C93F5' };
+    return { text: 'Between 65%–78.6%', color: '#6C93F5' };
+  }
+
+  function drawCandles(ctx, chart, candles, colorUp, colorDown){
+    const { scales } = chart;
+    const x = scales.x, y = scales.y;
+    const slotWidth = (x.getPixelForValue(1) - x.getPixelForValue(0)) || 4;
+    const bodyWidth = Math.max(1, slotWidth * 0.62);
+    ctx.save();
+    candles.forEach((c, i) => {
+      const px = x.getPixelForValue(i);
+      const up = c.close >= c.open;
+      const color = up ? colorUp : colorDown;
+      ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = 1;
+      const yHigh = y.getPixelForValue(c.high), yLow = y.getPixelForValue(c.low);
+      ctx.beginPath(); ctx.moveTo(px, yHigh); ctx.lineTo(px, yLow); ctx.stroke();
+      const yOpen = y.getPixelForValue(c.open), yClose = y.getPixelForValue(c.close);
+      const top = Math.min(yOpen, yClose), h = Math.max(1, Math.abs(yClose - yOpen));
+      ctx.fillRect(px - bodyWidth/2, top, bodyWidth, h);
+    });
+    ctx.restore();
+  }
+
+  function renderBox(tf, candles, fib, currentPrice, idx){
+    const dirClass = fib.direction;
+    const status = statusFor(currentPrice, fib);
+    const box = document.createElement('div');
+    box.className = 'fib-box ' + dirClass;
+    box.innerHTML = `
+      <div class="fib-box-head">
+        <span class="fib-box-tf">${tf.label}</span>
+        <span class="fib-box-dir ${dirClass}">${dirClass}</span>
+      </div>
+      <canvas id="fibChart-${idx}" height="230"></canvas>
+      <div class="fib-box-status" style="background:${status.color}22;color:${status.color};">${status.text}</div>
+      <div class="fib-box-levels">
+        <div><span class="lvl-label">61.8%</span><span class="lvl-price">${fmtPrice(fib.level618)}</span></div>
+        <div class="golden"><span class="lvl-label">65% (Golden)</span><span class="lvl-price">${fmtPrice(fib.level65)}</span></div>
+        <div><span class="lvl-label">78.6%</span><span class="lvl-price">${fmtPrice(fib.level786)}</span></div>
+      </div>
+    `;
+    gridEl.appendChild(box);
+
+    // candles is already the compact, fixed-size recent window (searchWindow)
+    // -- both swing markers are guaranteed to be within it, no trimming needed.
+    const dHiIdx = fib.hiIdx;
+    const dLoIdx = fib.loIdx;
+
+    const allVals = candles.flatMap(c => [c.high, c.low]).concat([fib.level618, fib.level65, fib.level786]);
+    const minV = Math.min(...allVals), maxV = Math.max(...allVals);
+    const pad = (maxV - minV) * 0.08 || maxV * 0.001;
+    const n = candles.length;
+    const upColor = '#2FD8A6', downColor = '#FF6259';
+
+    const plugin = {
+      id: 'fibChartDraw-' + idx,
+      beforeDatasetsDraw(chart){
+        const { chartArea, scales } = chart;
+        const ctx = chart.ctx;
+        const y = scales.y;
+        ctx.save();
+        const yGoldTop = y.getPixelForValue(Math.max(fib.level618, fib.level65));
+        const yGoldBot = y.getPixelForValue(Math.min(fib.level618, fib.level65));
+        ctx.fillStyle = 'rgba(232,166,60,.10)';
+        ctx.fillRect(chartArea.left, yGoldTop, chartArea.right - chartArea.left, yGoldBot - yGoldTop);
+        function hline(val, color){
+          const py = y.getPixelForValue(val);
+          ctx.strokeStyle = color; ctx.lineWidth = 1; ctx.setLineDash([3,2]);
+          ctx.beginPath(); ctx.moveTo(chartArea.left, py); ctx.lineTo(chartArea.right, py); ctx.stroke();
+          ctx.setLineDash([]);
+        }
+        hline(fib.level618, '#E8A63C');
+        hline(fib.level65, '#E8A63C');
+        hline(fib.level786, '#6C93F5');
+        ctx.restore();
+      },
+      afterDatasetsDraw(chart){
+        const ctx = chart.ctx;
+        drawCandles(ctx, chart, candles, upColor, downColor);
+
+        // Clearly mark the exact swing high / swing low the retracement is measured from.
+        const { scales } = chart;
+        const x = scales.x, y = scales.y;
+        const pxH = x.getPixelForValue(dHiIdx), pyH = y.getPixelForValue(fib.hi);
+        const pxL = x.getPixelForValue(dLoIdx), pyL = y.getPixelForValue(fib.lo);
+        // When H and L sit close together (flat/quiet chart), push their
+        // labels further apart so they don't collide into unreadable overlap.
+        const closeY = Math.abs(pyH - pyL) < 22;
+        const closeX = Math.abs(pxH - pxL) < 40;
+        const hOffset = closeY ? -16 : -8;
+        const lOffset = closeY ? 22 : 14;
+        function marker(px, py, label, color, yOffset){
+          ctx.save();
+          ctx.beginPath(); ctx.arc(px, py, 4, 0, Math.PI*2);
+          ctx.fillStyle = color; ctx.fill();
+          ctx.strokeStyle = '#0A0D12'; ctx.lineWidth = 1.5; ctx.stroke();
+          ctx.font = "700 10px 'JetBrains Mono', monospace";
+          ctx.fillStyle = color;
+          const onRight = closeX ? (label === 'H') : px > x.getPixelForValue(n * 0.7);
+          ctx.textAlign = onRight ? 'right' : 'left';
+          const labelX = onRight ? px - 8 : px + 8;
+          ctx.fillText(label, labelX, py + yOffset);
+          ctx.restore();
+        }
+        marker(pxH, pyH, 'H', '#2FD8A6', hOffset);
+        marker(pxL, pyL, 'L', '#FF6259', lOffset);
+      },
+    };
+
+    new Chart(document.getElementById(`fibChart-${idx}`), {
+      type: 'line',
+      data: { labels: candles.map((_,i)=>i), datasets: [{ data: candles.map(c=>c.close), borderColor:'transparent', pointRadius:0 }] },
+      options: {
+        responsive: true, animation: { duration: 0 },
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { type: 'linear', min: 0, max: n - 1, display: false },
+          y: { min: minV - pad, max: maxV + pad, ticks: { color:'#7C8998', font:{family:'JetBrains Mono', size:9}, maxTicksLimit:4 }, grid: { color:'#1A2029' } },
+        },
+      },
+      plugins: [plugin],
+    });
+  }
+
+  async function loadAll(){
+    const symbol = currentSymbol();
+    if (!symbol){
+      tickerEl.innerHTML = '<span style="color:var(--bear);">Enter a valid symbol.</span>';
+      return;
+    }
+    loadBtn.disabled = true;
+    loadBtn.textContent = 'Loading…';
+    tickerEl.innerHTML = '<span style="color:var(--muted);">Loading…</span>';
+    summaryEl.innerHTML = '';
+    gridEl.innerHTML = '';
+    miniCharts.forEach(c => c.destroy && c.destroy());
+    miniCharts = [];
+
+    try {
+      const ticker = await fetchTicker(symbol);
+      tickerEl.innerHTML = `<span style="font-weight:700;color:var(--tape);">${displaySymbol(symbol)}</span><span>${fmtPrice(ticker.lastPrice)}</span><span class="${ticker.change1dPct>=0?'up':'down'}">${ticker.change1dPct>=0?'+':''}${ticker.change1dPct.toFixed(2)}%</span>`;
+
+      const results = await Promise.all(TIMEFRAMES.map(async (tf) => {
+        try {
+          const fullCandles = await fetchKlines(symbol, tf, tf.lookback);
+          // Search + display only the recent, fixed-size window -- guarantees
+          // a readable chart and a swing that's actually relevant right now,
+          // regardless of how far back the raw fetch goes.
+          const candles = fullCandles.slice(-tf.searchWindow);
+          const fib = computeFib(candles);
+          return { tf, candles, fib };
+        } catch (e) {
+          return { tf, error: e.message };
+        }
+      }));
+
+      let supportCount = 0, resistanceCount = 0, goldenCount = 0;
+      const goldenTFs = [];
+      results.forEach((r, idx) => {
+        if (!r.fib){
+          const box = document.createElement('div');
+          box.className = 'fib-box';
+          box.innerHTML = `<div class="fib-box-head"><span class="fib-box-tf">${r.tf.label}</span></div><div style="color:var(--muted);font-family:var(--mono);font-size:11px;padding:20px 0;text-align:center;">${r.error || 'No data'}</div>`;
+          gridEl.appendChild(box);
+          return;
+        }
+        if (r.fib.direction === 'support') supportCount++; else resistanceCount++;
+        const status = statusFor(ticker.lastPrice, r.fib);
+        if (status.text === 'In Golden Pocket'){ goldenCount++; goldenTFs.push(r.tf.label); }
+        renderBox(r.tf, r.candles, r.fib, ticker.lastPrice, idx);
+      });
+
+      const goldenText = goldenCount
+        ? `<span><b style="color:var(--tape);">${goldenTFs.join(', ')}</b> in Golden Pocket right now</span>`
+        : `<span><b>0</b>/15 currently in Golden Pocket</span>`;
+      summaryEl.innerHTML = `<span><b>${supportCount}</b>/15 support structure</span><span><b>${resistanceCount}</b>/15 resistance structure</span>${goldenText}`;
+    } catch (e) {
+      tickerEl.innerHTML = `<span style="color:var(--bear);">${e.message || 'Failed to load data.'}</span>`;
+    } finally {
+      loadBtn.disabled = false;
+      loadBtn.textContent = 'Load';
+    }
+  }
+
+  loadAll();
+})();
+
+</script>
+</body>
+</html>
