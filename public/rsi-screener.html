@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RSI Screener — Ali Faisal Trades</title>
+<meta name="theme-color" content="#080B10">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Manrope:wght@400;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#0A0D12; --surface:#121821; --surface-2:#171E28;
+    --border:#242C38; --text:#EAEEF3; --muted:#7C8998;
+    --bull:#2FD8A6; --bear:#FF6259; --tape:#E8A63C;
+    --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --sans: 'Manrope', -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    --display: 'Space Grotesk', var(--sans);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--sans);}
+  body{padding:60px 20px;}
+  a.back-link{position:fixed;top:20px;left:20px;font-family:var(--mono);font-size:12px;color:var(--muted);text-decoration:none;}
+  a.back-link:hover{color:var(--tape);}
+
+  .rs-wrap{max-width:1100px;margin:0 auto;}
+  .rs-header h1{margin:0;font-family:var(--display);font-size:26px;font-weight:700;color:var(--text);}
+  .rs-header p{margin:4px 0 20px;font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);}
+  .rs-controls{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-bottom:16px;}
+  .rs-field{display:flex;flex-direction:column;gap:4px;}
+  .rs-field label{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-family:var(--mono);}
+  select, input[type=text]{
+    background:var(--surface-2);border:1px solid var(--border);color:var(--text);
+    padding:8px 10px;border-radius:5px;font-family:var(--mono);font-size:12.5px;min-width:90px;width:100%;
+  }
+  select:focus, input:focus{outline:1px solid var(--tape);outline-offset:0;}
+  button{
+    background:var(--tape);color:#0A0D12;border:none;border-radius:5px;
+    padding:9px 18px;font-family:var(--mono);font-size:12px;font-weight:700;
+    letter-spacing:.04em;cursor:pointer;white-space:nowrap;
+  }
+  button:hover{opacity:.88;}
+  button:disabled{opacity:.5;cursor:not-allowed;}
+
+  .rs-progress{margin-bottom:14px;}
+  .rs-progress-bar{height:6px;border-radius:3px;overflow:hidden;background:var(--surface-2);}
+  .rs-progress-fill{height:100%;background:var(--tape);width:0%;transition:width .2s;}
+  .rs-progress-label{font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-top:5px;}
+
+  .rs-summary{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px;font-family:var(--mono);font-size:12px;color:var(--muted);}
+  .rs-summary b{color:var(--tape);}
+
+  .rs-table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:10px;}
+  .rs-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12.5px;min-width:600px;}
+  .rs-table th{
+    text-align:right;color:var(--muted);font-size:10px;letter-spacing:.05em;text-transform:uppercase;
+    padding:10px 14px;border-bottom:1px solid var(--border);cursor:pointer;user-select:none;white-space:nowrap;
+    background:var(--surface-2);position:sticky;top:0;
+  }
+  .rs-table th:first-child, .rs-table td:first-child{text-align:left;}
+  .rs-table th:hover{color:var(--tape);}
+  .rs-table th.sorted::after{content:' \25be';color:var(--tape);}
+  .rs-table th.sorted.asc::after{content:' \25b4';}
+  .rs-table td{padding:9px 14px;text-align:right;border-bottom:1px solid rgba(34,43,56,.5);white-space:nowrap;}
+  .rs-table tr:last-child td{border-bottom:none;}
+  .rs-table tr:hover td{background:rgba(255,255,255,.02);}
+  .rs-table .sym-cell{font-weight:700;color:var(--text);}
+  .rs-table .up{color:var(--bull);} .rs-table .down{color:var(--bear);}
+  .rs-table .rsi-ob{color:var(--bear);font-weight:700;}
+  .rs-table .rsi-os{color:var(--bull);font-weight:700;}
+  .rs-table tbody tr{cursor:pointer;}
+  .rs-table tbody tr.active-row td{background:rgba(232,166,60,.10);}
+  .rs-chart-panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-top:14px;}
+  .rs-chart-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-family:var(--mono);font-size:12px;color:var(--tape);font-weight:700;}
+  .rs-chart-head button{background:var(--surface-2);color:var(--muted);border:1px solid var(--border);border-radius:5px;padding:5px 10px;font-family:var(--mono);font-size:10.5px;cursor:pointer;}
+  .rs-chart-head button:hover{color:var(--text);}
+  .rs-caption{font-family:var(--mono);font-size:10px;color:var(--muted);opacity:.75;margin-top:16px;}
+</style>
+</head>
+<body>
+
+<a href="/" class="back-link">&larr; Ali Faisal Trades</a>
+
+<div id="page-rsiscreener">
+<div class="rs-wrap">
+  <div class="rs-header">
+    <h1>RSI Screener</h1>
+    <p>Every USDT-M perpetual pair (≥$70M market cap) — scan for RSI extremes on any timeframe</p>
+  </div>
+
+  <div class="rs-controls">
+    <div class="rs-field">
+      <label>Exchange</label>
+      <select id="rsExchangeSelect">
+        <option value="binance">Binance</option>
+        <option value="bybit" selected>Bybit</option>
+      </select>
+    </div>
+    <div class="rs-field">
+      <label>Timeframe</label>
+      <select id="rsTfSelect">
+        <option value="1m">1m</option>
+        <option value="3m">3m</option>
+        <option value="5m">5m</option>
+        <option value="10m">10m</option>
+        <option value="15m" selected>15m</option>
+        <option value="30m">30m</option>
+        <option value="1h">1H</option>
+        <option value="2h">2H</option>
+        <option value="4h">4H</option>
+        <option value="8h">8H</option>
+        <option value="12h">12H</option>
+        <option value="1d">D</option>
+      </select>
+    </div>
+    <div class="rs-field">
+      <label>Condition</label>
+      <select id="rsDirectionSelect">
+        <option value="above">RSI Above</option>
+        <option value="below">RSI Below</option>
+      </select>
+    </div>
+    <div class="rs-field">
+      <label>Threshold</label>
+      <select id="rsThresholdSelect">
+        <option value="70">70</option>
+        <option value="75" selected>75</option>
+        <option value="80">80</option>
+        <option value="85">85</option>
+        <option value="90">90</option>
+        <option value="95">95</option>
+      </select>
+    </div>
+    <div class="rs-field" style="flex:1;min-width:160px;">
+      <label>Search</label>
+      <input type="text" id="rsSearchInput" placeholder="Filter e.g. BTC, ETH…" />
+    </div>
+    <button id="rsLoadBtn">Scan All Pairs</button>
+  </div>
+
+  <div class="rs-progress" id="rsProgress" style="display:none;">
+    <div class="rs-progress-bar"><div class="rs-progress-fill" id="rsProgressFill"></div></div>
+    <div class="rs-progress-label" id="rsProgressLabel">Loading…</div>
+  </div>
+
+  <div class="rs-summary" id="rsSummary"></div>
+
+  <div class="rs-table-wrap">
+    <table class="rs-table">
+      <thead>
+        <tr>
+          <th data-sort="symbol">Symbol</th>
+          <th data-sort="price">Price</th>
+          <th data-sort="rsi">RSI</th>
+          <th data-sort="ch24h">24H %</th>
+          <th data-sort="marketCap">Market Cap</th>
+        </tr>
+      </thead>
+      <tbody id="rsTableBody">
+        <tr><td colspan="5" style="color:var(--muted);padding:20px;text-align:center;">Pick a timeframe and RSI condition, then press "Scan All Pairs".</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="rs-chart-panel" id="rsChartPanel" style="display:none;">
+    <div class="rs-chart-head">
+      <span id="rsChartTitle">—</span>
+      <button id="rsChartCloseBtn">&#10005; Close</button>
+    </div>
+    <canvas id="rsVerifyChart" height="110"></canvas>
+  </div>
+
+  <div class="rs-caption">Pulls the complete USDT-M perpetual futures symbol list from the exchange itself, filters to ≥$70M market cap (via CoinGecko's free public API, matched by ticker symbol), then fetches candles for every qualifying pair on the selected timeframe and computes RSI(14) live. "10m" and (on Bybit) "8H" aren't native exchange intervals — they're built by aggregating 5m/4H candles, same approach used elsewhere on this site for Bybit's missing 3-day candles. Click any row to see that pair's RSI history charted out for verification. Click any column header to sort. Futures only, no API key needed.</div>
+</div>
+</div>
+
+<script>
+(function(){
+  const exchangeSelect = document.getElementById('rsExchangeSelect');
+  const tfSelect = document.getElementById('rsTfSelect');
+  const directionSelect = document.getElementById('rsDirectionSelect');
+  const thresholdSelect = document.getElementById('rsThresholdSelect');
+  const searchInput = document.getElementById('rsSearchInput');
+  const loadBtn = document.getElementById('rsLoadBtn');
+  const progressEl = document.getElementById('rsProgress');
+  const progressFill = document.getElementById('rsProgressFill');
+  const progressLabel = document.getElementById('rsProgressLabel');
+  const summaryEl = document.getElementById('rsSummary');
+  const tableBody = document.getElementById('rsTableBody');
+
+  const MIN_MARKET_CAP = 70_000_000;
+
+  let allRows = [];   // every qualifying (>=$70M) symbol with its computed RSI, before the above/below filter
+  let rows = [];       // rows actually matching the current condition
+  let sortKey = 'rsi', sortDir = 'desc';
+  let loaded = false;
+  let activeSymbol = null;
+  let verifyChart = null;
+
+  function currentExchange(){ return exchangeSelect.value; }
+
+  async function fetchJson(url, retries){
+    retries = retries === undefined ? 2 : retries;
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return await res.json();
+    } catch (e) {
+      if (retries > 0) { await new Promise(r => setTimeout(r, 350)); return fetchJson(url, retries - 1); }
+      throw e;
+    }
+  }
+
+  function fmtPrice(v){
+    if (v === null || v === undefined || isNaN(v)) return 'n/a';
+    return v.toLocaleString(undefined, {maximumFractionDigits: v < 1 ? 6 : 2});
+  }
+  function fmtPct(v){
+    if (v === null || v === undefined || isNaN(v)) return 'n/a';
+    return (v >= 0 ? '+' : '') + v.toFixed(2) + '%';
+  }
+  function fmtCompact(v){
+    if (v === null || v === undefined || isNaN(v)) return 'n/a';
+    const abs = Math.abs(v);
+    if (abs >= 1e9) return (v/1e9).toFixed(2) + 'B';
+    if (abs >= 1e6) return (v/1e6).toFixed(2) + 'M';
+    if (abs >= 1e3) return (v/1e3).toFixed(2) + 'K';
+    return v.toFixed(2);
+  }
+
+  function computeRSI(closes, period){
+    period = period || 14;
+    if (closes.length < period + 1) return null;
+    let gains = 0, losses = 0;
+    for (let i = 1; i <= period; i++){
+      const d = closes[i] - closes[i-1];
+      if (d >= 0) gains += d; else losses -= d;
+    }
+    let avgGain = gains / period, avgLoss = losses / period;
+    for (let i = period + 1; i < closes.length; i++){
+      const d = closes[i] - closes[i-1];
+      const gain = d > 0 ? d : 0, loss = d < 0 ? -d : 0;
+      avgGain = (avgGain * (period - 1) + gain) / period;
+      avgLoss = (avgLoss * (period - 1) + loss) / period;
+    }
+    if (avgLoss === 0) return 100;
+    const rs = avgGain / avgLoss;
+    return 100 - 100 / (1 + rs);
+  }
+
+  // Same Wilder's-smoothing math as computeRSI, but returns the RSI value at
+  // EVERY point (not just the latest) -- lets the person visually verify the
+  // screener's number against an actual chart, rather than taking it on faith.
+  function computeRSISeries(closes, period){
+    period = period || 14;
+    if (closes.length < period + 1) return [];
+    const series = new Array(closes.length).fill(null);
+    let gains = 0, losses = 0;
+    for (let i = 1; i <= period; i++){
+      const d = closes[i] - closes[i-1];
+      if (d >= 0) gains += d; else losses -= d;
+    }
+    let avgGain = gains / period, avgLoss = losses / period;
+    series[period] = avgLoss === 0 ? 100 : 100 - 100 / (1 + avgGain / avgLoss);
+    for (let i = period + 1; i < closes.length; i++){
+      const d = closes[i] - closes[i-1];
+      const gain = d > 0 ? d : 0, loss = d < 0 ? -d : 0;
+      avgGain = (avgGain * (period - 1) + gain) / period;
+      avgLoss = (avgLoss * (period - 1) + loss) / period;
+      series[i] = avgLoss === 0 ? 100 : 100 - 100 / (1 + avgGain / avgLoss);
+    }
+    return series;
+  }
+
+  // ---------------- Symbol universe + bulk 24hr data (same pattern as Futures Screener) ----------------
+  async function getBinanceSymbols(){
+    const info = await fetchJson('https://fapi.binance.com/fapi/v1/exchangeInfo');
+    return info.symbols
+      .filter(s => s.status === 'TRADING' && s.contractType === 'PERPETUAL' && s.quoteAsset === 'USDT')
+      .map(s => s.symbol);
+  }
+  async function getBinance24hr(){
+    const data = await fetchJson('https://fapi.binance.com/fapi/v1/ticker/24hr');
+    const map = new Map();
+    data.forEach(t => map.set(t.symbol, {
+      price: parseFloat(t.lastPrice), ch24h: parseFloat(t.priceChangePercent),
+    }));
+    return map;
+  }
+  async function getBybitSymbolsAnd24hr(){
+    const [instRes, tickerRes] = await Promise.all([
+      fetchJson('https://api.bybit.com/v5/market/instruments-info?category=linear&limit=1000'),
+      fetchJson('https://api.bybit.com/v5/market/tickers?category=linear'),
+    ]);
+    if (instRes.retCode !== 0) throw new Error(instRes.retMsg || 'Bybit error');
+    if (tickerRes.retCode !== 0) throw new Error(tickerRes.retMsg || 'Bybit error');
+    const validSymbols = new Set(
+      instRes.result.list.filter(i => i.status === 'Trading' && i.quoteCoin === 'USDT').map(i => i.symbol)
+    );
+    const map = new Map();
+    tickerRes.result.list.forEach(t => {
+      if (!validSymbols.has(t.symbol)) return;
+      map.set(t.symbol, { price: parseFloat(t.lastPrice), ch24h: parseFloat(t.price24hPcnt) * 100 });
+    });
+    return { symbols: [...validSymbols], map };
+  }
+
+  async function getMarketCapMap(){
+    const map = new Map();
+    for (let page = 1; page <= 6; page++){
+      try {
+        const data = await fetchJson(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=${page}`);
+        if (!Array.isArray(data) || !data.length) break;
+        data.forEach(c => {
+          const sym = (c.symbol || '').toUpperCase();
+          if (!map.has(sym)) map.set(sym, c.market_cap);
+        });
+        if (data.length < 250) break;
+      } catch (e) { break; }
+    }
+    return map;
+  }
+
+  // ---------------- Timeframe -> candle fetch, with aggregation for non-native intervals ----------------
+  // "10m" isn't a native interval on either exchange -- aggregate from 5m x2.
+  // Bybit also has no native 8h -- aggregate from 4h x2 there.
+  const TF_CONFIG = {
+    '1m':  { biI:'1m',  byI:'1'   },
+    '3m':  { biI:'3m',  byI:'3'   },
+    '5m':  { biI:'5m',  byI:'5'   },
+    '10m': { aggregate:2, baseBiI:'5m', baseByI:'5' },
+    '15m': { biI:'15m', byI:'15'  },
+    '30m': { biI:'30m', byI:'30'  },
+    '1h':  { biI:'1h',  byI:'60'  },
+    '2h':  { biI:'2h',  byI:'120' },
+    '4h':  { biI:'4h',  byI:'240' },
+    '8h':  { biI:'8h',  byI:null, aggregateBybitOnly:2, baseByI:'240' }, // Binance native, Bybit aggregated from 4h
+    '12h': { biI:'12h', byI:'720' },
+    '1d':  { biI:'1d',  byI:'D'   },
+  };
+
+  function aggregateCandles(closes, groupSize){
+    const out = [];
+    for (let i = 0; i + groupSize <= closes.length; i += groupSize){
+      out.push(closes[i + groupSize - 1]); // close of the LAST candle in each group = the aggregated close
+    }
+    return out;
+  }
+
+  async function fetchClosesForSymbol(symbol, tfKey){
+    const cfg = TF_CONFIG[tfKey];
+    if (currentExchange() === 'bybit'){
+      if (cfg.aggregate){
+        const res = await fetchJson(`https://api.bybit.com/v5/market/kline?category=linear&symbol=${symbol}&interval=${cfg.baseByI}&limit=200`);
+        if (res.retCode !== 0 || !res.result.list.length) return null;
+        const closes = res.result.list.slice().reverse().map(c => parseFloat(c[4]));
+        return aggregateCandles(closes, cfg.aggregate);
+      }
+      if (cfg.aggregateBybitOnly){
+        const res = await fetchJson(`https://api.bybit.com/v5/market/kline?category=linear&symbol=${symbol}&interval=${cfg.baseByI}&limit=200`);
+        if (res.retCode !== 0 || !res.result.list.length) return null;
+        const closes = res.result.list.slice().reverse().map(c => parseFloat(c[4]));
+        return aggregateCandles(closes, cfg.aggregateBybitOnly);
+      }
+      const res = await fetchJson(`https://api.bybit.com/v5/market/kline?category=linear&symbol=${symbol}&interval=${cfg.byI}&limit=100`);
+      if (res.retCode !== 0 || !res.result.list || res.result.list.length < 20) return null;
+      return res.result.list.slice().reverse().map(c => parseFloat(c[4]));
+    }
+    // Binance
+    if (cfg.aggregate){
+      const data = await fetchJson(`https://fapi.binance.com/fapi/v1/klines?symbol=${symbol}&interval=${cfg.baseBiI}&limit=200`);
+      if (!Array.isArray(data) || !data.length) return null;
+      const closes = data.map(c => parseFloat(c[4]));
+      return aggregateCandles(closes, cfg.aggregate);
+    }
+    const data = await fetchJson(`https://fapi.binance.com/fapi/v1/klines?symbol=${symbol}&interval=${cfg.biI}&limit=100`);
+    if (!Array.isArray(data) || data.length < 20) return null;
+    return data.map(c => parseFloat(c[4]));
+  }
+
+  async function runBatched(items, worker, concurrency, onProgress){
+    let idx = 0, done = 0;
+    const results = new Array(items.length);
+    async function runOne(){
+      while (idx < items.length){
+        const myIdx = idx++;
+        try { results[myIdx] = await worker(items[myIdx], myIdx); }
+        catch (e) { results[myIdx] = null; }
+        done++;
+        if (onProgress) onProgress(done, items.length);
+      }
+    }
+    const workers = new Array(concurrency).fill(0).map(runOne);
+    await Promise.all(workers);
+    return results;
+  }
+
+  async function loadAll(){
+    loadBtn.disabled = true;
+    loadBtn.textContent = 'Scanning…';
+    progressEl.style.display = 'block';
+    progressFill.style.width = '0%';
+    progressLabel.textContent = 'Fetching symbol list…';
+    summaryEl.innerHTML = '';
+    tableBody.innerHTML = '';
+    allRows = [];
+
+    try {
+      let symbols, bulkMap;
+      if (currentExchange() === 'bybit'){
+        const r = await getBybitSymbolsAnd24hr();
+        symbols = r.symbols; bulkMap = r.map;
+      } else {
+        symbols = await getBinanceSymbols();
+        bulkMap = await getBinance24hr();
+      }
+      symbols = symbols.filter(s => bulkMap.has(s));
+
+      progressLabel.textContent = 'Checking market caps…';
+      const marketCapMap = await getMarketCapMap();
+
+      // Filter to >=$70M BEFORE fetching per-symbol candles -- no point
+      // scanning RSI for coins we're going to exclude anyway.
+      const qualifying = symbols.filter(s => {
+        const base = s.endsWith('USDT') ? s.slice(0, -4) : s;
+        const cap = marketCapMap.get(base);
+        return cap && cap >= MIN_MARKET_CAP;
+      });
+
+      const tfKey = tfSelect.value;
+      progressLabel.textContent = `Computing RSI(14) for ${qualifying.length} pairs (≥$70M cap)…`;
+
+      const rsiResults = await runBatched(qualifying, async (symbol) => {
+        const closes = await fetchClosesForSymbol(symbol, tfKey);
+        return closes ? computeRSI(closes, 14) : null;
+      }, 8, (done, total) => {
+        progressFill.style.width = (done / total * 100).toFixed(0) + '%';
+        progressLabel.textContent = `Computing RSI(14)… ${done}/${total}`;
+      });
+
+      qualifying.forEach((symbol, i) => {
+        const bulk = bulkMap.get(symbol);
+        const base = symbol.endsWith('USDT') ? symbol.slice(0, -4) : symbol;
+        allRows.push({
+          symbol, price: bulk.price, ch24h: bulk.ch24h,
+          marketCap: marketCapMap.get(base),
+          rsi: rsiResults[i],
+        });
+      });
+
+      loaded = true;
+      progressEl.style.display = 'none';
+      applyFilterAndRender();
+    } catch (e) {
+      tableBody.innerHTML = `<tr><td colspan="5" style="color:var(--bear);padding:20px;text-align:center;">${e.message || 'Failed to load.'}</td></tr>`;
+      progressEl.style.display = 'none';
+    } finally {
+      loadBtn.disabled = false;
+      loadBtn.textContent = 'Scan All Pairs';
+    }
+  }
+
+  function applyFilterAndRender(){
+    const direction = directionSelect.value;
+    const threshold = parseFloat(thresholdSelect.value);
+
+    rows = allRows.filter(r => {
+      if (r.rsi === null || r.rsi === undefined) return false;
+      return direction === 'above' ? r.rsi >= threshold : r.rsi <= threshold;
+    });
+
+    renderTable();
+  }
+
+  function renderTable(){
+    const query = (searchInput.value || '').trim().toUpperCase();
+    let filtered = query ? rows.filter(r => r.symbol.includes(query)) : rows.slice();
+
+    filtered.sort((a, b) => {
+      let av = a[sortKey], bv = b[sortKey];
+      if (sortKey === 'symbol') return sortDir === 'asc' ? a.symbol.localeCompare(b.symbol) : b.symbol.localeCompare(a.symbol);
+      av = av === null || av === undefined ? -Infinity : av;
+      bv = bv === null || bv === undefined ? -Infinity : bv;
+      return sortDir === 'asc' ? av - bv : bv - av;
+    });
+
+    const direction = directionSelect.value, threshold = thresholdSelect.value;
+    summaryEl.innerHTML = `<span><b>${allRows.length}</b> pairs scanned (≥$70M cap)</span><span><b>${rows.length}</b> match RSI ${direction === 'above' ? '≥' : '≤'} ${threshold}</span><span>Showing <b>${filtered.length}</b></span>`;
+
+    tableBody.innerHTML = filtered.map(r => {
+      const rsiClass = r.rsi >= 70 ? 'rsi-ob' : r.rsi <= 30 ? 'rsi-os' : '';
+      return `
+      <tr data-symbol="${r.symbol}" class="${r.symbol === activeSymbol ? 'active-row' : ''}">
+        <td><span class="sym-cell">${r.symbol}</span></td>
+        <td>${fmtPrice(r.price)}</td>
+        <td class="${rsiClass}">${r.rsi !== null ? r.rsi.toFixed(1) : 'n/a'}</td>
+        <td class="${r.ch24h >= 0 ? 'up' : 'down'}">${fmtPct(r.ch24h)}</td>
+        <td>$${fmtCompact(r.marketCap)}</td>
+      </tr>
+    `;
+    }).join('') || '<tr><td colspan="5" style="color:var(--muted);padding:20px;text-align:center;">No pairs currently match this RSI condition.</td></tr>';
+
+    tableBody.querySelectorAll('tr[data-symbol]').forEach(tr => {
+      tr.addEventListener('click', () => showVerificationChart(tr.dataset.symbol));
+    });
+  }
+
+  document.querySelectorAll('.rs-table th[data-sort]').forEach(th => {
+    th.addEventListener('click', () => {
+      const key = th.dataset.sort;
+      if (sortKey === key) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+      else { sortKey = key; sortDir = 'desc'; }
+      document.querySelectorAll('.rs-table th').forEach(h => h.classList.remove('sorted', 'asc'));
+      th.classList.add('sorted');
+      if (sortDir === 'asc') th.classList.add('asc');
+      if (loaded) renderTable();
+    });
+  });
+
+  searchInput.addEventListener('input', () => { if (loaded) renderTable(); });
+
+  // "Above" needs overbought-style thresholds (70-95); "Below" needs
+  // oversold-style thresholds (30-10) -- showing the same 70-95 list for
+  // both didn't make sense for a "Below" scan.
+  const ABOVE_OPTIONS = [70, 75, 80, 85, 90, 95];
+  const BELOW_OPTIONS = [30, 25, 20, 15, 10];
+  function updateThresholdOptions(){
+    const isAbove = directionSelect.value === 'above';
+    const options = isAbove ? ABOVE_OPTIONS : BELOW_OPTIONS;
+    const defaultValue = isAbove ? 75 : 25;
+    thresholdSelect.innerHTML = options.map(v => `<option value="${v}"${v === defaultValue ? ' selected' : ''}>${v}</option>`).join('');
+  }
+  updateThresholdOptions();
+
+  directionSelect.addEventListener('change', () => {
+    updateThresholdOptions();
+    if (loaded) applyFilterAndRender();
+  });
+  thresholdSelect.addEventListener('change', () => { if (loaded) applyFilterAndRender(); });
+  loadBtn.addEventListener('click', loadAll);
+
+  async function showVerificationChart(symbol){
+    activeSymbol = symbol;
+    document.querySelectorAll('.rs-table tbody tr').forEach(tr => {
+      tr.classList.toggle('active-row', tr.dataset.symbol === symbol);
+    });
+
+    const panel = document.getElementById('rsChartPanel');
+    const titleEl = document.getElementById('rsChartTitle');
+    panel.style.display = 'block';
+    titleEl.textContent = `${symbol} — RSI(14) on ${tfSelect.value}, loading…`;
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    try {
+      const closes = await fetchClosesForSymbol(symbol, tfSelect.value);
+      if (!closes || closes.length < 20) throw new Error('Not enough candle data to chart.');
+      const rsiSeries = computeRSISeries(closes, 14);
+      const labels = closes.map((_, i) => i);
+      const lastRsi = [...rsiSeries].reverse().find(v => v !== null);
+
+      titleEl.textContent = `${symbol} — RSI(14) on ${tfSelect.value} · Current: ${lastRsi !== undefined ? lastRsi.toFixed(1) : 'n/a'}`;
+
+      const canvas = document.getElementById('rsVerifyChart');
+      if (verifyChart) verifyChart.destroy();
+      verifyChart = new Chart(canvas, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            { data: rsiSeries, borderColor: '#E8A63C', borderWidth: 2, pointRadius: 0, tension: .15, spanGaps: true },
+            { data: labels.map(() => 70), borderColor: 'rgba(255,98,89,.4)', borderWidth: 1, borderDash: [4,4], pointRadius: 0 },
+            { data: labels.map(() => 30), borderColor: 'rgba(47,216,166,.4)', borderWidth: 1, borderDash: [4,4], pointRadius: 0 },
+          ],
+        },
+        options: {
+          responsive: true, animation: { duration: 250 },
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { display: false },
+            y: { min: 0, max: 100, ticks: { color: '#7C8998', font: { family: 'JetBrains Mono', size: 9 } }, grid: { color: '#1A2029' } },
+          },
+        },
+      });
+    } catch (e) {
+      titleEl.textContent = `${symbol} — ${e.message || 'Failed to load chart.'}`;
+      if (verifyChart) { verifyChart.destroy(); verifyChart = null; }
+    }
+  }
+
+  document.getElementById('rsChartCloseBtn').addEventListener('click', () => {
+    document.getElementById('rsChartPanel').style.display = 'none';
+    activeSymbol = null;
+    document.querySelectorAll('.rs-table tbody tr').forEach(tr => tr.classList.remove('active-row'));
+    if (verifyChart) { verifyChart.destroy(); verifyChart = null; }
+  });
+})();
+</script>
+</body>
+</html>
