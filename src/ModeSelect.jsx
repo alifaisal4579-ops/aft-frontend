@@ -18,19 +18,19 @@ const ICON_COLORS = {
 };
 
 const TOOLS = [
-  { name: 'Trend Screener', path: '/trend-screener.html', icon: 'Tr', color: 'bull' },
-  { name: 'Sector Screener', path: '/sector-screener.html', icon: 'Se', color: 'tape' },
-  { name: 'Futures Screener', path: '/futures-screener.html', icon: 'Fu', color: 'violet' },
-  { name: 'RSI Screener', path: '/rsi-screener.html', icon: 'RS', color: 'bull' },
-  { name: 'Volume Profile', path: '/volume-profile.html', icon: 'Vo', color: 'violet' },
-  { name: 'Anchor VWAP', path: '/anchor-vwap.html', icon: 'VW', color: 'tape' },
-  { name: 'Confluence Zones', path: '/confluence-zones.html', icon: 'CZ', color: 'bear' },
-  { name: 'Confluence Dashboard', path: '/confluence-dashboard.html', icon: 'CD', color: 'violet' },
-  { name: 'Fibonacci Levels', path: '/fibonacci-levels.html', icon: 'Fi', color: 'bull' },
-  { name: 'RSI Checker', path: '/rsi-checker.html', icon: 'RC', color: 'bull' },
-  { name: 'Cipher B Checker', path: '/cipher-b-checker.html', icon: 'CB', color: 'violet' },
-  { name: 'Order Flow', path: '/order-flow.html', icon: 'OF', color: 'bear' },
-  { name: 'Lakhsmi Signals', path: '/lakhsmi-signals.html', icon: 'LS', color: 'tape' },
+  { name: 'Trend Screener', path: '/trend-screener.html', icon: 'Tr', color: 'bull', desc: 'Price vs EMA + OBV vs EMA dual-confirmation trend scan.' },
+  { name: 'Sector Screener', path: '/sector-screener.html', icon: 'Se', color: 'tape', desc: 'Ranks crypto sectors by relative strength.' },
+  { name: 'Futures Screener', path: '/futures-screener.html', icon: 'Fu', color: 'violet', desc: 'Every USDT-M perpetual pair, 1H/4H/12H/24H change in one table.' },
+  { name: 'RSI Screener', path: '/rsi-screener.html', icon: 'RS', color: 'bull', desc: 'Every USDT-M pair (\u2265$70M cap), RSI extremes on any timeframe.' },
+  { name: 'Volume Profile', path: '/volume-profile.html', icon: 'Vo', color: 'violet', desc: 'HVN/LVN and value area from real traded volume.' },
+  { name: 'Anchor VWAP', path: '/anchor-vwap.html', icon: 'VW', color: 'tape', desc: 'Daily/weekly/monthly/quarterly anchored VWAPs.' },
+  { name: 'Confluence Zones', path: '/confluence-zones.html', icon: 'CZ', color: 'bear', desc: 'Ranked price zones from 33 sources.' },
+  { name: 'Confluence Dashboard', path: '/confluence-dashboard.html', icon: 'CD', color: 'violet', desc: 'One combined score per symbol across every tool.' },
+  { name: 'Fibonacci Levels', path: '/fibonacci-levels.html', icon: 'Fi', color: 'bull', desc: 'Auto-plotted retracement and extension levels.' },
+  { name: 'RSI Checker', path: '/rsi-checker.html', icon: 'RC', color: 'bull', desc: 'Single-symbol RSI check across timeframes.' },
+  { name: 'Cipher B Checker', path: '/cipher-b-checker.html', icon: 'CB', color: 'violet', desc: 'Money-flow / wave-trend signal checker.' },
+  { name: 'Order Flow', path: '/order-flow.html', icon: 'OF', color: 'bear', desc: 'Aggregated depth ladder, CVD, OI, funding, liquidations and trade tape.' },
+  { name: 'Lakhsmi Signals', path: '/lakhsmi-signals.html', icon: 'LS', color: 'tape', desc: 'The core AFT signal-generation engine.' },
 ];
 
 function useTop5Prices() {
@@ -74,6 +74,7 @@ export default function ModeSelect() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { prices, error } = useTop5Prices();
+  const displayName = (user && (user.full_name || user.email)) || '';
 
   return (
     <div className="ms-page">
@@ -97,7 +98,7 @@ export default function ModeSelect() {
         )}
       </div>
 
-      <h2 className="mode-select-greeting">Welcome, {user?.email}</h2>
+      <h2 className="mode-select-greeting">Welcome, {displayName}</h2>
       <p className="mode-select-sub">16 tools, one login. Pick a tool below, or manage your bots.</p>
 
       <section className="ms-section">
@@ -110,6 +111,7 @@ export default function ModeSelect() {
                 <div className="tool-icon" style={{ background: c.bg, color: c.fg }}>{t.icon}</div>
                 <span className="tool-live-badge">Open</span>
                 <h3>{t.name}</h3>
+                <p>{t.desc}</p>
               </a>
             );
           })}
