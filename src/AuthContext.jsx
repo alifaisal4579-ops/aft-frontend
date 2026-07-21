@@ -39,8 +39,8 @@ export function AuthProvider({ children }) {
     return () => { cancelled = true; };
   }, []);
 
-  const signup = useCallback(async (email, password, blofinUid) => {
-    const { ok, body } = await api.signup(email, password, blofinUid);
+  const signup = useCallback(async (email, password, blofinUid, fullName) => {
+    const { ok, body } = await api.signup(email, password, blofinUid, fullName);
     if (ok) { setUser(body.user); setSessionMarker(); }
     return { ok, error: ok ? null : body.error };
   }, []);
