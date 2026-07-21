@@ -7,6 +7,7 @@ export default function Signup() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [blofinUid, setBlofinUid] = useState('');
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
 
@@ -19,7 +20,7 @@ export default function Signup() {
     }
     setBusy(true);
     try {
-      const { ok, error } = await signup(email, password);
+      const { ok, error } = await signup(email, password, blofinUid);
       if (ok) navigate('/dashboard');
       else setError(error || 'Something went wrong.');
     } catch (err) {
@@ -45,6 +46,16 @@ export default function Signup() {
             <label htmlFor="password">Password</label>
             <input id="password" type="password" autoComplete="new-password" required minLength={8}
               value={password} onChange={(e) => setPassword(e.target.value)} />
+          </div>
+          <div className="field">
+            <label htmlFor="blofinUid">Your BloFin UID</label>
+            <input id="blofinUid" type="text" required
+              placeholder="e.g. 123456789"
+              value={blofinUid} onChange={(e) => setBlofinUid(e.target.value)} />
+            <p className="field-hint">
+              Find this under Account &amp; Security on BloFin. Haven't signed up yet?{' '}
+              <a href="https://blofin.com/register" target="_blank" rel="noopener noreferrer">Register with our referral link</a> first.
+            </p>
           </div>
           <button className="btn-primary" type="submit" disabled={busy}>
             {busy ? 'Creating account...' : 'Sign up'}
