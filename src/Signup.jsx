@@ -5,6 +5,7 @@ import { useAuth } from './AuthContext';
 export default function Signup() {
   const { signup } = useAuth();
   const navigate = useNavigate();
+  const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [blofinUid, setBlofinUid] = useState('');
@@ -20,7 +21,7 @@ export default function Signup() {
     }
     setBusy(true);
     try {
-      const { ok, error } = await signup(email, password, blofinUid);
+      const { ok, error } = await signup(email, password, blofinUid, fullName);
       if (ok) navigate('/dashboard');
       else setError(error || 'Something went wrong.');
     } catch (err) {
@@ -32,11 +33,17 @@ export default function Signup() {
 
   return (
     <div className="auth-shell">
+      <div className="auth-mesh"><i></i></div>
       <div className="auth-card">
         <div className="auth-brand">Ali Faisal Trades</div>
         <h1>Create your account</h1>
         {error && <div className="auth-error">{error}</div>}
         <form onSubmit={handleSubmit}>
+          <div className="field">
+            <label htmlFor="fullName">Full Name</label>
+            <input id="fullName" type="text" autoComplete="name" required
+              value={fullName} onChange={(e) => setFullName(e.target.value)} />
+          </div>
           <div className="field">
             <label htmlFor="email">Email</label>
             <input id="email" type="email" autoComplete="email" required
@@ -54,7 +61,7 @@ export default function Signup() {
               value={blofinUid} onChange={(e) => setBlofinUid(e.target.value)} />
             <p className="field-hint">
               Find this under Account &amp; Security on BloFin. Haven't signed up yet?{' '}
-              <a href="https://blofin.com/register" target="_blank" rel="noopener noreferrer">Register with our referral link</a> first.
+              <a href="https://partner.blofin.com/d/alifaisal" target="_blank" rel="noopener noreferrer">Register with our referral link</a> first.
             </p>
           </div>
           <button className="btn-primary" type="submit" disabled={busy}>
