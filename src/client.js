@@ -59,8 +59,8 @@ async function apiFetch(path, options = {}) {
   return { ok: res.ok, status: res.status, body };
 }
 
-async function signup(email, password) {
-  const { ok, body } = await apiFetch('/api/auth/signup', { method: 'POST', body: JSON.stringify({ email, password }) });
+async function signup(email, password, blofinUid) {
+  const { ok, body } = await apiFetch('/api/auth/signup', { method: 'POST', body: JSON.stringify({ email, password, blofinUid }) });
   if (ok) setAccessToken(body.accessToken);
   return { ok, body };
 }
