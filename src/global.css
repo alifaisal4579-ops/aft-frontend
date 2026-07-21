@@ -872,3 +872,28 @@ td.confluences {
 }
 .tool-card h3{font-family:var(--display);font-size:14.5px;font-weight:600;margin:0 0 6px;}
 .tool-card p{font-size:12px;color:var(--muted);line-height:1.5;margin:0;}
+
+/* ==== Unified site nav — EXACT same dimensions everywhere (dashboard + all tool pages) ==== */
+.site-nav-outer{position:sticky;top:16px;z-index:60;display:flex;justify-content:center;padding:0 16px;margin-bottom:8px;}
+.site-nav{
+  width:100%;max-width:1180px;display:flex;align-items:center;gap:24px;justify-content:space-between;
+  padding:12px 20px;border-radius:999px;
+  background:rgba(10,12,18,.55);backdrop-filter:blur(18px) saturate(160%);-webkit-backdrop-filter:blur(18px) saturate(160%);
+  border:1px solid rgba(255,255,255,.08);
+  box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 12px 40px -20px rgba(0,0,0,.8);
+}
+.site-nav .logo{font-family:var(--mono);font-weight:700;font-size:13px;letter-spacing:.02em;white-space:nowrap;color:var(--text);}
+.site-nav .logo b{color:var(--tape);}
+.nav-user-group{display:flex;align-items:center;gap:14px;}
+.nav-dashboard-link{
+  font-family:var(--mono);font-size:12.5px;color:var(--muted);text-decoration:none;
+  white-space:nowrap;transition:color .15s ease;
+}
+.nav-dashboard-link:hover{color:var(--tape);}
+.nav-user-name{font-family:var(--mono);font-size:12.5px;color:var(--muted);white-space:nowrap;}
+.nav-logout-btn{
+  font-family:var(--mono);font-size:12px;font-weight:600;color:var(--muted);
+  border:1px solid rgba(255,255,255,.1);padding:8px 14px;border-radius:999px;
+  background:transparent;cursor:pointer;white-space:nowrap;transition:all .2s ease;
+}
+.nav-logout-btn:hover{border-color:rgba(255,98,89,.5);color:var(--bear);background:rgba(255,98,89,.06);}
