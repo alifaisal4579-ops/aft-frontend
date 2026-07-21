@@ -27,6 +27,7 @@ export default function Login() {
 
   return (
     <div className="auth-shell">
+      <div className="auth-mesh"><i></i></div>
       <div className="auth-card">
         <div className="auth-brand">Ali Faisal Trades</div>
         <h1>Log in</h1>
@@ -53,4 +54,3 @@ export default function Login() {
     </div>
   );
 }
-
