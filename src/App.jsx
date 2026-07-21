@@ -1,25 +1,28 @@
 import { Routes, Route, Navigate, Link } from 'react-router-dom';
-import { useAuth } from './AuthContext';
-import ProtectedRoute from './ProtectedRoute';
-import Home from './Home';
-import Login from './Login';
-import Signup from './Signup';
-import ModeSelect from './ModeSelect';
-import SimulatedDashboard from './SimulatedDashboard';
-import RealDashboard from './RealDashboard';
-import ToolsSuite from './ToolsSuite';
+import { useAuth } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
+import Home from './pages/Home';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import ModeSelect from './pages/ModeSelect';
+import SimulatedDashboard from './pages/SimulatedDashboard';
+import RealDashboard from './pages/RealDashboard';
+import ToolsSuite from './pages/ToolsSuite';
 
 function Topbar() {
   const { user, logout } = useAuth();
+  const displayName = (user && (user.full_name || user.email)) || '';
   return (
-    <div className="topbar">
-      <span className="brand">Ali Faisal Trades</span>
-      {user && (
-        <div>
-          <span className="user-email">{user.email}</span>
-          <button className="btn-ghost" onClick={logout}>Log out</button>
-        </div>
-      )}
+    <div className="site-nav-outer">
+      <nav className="site-nav glass">
+        <span className="logo">Ali Faisal <b>Trades</b></span>
+        {user && (
+          <div className="nav-user-group">
+            <span className="nav-user-name">{displayName}</span>
+            <button className="nav-logout-btn" onClick={logout}>Log out</button>
+          </div>
+        )}
+      </nav>
     </div>
   );
 }
@@ -87,4 +90,3 @@ export default function App() {
     </Routes>
   );
 }
-
