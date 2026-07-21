@@ -772,3 +772,58 @@ td.confluences {
 .tools-suite-wrap{display:flex;flex-direction:column;height:100vh;}
 .tools-suite-bar{padding:10px 16px;border-bottom:1px solid var(--border);background:var(--bg);}
 .tools-suite-frame{flex:1;width:100%;border:none;}
+
+/* ==== Shared glass utilities (also used by ModeSelect dashboard-homepage) ==== */
+:root{
+  --violet:#9C8CFF;
+  --glass:rgba(255,255,255,.045); --glass-hover:rgba(255,255,255,.075);
+  --glass-border:rgba(255,255,255,.09); --glass-border-hover:rgba(232,166,60,.4);
+}
+.glass{
+  background:var(--glass);backdrop-filter:blur(20px) saturate(140%);-webkit-backdrop-filter:blur(20px) saturate(140%);
+  border:1px solid var(--glass-border);border-radius:18px;
+  box-shadow:0 1px 0 rgba(255,255,255,.06) inset, 0 20px 60px -30px rgba(0,0,0,.7);
+  position:relative;
+}
+
+.ms-page{position:relative;max-width:1180px;margin:0 auto;}
+.ms-mesh{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none;}
+.ms-mesh::before,.ms-mesh::after,.ms-mesh i{content:'';position:absolute;border-radius:50%;filter:blur(90px);opacity:.4;}
+.ms-mesh::before{width:520px;height:520px;top:-180px;left:-100px;background:radial-gradient(circle,rgba(232,166,60,.2),transparent 70%);animation:msDrift1 26s ease-in-out infinite;}
+.ms-mesh::after{width:460px;height:460px;top:10%;right:-140px;background:radial-gradient(circle,rgba(47,216,166,.16),transparent 70%);animation:msDrift2 32s ease-in-out infinite;}
+.ms-mesh i{width:420px;height:420px;bottom:-160px;left:30%;background:radial-gradient(circle,rgba(156,140,255,.13),transparent 70%);animation:msDrift3 38s ease-in-out infinite;}
+@keyframes msDrift1{0%,100%{transform:translate(0,0);}50%{transform:translate(60px,50px);}}
+@keyframes msDrift2{0%,100%{transform:translate(0,0);}50%{transform:translate(-50px,60px);}}
+@keyframes msDrift3{0%,100%{transform:translate(0,0);}50%{transform:translate(40px,-50px);}}
+@media (prefers-reduced-motion: reduce){ .ms-mesh::before,.ms-mesh::after,.ms-mesh i{animation:none;} }
+
+.ms-ticker{display:flex;flex-wrap:wrap;gap:22px;padding:14px 20px;margin-bottom:28px;}
+.ms-ticker-item{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:13px;}
+.ms-ticker-sym{color:var(--muted);font-weight:700;}
+.ms-ticker-price{color:var(--text);font-weight:700;}
+.ms-ticker-pct{font-weight:700;font-size:12px;}
+.ms-ticker-pct.up{color:var(--bull);} .ms-ticker-pct.down{color:var(--bear);}
+
+.ms-section{margin-top:40px;}
+.ms-section-label{
+  display:flex;align-items:center;gap:12px;margin-bottom:18px;
+  font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--tape);
+}
+.ms-section-label::after{content:'';flex:1;height:1px;background:linear-gradient(90deg, var(--border), transparent);}
+
+.tool-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;}
+.tool-card{
+  padding:20px 20px;transition:transform .25s cubic-bezier(.16,1,.3,1),background .25s ease,border-color .25s ease;
+  display:block;text-decoration:none;color:inherit;position:relative;
+}
+.tool-card:hover{transform:translateY(-4px);background:var(--glass-hover);border-color:var(--glass-border-hover);}
+.tool-live-badge{
+  position:absolute;top:16px;right:16px;font-family:var(--mono);font-size:8.5px;letter-spacing:.04em;
+  color:var(--bull);background:rgba(47,216,166,.12);border:1px solid rgba(47,216,166,.3);
+  padding:3px 9px;border-radius:999px;white-space:nowrap;
+}
+.tool-icon{
+  width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+  margin-bottom:12px;font-family:var(--mono);font-weight:700;font-size:12px;
+}
+.tool-card h3{font-family:var(--display);font-size:14.5px;font-weight:600;margin:0;}
