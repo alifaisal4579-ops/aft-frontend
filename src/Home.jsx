@@ -72,7 +72,7 @@ const HOMEPAGE_CSS = `
   /* ---- nav ---- */
   .nav-outer{position:sticky;top:16px;z-index:60;display:flex;justify-content:center;padding:0 16px;}
   nav{
-    width:100%;max-width:1180px;display:flex;align-items:center;gap:24px;
+    width:100%;max-width:1180px;display:flex;align-items:center;gap:24px;flex-wrap:nowrap;
     padding:12px 20px;border-radius:999px;
     background:rgba(10,12,18,.55);backdrop-filter:blur(18px) saturate(160%);-webkit-backdrop-filter:blur(18px) saturate(160%);
     border:1px solid rgba(255,255,255,.08);
@@ -87,12 +87,12 @@ const HOMEPAGE_CSS = `
     width:26px;height:26px;border-radius:50%;object-fit:cover;flex-shrink:0;
     border:1.5px solid rgba(255,255,255,.2);box-shadow:0 0 0 3px rgba(232,166,60,.14);
   }
-  .nav-links{display:flex;gap:20px;flex:1;font-size:13px;color:var(--muted);}
-  .nav-links a{transition:color .15s ease;position:relative;}
+  .nav-links{display:flex;gap:20px;flex:1;flex-wrap:nowrap;font-size:13px;color:var(--muted);}
+  .nav-links a{transition:color .15s ease;position:relative;white-space:nowrap;flex-shrink:0;}
   .nav-links a:hover{color:var(--text);}
   .nav-links a::after{content:'';position:absolute;left:0;right:0;bottom:-6px;height:1.5px;background:var(--tape);transform:scaleX(0);transform-origin:left;transition:transform .25s ease;}
   .nav-links a:hover::after{transform:scaleX(1);}
-  .nav-cta-group{display:flex;align-items:center;gap:10px;}
+  .nav-cta-group{display:flex;align-items:center;gap:10px;margin-left:24px;flex-shrink:0;}
   .nav-telegram{
     font-family:var(--mono);font-size:12px;font-weight:600;color:var(--muted);
     border:1px solid rgba(255,255,255,.1);padding:8px 14px;border-radius:999px;
@@ -107,7 +107,7 @@ const HOMEPAGE_CSS = `
   }
   .nav-cta:hover{filter:brightness(1.08);transform:translateY(-1px);}
   .nav-toggle{display:none;background:transparent;border:1px solid rgba(255,255,255,.14);color:var(--text);border-radius:6px;padding:8px 10px;cursor:pointer;align-items:center;justify-content:center;}
-  @media (max-width:820px){
+  @media (max-width:900px){
     .nav-toggle{display:flex;}
     .nav-mobile-menu{display:none;}
     .nav-mobile-menu.open{
