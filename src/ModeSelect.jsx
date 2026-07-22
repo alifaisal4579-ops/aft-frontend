@@ -23,7 +23,7 @@ const TOOLS = [
   { name: 'Futures Screener', path: '/futures-screener.html', icon: 'Fu', color: 'violet', desc: 'Every USDT-M perpetual pair, 1H/4H/12H/24H change in one table.' },
   { name: 'RSI Screener', path: '/rsi-screener.html', icon: 'RS', color: 'bull', desc: 'Every USDT-M pair (\u2265$70M cap), RSI extremes on any timeframe.' },
   { name: 'Volume Profile', path: '/volume-profile.html', icon: 'Vo', color: 'violet', desc: 'HVN/LVN and value area from real traded volume.' },
-  { name: 'Anchor VWAP', path: '/anchor-vwap.html', icon: 'VW', color: 'tape', desc: 'Daily/weekly/monthly/quarterly anchored VWAPs.' },
+  { name: 'VWAPs', path: '/anchor-vwap.html', icon: 'VW', color: 'tape', desc: 'Daily/weekly/monthly/quarterly anchored VWAPs.' },
   { name: 'Confluence Zones', path: '/confluence-zones.html', icon: 'CZ', color: 'bear', desc: 'Ranked price zones from 33 sources.' },
   { name: 'Confluence Dashboard', path: '/confluence-dashboard.html', icon: 'CD', color: 'violet', desc: 'One combined score per symbol across every tool.' },
   { name: 'Fibonacci Levels', path: '/fibonacci-levels.html', icon: 'Fi', color: 'bull', desc: 'Auto-plotted retracement and extension levels.' },
