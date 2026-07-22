@@ -144,6 +144,54 @@
   .of-tape-row .t-tag.whale{color:#B98CFF;}
   .of-tape-row .t-tag.large{color:#E8A63C;}
 
+  .of-mc-progress{margin:10px 0;}
+  .of-mc-progress-bar{height:6px;border-radius:3px;overflow:hidden;background:var(--surface-2);}
+  .of-mc-progress-fill{height:100%;background:var(--tape);width:0%;transition:width .2s;}
+  .of-mc-progress-label{font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-top:5px;}
+
+  .of-mc-reader{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0;}
+  .of-mc-reader-col{border-radius:10px;padding:14px 16px;border:1px solid var(--border);}
+  .of-mc-reader-col.bull{background:rgba(47,216,166,.06);border-color:rgba(47,216,166,.25);}
+  .of-mc-reader-col.bear{background:rgba(255,98,89,.06);border-color:rgba(255,98,89,.25);}
+  .of-mc-reader-head{font-family:var(--display);font-size:14px;font-weight:700;margin-bottom:10px;color:var(--text);}
+  .of-mc-reader-list{display:flex;flex-direction:column;gap:8px;}
+  .of-mc-reader-item{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    background:var(--surface);border-radius:7px;padding:8px 12px;font-family:var(--mono);font-size:12px;
+  }
+  .of-mc-reader-item .rank{color:var(--muted-2);font-size:10.5px;width:16px;flex-shrink:0;}
+  .of-mc-reader-item .sym{font-weight:700;color:var(--text);flex:1;}
+  .of-mc-reader-item .why{color:var(--muted);font-size:10.5px;flex:2;}
+  .of-mc-reader-item.bull .score{color:var(--bull);font-weight:700;}
+  .of-mc-reader-item.bear .score{color:var(--bear);font-weight:700;}
+
+  .of-mc-controls{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:10px;}
+  .of-mc-controls input{
+    background:var(--surface-2);border:1px solid var(--border);color:var(--text);
+    padding:7px 10px;border-radius:5px;font-family:var(--mono);font-size:12px;min-width:180px;
+  }
+  .of-mc-controls input:focus{outline:1px solid var(--tape);outline-offset:0;}
+  .of-mc-summary{font-family:var(--mono);font-size:11px;color:var(--muted);}
+
+  .of-mc-table-wrap{overflow-x:auto;margin-top:4px;border:1px solid var(--border);border-radius:8px;max-height:520px;overflow-y:auto;}
+  .of-mc-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px;min-width:640px;}
+  .of-mc-table th{
+    text-align:right;color:var(--muted);font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;
+    padding:8px 12px;border-bottom:1px solid var(--border);background:var(--surface-2);white-space:nowrap;
+    cursor:pointer;user-select:none;position:sticky;top:0;
+  }
+  .of-mc-table th:hover{color:var(--tape);}
+  .of-mc-table th.sorted::after{content:' ▾';color:var(--tape);}
+  .of-mc-table th.sorted.asc::after{content:' ▴';}
+  .of-mc-table th:first-child{text-align:left;}
+  .of-mc-table td{padding:8px 12px;text-align:right;border-bottom:1px solid rgba(34,43,56,.5);white-space:nowrap;}
+  .of-mc-table td:first-child{text-align:left;font-weight:700;color:var(--text);}
+  .of-mc-table tr:last-child td{border-bottom:none;}
+  .of-mc-table tr:hover td{background:rgba(255,255,255,.02);}
+  .of-mc-table .up{color:var(--bull);} .of-mc-table .down{color:var(--bear);}
+  .of-mc-table .score-strong-bull{color:var(--bull);font-weight:700;}
+  .of-mc-table .score-strong-bear{color:var(--bear);font-weight:700;}
+
   .of-read{
     margin-top:12px;padding:10px 12px;border-radius:8px;background:var(--surface-2);
     border-left:3px solid var(--tape);font-size:12.5px;line-height:1.5;color:var(--text);
@@ -377,11 +425,53 @@
       <div class="of-tape" id="ofTape"></div>
       <div class="of-read" id="ofTapeRead">Collecting trades…</div>
     </div>
+
+    <div class="of-section-label"><span>Cross-Market Scan</span></div>
+    <div class="of-panel" style="grid-column:1/-1;">
+      <div class="of-panel-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+        <span>Multi-Coin Comparison — Top 100 by Market Cap</span>
+        <button id="ofMcBtn" style="background:var(--tape);color:#0A0D12;border:none;border-radius:5px;padding:7px 16px;font-family:var(--mono);font-size:11.5px;font-weight:700;cursor:pointer;">Scan Top 100 Coins</button>
+      </div>
+      <div class="of-mc-progress" id="ofMcProgress" style="display:none;">
+        <div class="of-mc-progress-bar"><div class="of-mc-progress-fill" id="ofMcProgressFill"></div></div>
+        <div class="of-mc-progress-label" id="ofMcProgressLabel">Loading…</div>
+      </div>
+
+      <div class="of-mc-reader" id="ofMcReader" style="display:none;">
+        <div class="of-mc-reader-col bull">
+          <div class="of-mc-reader-head">🔥 Strongest Bullish Setups</div>
+          <div class="of-mc-reader-list" id="ofMcBullList"></div>
+        </div>
+        <div class="of-mc-reader-col bear">
+          <div class="of-mc-reader-head">🧊 Strongest Bearish Setups</div>
+          <div class="of-mc-reader-list" id="ofMcBearList"></div>
+        </div>
+      </div>
+
+      <div class="of-mc-controls" id="ofMcControls" style="display:none;">
+        <input type="text" id="ofMcSearchInput" placeholder="Filter e.g. BTC, ETH…" />
+        <span class="of-mc-summary" id="ofMcSummary"></span>
+      </div>
+      <div class="of-mc-table-wrap" id="ofMcTableWrap" style="display:none;">
+        <table class="of-mc-table">
+          <thead>
+            <tr>
+              <th data-sort="symbol" style="text-align:left;">Coin</th>
+              <th data-sort="price">Price</th>
+              <th data-sort="change1dPct">24H %</th>
+              <th data-sort="cvdScore">CVD</th>
+              <th data-sort="funding">Funding</th>
+              <th data-sort="marketCap">Market Cap</th>
+              <th data-sort="score">Score</th>
+            </tr>
+          </thead>
+          <tbody id="ofMcTableBody"></tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
-  <div class="of-caption">CVD, Open Interest, the Trade Tape, and Live Liquidations all combine Binance + Bybit + OKX automatically — regardless of which Exchange is selected above. Order Book, Funding Rate, Long/Short Ratio, and Basis remain per the selected Exchange (Binance or Bybit) since order books are separate liquidity pools per venue and those three are inherently single-exchange metrics, not additive ones. CVD sums each exchange's taker buy/sell volume into shared time buckets — Binance's split comes straight from its klines (exact), Bybit and OKX don't expose a taker split in candles so theirs is approximated from recent trade prints instead. The Trade Tape and Live Liquidations merge all three exchanges' real-time streams into one feed, each row tagged with its source exchange; trades over $50K notional are marked "Large" and over $250K "Whale", liquidations over $100K "Large". A forced sell liquidation means a long got closed out, a forced buy means a short did. Open Interest sums each exchange's current OI (OKX reports its own OI in contracts, converted to base-currency using that instrument's contract value) — OKX has no easily-accessible public OI history endpoint, so its number counts toward the current total but not the trend chart or 24h-change calc, which stay Binance + Bybit only. If a pair is missing on one exchange, everything above falls back to whichever ones have it and says so. None of this is a modeled liquidation-heatmap estimate — that needs assumed leverage distributions that aren't public data, a separate and harder problem. Funding/Open Interest/Basis/Long-Short all use futures-only endpoints (spot has neither) — Market is forced to Futures for the relevant panels regardless of the Market selector above. All data is live and public — no API key. Not financial advice.
-  <br><br>
-  <b style="color:var(--tape);">Not yet on this page:</b> the Multi-Coin Comparison scanner (top-100-by-market-cap scan with its own table) — coming in the next update.</div>
+  <div class="of-caption">CVD, Open Interest, the Trade Tape, and Live Liquidations all combine Binance + Bybit + OKX automatically — regardless of which Exchange is selected above. Order Book, Funding Rate, Long/Short Ratio, and Basis remain per the selected Exchange (Binance or Bybit) since order books are separate liquidity pools per venue and those three are inherently single-exchange metrics, not additive ones. CVD sums each exchange's taker buy/sell volume into shared time buckets — Binance's split comes straight from its klines (exact), Bybit and OKX don't expose a taker split in candles so theirs is approximated from recent trade prints instead. The Trade Tape and Live Liquidations merge all three exchanges' real-time streams into one feed, each row tagged with its source exchange; trades over $50K notional are marked "Large" and over $250K "Whale", liquidations over $100K "Large". A forced sell liquidation means a long got closed out, a forced buy means a short did. Open Interest sums each exchange's current OI (OKX reports its own OI in contracts, converted to base-currency using that instrument's contract value) — OKX has no easily-accessible public OI history endpoint, so its number counts toward the current total but not the trend chart or 24h-change calc, which stay Binance + Bybit only. If a pair is missing on one exchange, everything above falls back to whichever ones have it and says so. None of this is a modeled liquidation-heatmap estimate — that needs assumed leverage distributions that aren't public data, a separate and harder problem. Funding/Open Interest/Basis/Long-Short all use futures-only endpoints (spot has neither) — Market is forced to Futures for the relevant panels regardless of the Market selector above. Multi-Coin Comparison pulls the exchange's full USDT-M perpetual symbol list, keeps the top 100 by market cap (via CoinGecko), then scans each one's CVD (single-exchange proxy — exact taker-split on Binance, a price-momentum proxy on Bybit), funding rate, and 24H change to build a Score. This uses the currently-selected Exchange only, not the 3-exchange combine, to keep a 100-coin scan reasonably fast. All data is live and public — no API key. Not financial advice.</div>
 </div>
 </div>
 
@@ -1120,7 +1210,7 @@
 
   function startLadderAutoRefresh(){
     if (ladderTimer) return;
-    ladderTimer = setInterval(() => { loadOrderBook(); }, 5000);
+    ladderTimer = setInterval(() => { loadOrderBook(); }, 3000);
   }
 
   function disconnectLiveOrderBook(){
@@ -2053,6 +2143,241 @@
       loadBtn.textContent = 'Load';
     }
   }
+
+  // ---------------- Multi-Coin Comparison ----------------
+  // Uses the currently-selected Exchange only (single exchange, not the
+  // 3-way combine) to keep a 100-coin scan reasonably fast. CVD here is a
+  // lighter proxy too: exact taker-buy split on Binance (same math as the
+  // main CVD panel), but a simple price-momentum proxy on Bybit since doing
+  // real trade-based CVD for 100 coins at once would be too many calls.
+  const MC_MIN_MARKET_CAP_FALLBACK = 0; // no hard floor -- just take the top 100 by cap, whatever that is
+  let mcAllResults = [];
+  let mcSortKey = 'score', mcSortDir = 'desc';
+
+  async function mcGetBinanceSymbols(){
+    const info = await fetchJson('https://fapi.binance.com/fapi/v1/exchangeInfo');
+    return info.symbols
+      .filter(s => s.status === 'TRADING' && s.contractType === 'PERPETUAL' && s.quoteAsset === 'USDT')
+      .map(s => s.symbol);
+  }
+  async function mcGetBybitSymbols(){
+    const res = await fetchJson('https://api.bybit.com/v5/market/instruments-info?category=linear&limit=1000');
+    if (res.retCode !== 0) throw new Error(res.retMsg || 'Bybit error');
+    return res.result.list.filter(i => i.status === 'Trading' && i.quoteCoin === 'USDT').map(i => i.symbol);
+  }
+  async function mcGetMarketCapMap(){
+    const map = new Map();
+    for (let page = 1; page <= 4; page++){
+      try {
+        const data = await fetchJson(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=${page}`);
+        if (!Array.isArray(data) || !data.length) break;
+        data.forEach(c => {
+          const sym = (c.symbol || '').toUpperCase();
+          if (!map.has(sym)) map.set(sym, c.market_cap);
+        });
+        if (data.length < 250) break;
+      } catch (e) { break; }
+    }
+    return map;
+  }
+
+  async function fetchQuickFunding(symbol){
+    try {
+      if (currentExchange() === 'bybit'){
+        const t = await fetchTicker(symbol);
+        return t.fundingRate;
+      }
+      const data = await fetchJson(`https://fapi.binance.com/fapi/v1/premiumIndex?symbol=${symbol}`);
+      return parseFloat(data.lastFundingRate);
+    } catch (e) { return null; }
+  }
+
+  async function fetchQuickCvdBias(symbol){
+    try {
+      const candles = await fetchKlines(symbol, '15m', 20);
+      if (currentExchange() === 'bybit'){
+        // No taker split available -- use a simple momentum proxy (net
+        // direction of closes) instead of true CVD.
+        const first = candles[0].close, last = candles[candles.length - 1].close;
+        return last >= first ? 'Bullish' : 'Bearish';
+      }
+      const delta = candles.reduce((a, c) => a + (2 * c.takerBuyBase - c.volume), 0);
+      return delta >= 0 ? 'Bullish' : 'Bearish';
+    } catch (e) { return null; }
+  }
+
+  async function mcRunBatched(items, worker, concurrency, onProgress){
+    let idx = 0, done = 0;
+    const results = new Array(items.length);
+    async function runOne(){
+      while (idx < items.length){
+        const myIdx = idx++;
+        try { results[myIdx] = await worker(items[myIdx], myIdx); }
+        catch (e) { results[myIdx] = null; }
+        done++;
+        if (onProgress) onProgress(done, items.length);
+      }
+    }
+    const workers = new Array(concurrency).fill(0).map(runOne);
+    await Promise.all(workers);
+    return results;
+  }
+
+  async function scanMultiCoin(){
+    const btn = document.getElementById('ofMcBtn');
+    const progressEl = document.getElementById('ofMcProgress');
+    const progressFill = document.getElementById('ofMcProgressFill');
+    const progressLabel = document.getElementById('ofMcProgressLabel');
+    const readerEl = document.getElementById('ofMcReader');
+    const controlsEl = document.getElementById('ofMcControls');
+    const tableWrap = document.getElementById('ofMcTableWrap');
+
+    btn.disabled = true;
+    btn.textContent = 'Scanning…';
+    progressEl.style.display = 'block';
+    progressFill.style.width = '0%';
+    progressLabel.textContent = 'Fetching symbol list…';
+    readerEl.style.display = 'none';
+    controlsEl.style.display = 'none';
+    tableWrap.style.display = 'none';
+
+    try {
+      const symbols = currentExchange() === 'bybit' ? await mcGetBybitSymbols() : await mcGetBinanceSymbols();
+      progressLabel.textContent = 'Checking market caps…';
+      const marketCapMap = await mcGetMarketCapMap();
+
+      const withCap = symbols
+        .map(s => {
+          const base = s.endsWith('USDT') ? s.slice(0, -4) : s;
+          return { symbol: s, marketCap: marketCapMap.get(base) || null };
+        })
+        .filter(s => s.marketCap !== null)
+        .sort((a, b) => b.marketCap - a.marketCap)
+        .slice(0, 100);
+
+      progressLabel.textContent = `Scanning top ${withCap.length} coins…`;
+
+      const scanned = await mcRunBatched(withCap, async (coin) => {
+        const [ticker, funding, cvdBias] = await Promise.all([
+          fetchTicker(coin.symbol),
+          fetchQuickFunding(coin.symbol),
+          fetchQuickCvdBias(coin.symbol),
+        ]);
+        const cvdScore = cvdBias === 'Bullish' ? 1 : cvdBias === 'Bearish' ? -1 : 0;
+        const priceScore = Math.max(-1, Math.min(1, ticker.change1dPct / 5));
+        const fundingExtreme = funding !== null && Math.abs(funding * 100) > 0.05;
+        const score = cvdScore + priceScore * 0.5;
+        return {
+          symbol: coin.symbol, marketCap: coin.marketCap,
+          price: ticker.lastPrice, change1dPct: ticker.change1dPct,
+          cvdBias, funding, fundingExtreme, score,
+        };
+      }, 8, (done, total) => {
+        progressFill.style.width = (done / total * 100).toFixed(0) + '%';
+        progressLabel.textContent = `Scanning… ${done}/${total}`;
+      });
+
+      mcAllResults = scanned.filter(Boolean);
+      renderMcReader();
+      renderMcTable();
+      controlsEl.style.display = 'flex';
+      tableWrap.style.display = 'block';
+    } catch (e) {
+      progressLabel.textContent = e.message || 'Scan failed.';
+    } finally {
+      progressEl.style.display = 'none';
+      btn.disabled = false;
+      btn.textContent = 'Scan Top 100 Coins';
+    }
+  }
+
+  function mcReasonFor(r, wantBullish){
+    const reasons = [];
+    if (wantBullish && r.cvdBias === 'Bullish') reasons.push('more buying than selling');
+    if (!wantBullish && r.cvdBias === 'Bearish') reasons.push('more selling than buying');
+    if (wantBullish && r.change1dPct > 0.3) reasons.push(`price up ${r.change1dPct.toFixed(1)}%`);
+    if (!wantBullish && r.change1dPct < -0.3) reasons.push(`price down ${Math.abs(r.change1dPct).toFixed(1)}%`);
+    if (r.fundingExtreme) reasons.push('funding is stretched');
+    return reasons.length ? reasons.join(', ') : 'multiple signals aligned';
+  }
+
+  function renderMcReader(){
+    const readerEl = document.getElementById('ofMcReader');
+    const bullListEl = document.getElementById('ofMcBullList');
+    const bearListEl = document.getElementById('ofMcBearList');
+    const valid = mcAllResults.filter(r => r.price !== null);
+    if (!valid.length){ readerEl.style.display = 'none'; return; }
+
+    const bullTop = valid.slice().sort((a,b) => b.score - a.score).slice(0, 3).filter(r => r.score > 0.3);
+    const bearTop = valid.slice().sort((a,b) => a.score - b.score).slice(0, 3).filter(r => r.score < -0.3);
+
+    bullListEl.innerHTML = bullTop.length ? bullTop.map((r, i) => `
+      <div class="of-mc-reader-item bull">
+        <span class="rank">#${i+1}</span>
+        <span class="sym">${displaySymbol(r.symbol)}</span>
+        <span class="why">${mcReasonFor(r, true)}</span>
+        <span class="score">${r.score.toFixed(1)}</span>
+      </div>
+    `).join('') : '<div class="of-mc-reader-item" style="color:var(--muted);">Nothing stands out bullish right now.</div>';
+
+    bearListEl.innerHTML = bearTop.length ? bearTop.map((r, i) => `
+      <div class="of-mc-reader-item bear">
+        <span class="rank">#${i+1}</span>
+        <span class="sym">${displaySymbol(r.symbol)}</span>
+        <span class="why">${mcReasonFor(r, false)}</span>
+        <span class="score">${r.score.toFixed(1)}</span>
+      </div>
+    `).join('') : '<div class="of-mc-reader-item" style="color:var(--muted);">Nothing stands out bearish right now.</div>';
+
+    readerEl.style.display = 'grid';
+  }
+
+  function renderMcTable(){
+    const tableBody = document.getElementById('ofMcTableBody');
+    const summaryEl = document.getElementById('ofMcSummary');
+    const query = (document.getElementById('ofMcSearchInput').value || '').trim().toUpperCase();
+
+    let filtered = query ? mcAllResults.filter(r => r.symbol.includes(query)) : mcAllResults.slice();
+    filtered.sort((a, b) => {
+      let av = a[mcSortKey], bv = b[mcSortKey];
+      if (mcSortKey === 'symbol') return mcSortDir === 'asc' ? a.symbol.localeCompare(b.symbol) : b.symbol.localeCompare(a.symbol);
+      if (mcSortKey === 'cvdScore'){ av = a.cvdBias === 'Bullish' ? 1 : a.cvdBias === 'Bearish' ? -1 : 0; bv = b.cvdBias === 'Bullish' ? 1 : b.cvdBias === 'Bearish' ? -1 : 0; }
+      av = av === null || av === undefined ? -Infinity : av;
+      bv = bv === null || bv === undefined ? -Infinity : bv;
+      return mcSortDir === 'asc' ? av - bv : bv - av;
+    });
+
+    summaryEl.textContent = `${mcAllResults.length} coins scanned · showing ${filtered.length}`;
+
+    tableBody.innerHTML = filtered.map(r => {
+      const scoreClass = r.score >= 1.5 ? 'score-strong-bull' : r.score <= -1.5 ? 'score-strong-bear' : '';
+      return `
+        <tr>
+          <td>${displaySymbol(r.symbol)}</td>
+          <td>${fmtPrice(r.price)}</td>
+          <td class="${r.change1dPct >= 0 ? 'up' : 'down'}">${r.change1dPct !== null ? (r.change1dPct >= 0 ? '+' : '') + r.change1dPct.toFixed(2) + '%' : 'n/a'}</td>
+          <td class="${r.cvdBias === 'Bullish' ? 'up' : r.cvdBias === 'Bearish' ? 'down' : ''}">${r.cvdBias || 'n/a'}</td>
+          <td>${r.funding !== null && r.funding !== undefined ? (r.funding * 100).toFixed(4) + '%' : 'n/a'}</td>
+          <td>$${fmtCompact(r.marketCap)}</td>
+          <td class="${scoreClass}">${r.score.toFixed(1)}</td>
+        </tr>
+      `;
+    }).join('') || '<tr><td colspan="7" style="color:var(--muted);padding:16px;text-align:center;">No coins match your search.</td></tr>';
+  }
+
+  document.getElementById('ofMcBtn').addEventListener('click', scanMultiCoin);
+  document.getElementById('ofMcSearchInput').addEventListener('input', () => { if (mcAllResults.length) renderMcTable(); });
+  document.querySelectorAll('.of-mc-table th[data-sort]').forEach(th => {
+    th.addEventListener('click', () => {
+      const key = th.dataset.sort;
+      if (mcSortKey === key) mcSortDir = mcSortDir === 'asc' ? 'desc' : 'asc';
+      else { mcSortKey = key; mcSortDir = 'desc'; }
+      document.querySelectorAll('.of-mc-table th').forEach(h => h.classList.remove('sorted', 'asc'));
+      th.classList.add('sorted');
+      if (mcSortDir === 'asc') th.classList.add('asc');
+      if (mcAllResults.length) renderMcTable();
+    });
+  });
 
 })();
 </script>
