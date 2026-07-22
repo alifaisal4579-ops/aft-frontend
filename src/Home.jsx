@@ -105,11 +105,27 @@ const HOMEPAGE_CSS = `
     white-space:nowrap;transition:filter .2s ease,transform .2s ease;box-shadow:0 6px 20px -8px rgba(232,166,60,.6);
   }
   .nav-cta:hover{filter:brightness(1.08);transform:translateY(-1px);}
-  @media (max-width:820px){ .nav-links{display:none;} }
+  .nav-toggle{display:none;background:transparent;border:1px solid rgba(255,255,255,.14);color:var(--text);border-radius:6px;padding:8px 10px;cursor:pointer;align-items:center;justify-content:center;}
+  @media (max-width:820px){
+    .nav-toggle{display:flex;}
+    .nav-mobile-menu{display:none;}
+    .nav-mobile-menu.open{
+      display:flex;position:absolute;top:100%;left:16px;right:16px;z-index:70;margin-top:8px;
+      flex-direction:column;align-items:stretch;gap:4px;
+      background:rgba(10,12,18,.92);backdrop-filter:blur(18px) saturate(160%);-webkit-backdrop-filter:blur(18px) saturate(160%);
+      border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:14px 18px;
+    }
+    .nav-mobile-menu.open .nav-links{display:flex;flex-direction:column;gap:0;}
+    .nav-mobile-menu.open .nav-links a{padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);}
+    .nav-mobile-menu.open .nav-cta-group{display:flex;flex-direction:column;align-items:stretch;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.08);}
+    .nav-mobile-menu.open .nav-telegram,.nav-mobile-menu.open .nav-cta{justify-content:center;}
+    nav{position:relative;}
+  }
 
   /* ---- hero ---- */
   .hero{position:relative;z-index:1;padding:80px 0 40px;}
   .hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center;}
+  @media (max-width:900px){ .hero-grid{grid-template-columns:1fr;gap:36px;} .hero-visual{order:-1;} }
   .eyebrow{
     display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;
     letter-spacing:.1em;text-transform:uppercase;color:var(--tape);margin-bottom:22px;
@@ -203,6 +219,7 @@ const HOMEPAGE_CSS = `
   /* ---- process ---- */
   .process{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
   @media (max-width:820px){ .process{grid-template-columns:repeat(2,1fr);} }
+  @media (max-width:480px){ .process{grid-template-columns:1fr;} }
   .process-step{padding:26px 22px;}
   .process-num{font-family:var(--mono);font-size:11px;color:var(--tape);margin-bottom:16px;}
   .process-step h4{font-family:var(--display);font-size:15px;font-weight:600;margin-bottom:9px;}
@@ -257,6 +274,10 @@ const PART_A = `
       <img src="/logo.jpg" alt="Ali Faisal Trades" class="nav-avatar">
       <span class="logo">Ali Faisal Trades</span>
     </a>
+    <button class="nav-toggle" id="navToggle" aria-label="Menu">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+    </button>
+    <div class="nav-mobile-menu" id="navMobileMenu">
     <div class="nav-links">
       <a href="/sector-screener.html">Sector Screener</a>
       <a href="/confluence-dashboard.html">Confluence Dashboard</a>
@@ -268,6 +289,7 @@ const PART_A = `
         <span>Join Telegram</span>
       </a>
       <a class="nav-cta" href="/login">Open Terminal &rarr;</a>
+    </div>
     </div>
   </nav>
 </div>
@@ -592,9 +614,15 @@ export default function Home() {
     };
     window.addEventListener('scroll', onScroll, { passive: true });
 
+    const navToggle = document.getElementById('navToggle');
+    const navMobileMenu = document.getElementById('navMobileMenu');
+    const onToggleClick = () => { if (navMobileMenu) navMobileMenu.classList.toggle('open'); };
+    if (navToggle) navToggle.addEventListener('click', onToggleClick);
+
     return () => {
       io.disconnect();
       window.removeEventListener('scroll', onScroll);
+      if (navToggle) navToggle.removeEventListener('click', onToggleClick);
     };
   }, []);
 
