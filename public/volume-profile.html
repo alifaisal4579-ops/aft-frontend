@@ -103,9 +103,14 @@
     border:1px solid rgba(255,255,255,.08);
     box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 12px 40px -20px rgba(0,0,0,.8);
   }
-  .site-nav .logo{font-family:var(--mono);font-weight:700;font-size:13px;letter-spacing:.02em;white-space:nowrap;color:var(--text);}
+  .site-nav .logo{font-family:var(--mono);font-weight:700;font-size:13px;letter-spacing:.02em;white-space:nowrap;color:var(--text);flex-shrink:0;}
   .site-nav .logo b{color:var(--tape);}
-  .nav-user-group{display:flex;align-items:center;gap:14px;}
+  .nav-links{display:flex;align-items:center;justify-content:center;gap:22px;flex:1;flex-wrap:wrap;}
+  .nav-links a{font-family:var(--mono);font-size:12.5px;color:var(--muted);text-decoration:none;white-space:nowrap;transition:color .15s ease;}
+  .nav-links a:hover{color:var(--tape);}
+  .nav-dashboard-btn{background:var(--tape);color:#0A0D12!important;font-weight:700;padding:7px 16px;border-radius:999px;transition:filter .15s ease;}
+  .nav-dashboard-btn:hover{filter:brightness(1.1);color:#0A0D12!important;}
+  .nav-user-group{display:flex;align-items:center;gap:14px;flex-shrink:0;}
   .nav-dashboard-link{font-family:var(--mono);font-size:12.5px;color:var(--muted);text-decoration:none;white-space:nowrap;transition:color .15s ease;}
   .nav-dashboard-link:hover{color:var(--tape);}
   .nav-user-name{font-family:var(--mono);font-size:12.5px;color:var(--muted);white-space:nowrap;}
@@ -122,8 +127,15 @@
 <div class="site-nav-outer">
   <nav class="site-nav">
     <span class="logo">AFT <b>Tools</b></span>
+    <div class="nav-links">
+      <a href="/volume-profile.html">Volume Profile</a>
+      <a href="/order-flow.html">Order Flow</a>
+      <a href="/fibonacci-levels.html">Fibonacci Levels</a>
+      <a href="/rsi-checker.html">RSI Checker</a>
+      <a href="/confluence-zones.html">Confluence Zones</a>
+      <a href="/dashboard" class="nav-dashboard-btn" id="navDashLink">Dashboard</a>
+    </div>
     <div class="nav-user-group" id="navUserGroup">
-      <a href="/dashboard" class="nav-dashboard-link" id="navDashLink">&larr; Dashboard</a>
       <span class="nav-user-name" id="navUserName" style="display:none;">&hellip;</span>
       <button class="nav-logout-btn" id="navLogoutBtn" style="display:none;">Log out</button>
       <a href="/login" class="nav-dashboard-link" id="navLoginLink" style="display:none;">Log in</a>
