@@ -44,9 +44,6 @@ function Topbar() {
 }
 
 export default function App() {
-  const { loading } = useAuth();
-  if (loading) return <div className="center-loading">Loading...</div>;
-
   return (
     <Routes>
       {/* Homepage, login and signup render full-screen, with no topbar/app-shell around them */}
