@@ -81,6 +81,11 @@ const HOMEPAGE_CSS = `
   nav.scrolled{background:rgba(8,10,16,.78);box-shadow:0 1px 0 rgba(255,255,255,.08) inset,0 16px 50px -18px rgba(0,0,0,.85);}
   .logo{font-family:var(--mono);font-weight:700;font-size:13px;letter-spacing:.02em;white-space:nowrap;}
   .logo b{color:var(--tape);}
+  .nav-brand{display:flex;align-items:center;gap:8px;text-decoration:none;flex-shrink:0;}
+  .nav-avatar{
+    width:26px;height:26px;border-radius:50%;object-fit:cover;flex-shrink:0;
+    border:1.5px solid rgba(255,255,255,.2);box-shadow:0 0 0 3px rgba(232,166,60,.14);
+  }
   .nav-links{display:flex;gap:20px;flex:1;font-size:13px;color:var(--muted);}
   .nav-links a{transition:color .15s ease;position:relative;}
   .nav-links a:hover{color:var(--text);}
@@ -248,7 +253,10 @@ const PART_A = `
 
 <div class="nav-outer">
   <nav id="mainNav" class="glass">
-    <span class="logo">AFT <b>Tools</b></span>
+    <a href="/" class="nav-brand">
+      <img src="/logo.jpg" alt="Ali Faisal Trades" class="nav-avatar">
+      <span class="logo">AFT <b>Tools</b></span>
+    </a>
     <div class="nav-links">
       <a href="/sector-screener.html">Sector Screener</a>
       <a href="/confluence-dashboard.html">Confluence Dashboard</a>
