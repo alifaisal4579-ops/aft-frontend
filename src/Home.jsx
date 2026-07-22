@@ -255,7 +255,7 @@ const PART_A = `
   <nav id="mainNav" class="glass">
     <a href="/" class="nav-brand">
       <img src="/logo.jpg" alt="Ali Faisal Trades" class="nav-avatar">
-      <span class="logo">AFT <b>Tools</b></span>
+      <span class="logo">Ali Faisal Trades</span>
     </a>
     <div class="nav-links">
       <a href="/sector-screener.html">Sector Screener</a>
@@ -278,7 +278,7 @@ const PART_A = `
       <div class="eyebrow"><i></i>16 Tools &middot; One Login &middot; Zero Guesswork</div>
       <h1>Price shows what happened.<br><span class="accent">Order flow shows who did it.</span></h1>
       <p class="hero-sub">
-        AFT Tools is a <b>16-tool institutional trading suite</b> &mdash; screeners, order flow, volume,
+        Ali Faisal Trades is a <b>16-tool institutional trading suite</b> &mdash; screeners, order flow, volume,
         VWAPs, Fibonacci structure, live signals and a paper-trading bot &mdash; all unified into one
         confluence engine. Log in once, and every tool talks to every other tool.
       </p>
@@ -518,7 +518,7 @@ const PART_C = `
       </div>
       <div class="faq-item">
         <h4>Is this financial advice or a signal service?</h4>
-        <p>No. AFT Tools is market-structure and order-flow analytics &mdash; decision support, not a buy/sell call.</p>
+        <p>No. Ali Faisal Trades is market-structure and order-flow analytics &mdash; decision support, not a buy/sell call.</p>
       </div>
       <div class="faq-item">
         <h4>Which exchanges does the data come from?</h4>
@@ -544,7 +544,7 @@ const PART_C = `
 <footer>
   <div class="wrap">
     <div class="footer-inner">
-      <span class="logo">AFT <b>Tools</b></span>
+      <span class="logo">Ali Faisal Trades</span>
       <div class="footer-links">
         <a href="#suite">Suite</a>
         <a href="#confluence">How it works</a>
@@ -552,8 +552,8 @@ const PART_C = `
       </div>
     </div>
     <p class="footer-note">
-      Educational and informational only. AFT Tools provides market-structure and order-flow analytics, not financial advice.
-      Crypto markets are volatile and leveraged trading carries substantial risk of loss. &copy; 2026 AFT Tools.
+      Educational and informational only. Ali Faisal Trades provides market-structure and order-flow analytics, not financial advice.
+      Crypto markets are volatile and leveraged trading carries substantial risk of loss. &copy; 2026 Ali Faisal Trades.
     </p>
   </div>
 </footer>
@@ -577,7 +577,7 @@ const PART_C = `
 
 export default function Home() {
   useEffect(() => {
-    document.title = 'AFT Tools \u00b7 16 Institutional Trading Tools \u00b7 One Login';
+    document.title = 'Ali Faisal Trades \u00b7 16 Institutional Trading Tools \u00b7 One Login';
 
     const io = new IntersectionObserver((entries) => {
       entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
@@ -652,4 +652,3 @@ export default function Home() {
     </>
   );
 }
-
