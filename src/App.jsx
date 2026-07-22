@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Routes, Route, Navigate, Link } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import ProtectedRoute from './ProtectedRoute';
@@ -11,12 +12,19 @@ import ToolsSuite from './ToolsSuite';
 
 function Topbar() {
   const { user, logout } = useAuth();
-  const displayName = (user && (user.full_name || user.email)) || '';
+  const [menuOpen, setMenuOpen] = useState(false);
+  const displayName = (user && user.full_name) || '';
   return (
     <div className="site-nav-outer">
-      <nav className="site-nav glass">
-        <span className="logo">Ali Faisal <b>Trades</b></span>
-        <div className="nav-links">
+      <nav className="site-nav">
+        <Link to="/" className="nav-brand">
+          <img src="/logo.jpg" alt="Ali Faisal Trades" className="nav-avatar" />
+          <span className="logo">Ali Faisal Trades</span>
+        </Link>
+        <button className="nav-toggle" aria-label="Menu" onClick={() => setMenuOpen((o) => !o)}>
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
+        </button>
+        <div className={`nav-links${menuOpen ? ' open' : ''}`}>
           <a href="/volume-profile.html">Volume Profile</a>
           <a href="/order-flow.html">Order Flow</a>
           <a href="/fibonacci-levels.html">Fibonacci Levels</a>
@@ -26,7 +34,7 @@ function Topbar() {
         </div>
         {user && (
           <div className="nav-user-group">
-            <span className="nav-user-name">{displayName}</span>
+            {displayName && <span className="nav-user-name">{displayName}</span>}
             <button className="nav-logout-btn" onClick={logout}>Log out</button>
           </div>
         )}
