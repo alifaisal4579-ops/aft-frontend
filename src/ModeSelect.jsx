@@ -1,6 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useAuth } from './AuthContext';
+import GainersLosers from './GainersLosers';
+import TradingFacts from './TradingFacts';
 
 const TOP5 = [
   { symbol: 'BTCUSDT', label: 'BTC' },
@@ -74,7 +76,7 @@ export default function ModeSelect() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { prices, error } = useTop5Prices();
-  const displayName = (user && (user.full_name || user.email)) || '';
+  const displayName = (user && user.full_name) || '';
 
   return (
     <div className="ms-page">
@@ -98,8 +100,20 @@ export default function ModeSelect() {
         )}
       </div>
 
-      <h2 className="mode-select-greeting">Welcome, {displayName}</h2>
+      <h2 className="mode-select-greeting">{displayName ? `Welcome, ${displayName}` : 'Welcome'}</h2>
       <p className="mode-select-sub">16 tools, one login. Pick a tool below, or manage your bots.</p>
+
+      <section className="ms-section">
+        <div className="ms-section-label"><span>Market Pulse</span></div>
+        <div className="pulse-grid">
+          <div className="pulse-col glass">
+            <GainersLosers />
+          </div>
+          <div className="pulse-col glass">
+            <TradingFacts />
+          </div>
+        </div>
+      </section>
 
       <section className="ms-section">
         <div className="ms-section-label"><span>Tools</span></div>
