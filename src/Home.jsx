@@ -1,6 +1,7 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import LiveOrderFlow from './LiveOrderFlow';
 import LiveRsiScreener from './LiveRsiScreener';
+import ToolShowcase from './ToolShowcase';
 
 const HOMEPAGE_CSS = `
   :root{
@@ -212,6 +213,78 @@ const HOMEPAGE_CSS = `
     width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;
     margin-bottom:16px;font-family:var(--mono);font-weight:700;font-size:13px;
   }
+  .tool-icon.c-tape{background:rgba(232,166,60,.14);color:var(--tape);}
+  .tool-icon.c-bull{background:rgba(47,216,166,.14);color:var(--bull);}
+  .tool-icon.c-bear{background:rgba(255,98,89,.14);color:var(--bear);}
+  .tool-icon.c-violet{background:rgba(156,140,255,.14);color:var(--violet);}
+
+  /* Trust signals bar */
+  .trust-bar{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;padding:22px 0 46px;}
+  .trust-pill{
+    font-family:var(--mono);font-size:12.5px;color:var(--muted);white-space:nowrap;
+    border:1px solid rgba(255,255,255,.08);padding:9px 18px;border-radius:999px;
+    background:rgba(255,255,255,.02);
+  }
+  .trust-pill b{color:var(--tape);}
+
+  /* Before/After comparison */
+  .ba-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:24px;align-items:center;margin-top:36px;}
+  .ba-col{padding:28px 30px;border-radius:16px;}
+  .ba-before{border:1px solid rgba(255,98,89,.18);background:rgba(255,98,89,.03);}
+  .ba-col-head{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--muted);margin-bottom:16px;}
+  .ba-col-head.accent{color:var(--tape);}
+  .ba-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px;}
+  .ba-list li{position:relative;padding-left:22px;font-size:14px;color:var(--muted);line-height:1.5;}
+  .ba-before .ba-list li::before{content:'\\2715';position:absolute;left:0;top:1px;color:var(--bear);font-size:12px;font-weight:700;}
+  .ba-after .ba-list li::before{content:'\\2713';position:absolute;left:0;top:1px;color:var(--bull);font-size:12px;font-weight:700;}
+  .ba-after .ba-list li b{color:var(--text);}
+  .ba-arrow{font-size:28px;color:var(--tape);font-weight:700;}
+  @media (max-width:820px){
+    .ba-grid{grid-template-columns:1fr;}
+    .ba-arrow{display:none;}
+  }
+
+  /* Interactive Tool Showcase */
+  .showcase{display:grid;grid-template-columns:280px 1fr;gap:24px;margin-top:20px;}
+  .showcase-tabs{display:flex;flex-direction:column;gap:4px;max-height:520px;overflow-y:auto;padding-right:4px;}
+  .showcase-tab{
+    display:flex;align-items:center;gap:10px;text-align:left;background:transparent;border:none;
+    color:var(--muted);font-family:var(--sans, inherit);font-size:13.5px;padding:10px 12px;border-radius:10px;
+    cursor:pointer;transition:all .15s ease;
+  }
+  .showcase-tab:hover{background:rgba(255,255,255,.04);color:var(--text);}
+  .showcase-tab.active{background:rgba(232,166,60,.1);color:var(--tape);font-weight:600;}
+  .showcase-tab-icon{
+    width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+    font-family:var(--mono);font-weight:700;font-size:10.5px;flex-shrink:0;
+  }
+  .showcase-panel{display:flex;gap:24px;padding:36px;border-radius:20px;align-items:flex-start;}
+  .showcase-panel-icon .tool-icon{width:52px;height:52px;border-radius:14px;font-size:17px;margin-bottom:0;}
+  .showcase-panel-body{flex:1;}
+  .showcase-panel-tag{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+  .showcase-panel-body h3{font-family:var(--display);font-size:21px;font-weight:700;margin:0 0 12px;line-height:1.35;}
+  .showcase-panel-body p{font-size:14px;color:var(--muted);line-height:1.6;margin:0 0 20px;}
+  @media (max-width:820px){
+    .showcase{grid-template-columns:1fr;}
+    .showcase-tabs{flex-direction:row;flex-wrap:wrap;max-height:none;overflow-y:visible;}
+    .showcase-panel{flex-direction:column;padding:24px;}
+  }
+
+  /* Sticky floating CTA */
+  .sticky-cta{
+    position:fixed;bottom:24px;right:24px;z-index:80;
+    opacity:0;transform:translateY(20px) scale(.9);pointer-events:none;
+    transition:opacity .25s ease,transform .25s ease;
+  }
+  .sticky-cta.show{opacity:1;transform:translateY(0) scale(1);pointer-events:auto;}
+  .sticky-cta a{
+    display:flex;align-items:center;gap:8px;font-family:var(--mono);font-weight:700;font-size:13px;
+    background:linear-gradient(135deg,#F2BE5E,var(--tape));color:#241a05;padding:14px 22px;border-radius:999px;
+    text-decoration:none;white-space:nowrap;box-shadow:0 10px 32px -8px rgba(232,166,60,.7);
+    animation:stickyCtaPulse 2.4s ease-in-out infinite;
+  }
+  @keyframes stickyCtaPulse{0%,100%{box-shadow:0 10px 32px -8px rgba(232,166,60,.7);}50%{box-shadow:0 10px 40px -4px rgba(232,166,60,.9);}}
+  @media (max-width:600px){ .sticky-cta{bottom:16px;right:16px;} .sticky-cta a{padding:12px 18px;font-size:12px;} }
   .tool-card h3{font-family:var(--display);font-size:16px;font-weight:600;margin-bottom:8px;}
   .tool-card p{font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:12px;}
   .tool-tag{font-family:var(--mono);font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted-2);}
@@ -373,6 +446,45 @@ const PART_A = `
     </div>
   </div>
 </div>
+
+<div class="wrap">
+  <div class="trust-bar reveal">
+    <div class="trust-pill"><b>NO API KEY</b> needed to try 3 tools free</div>
+    <div class="trust-pill"><b>NON-CUSTODIAL</b> &mdash; your funds stay on your exchange</div>
+    <div class="trust-pill"><b>14 EXCHANGES</b> aggregated in real time</div>
+    <div class="trust-pill"><b>EDUCATIONAL</b> analytics, not a signal service</div>
+  </div>
+</div>
+
+<section id="before-after">
+  <div class="wrap">
+    <div class="section-head center reveal">
+      <div class="eyebrow" style="justify-content:center;"><i></i>The old way vs. the AFT way</div>
+      <h2>Stop trading with eight tabs open.</h2>
+    </div>
+    <div class="ba-grid">
+      <div class="ba-col ba-before reveal">
+        <div class="ba-col-head">WITHOUT AFT TOOLS</div>
+        <ul class="ba-list">
+          <li>Screener in one tab, order book in another, TradingView in a third</li>
+          <li>Manually cross-checking RSI, volume and VWAP before every entry</li>
+          <li>Missing the setup because you were still switching tabs</li>
+          <li>No single number telling you how strong a setup actually is</li>
+        </ul>
+      </div>
+      <div class="ba-arrow">&rarr;</div>
+      <div class="ba-col ba-after glass reveal">
+        <div class="ba-col-head accent">WITH AFT TOOLS</div>
+        <ul class="ba-list">
+          <li><b>One login</b> &mdash; every tool already talks to every other tool</li>
+          <li><b>One score</b> &mdash; Confluence Dashboard tallies every signal live</li>
+          <li><b>Zero tab-switching</b> &mdash; screen, confirm, locate, score, done</li>
+          <li><b>Real-time</b> &mdash; 14 exchanges aggregated, updated every few seconds</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
 
 <section id="suite">
   <div class="wrap">
@@ -554,8 +666,8 @@ const PART_C = `
   <div class="wrap">
     <div class="final-cta glass reveal">
       <div class="final-cta-glow"></div>
-      <h2>16 tools. One login. Trading made easy.</h2>
-      <p>Stop reading eight tabs to make one decision. Log in once and every tool works together.</p>
+      <h2>Every serious trader eventually builds this stack. Skip the years it takes.</h2>
+      <p>16 tools, 14 exchanges, one login &mdash; ready right now. Free tools need no signup at all.</p>
       <div class="cta-row">
         <a class="btn-primary" href="/login">Login &amp; Start Trading &rarr;</a>
       </div>
@@ -598,6 +710,8 @@ const PART_C = `
 `;
 
 export default function Home() {
+  const [showStickyCta, setShowStickyCta] = useState(false);
+
   useEffect(() => {
     document.title = 'Ali Faisal Trades \u00b7 16 Institutional Trading Tools \u00b7 One Login';
 
@@ -611,6 +725,7 @@ export default function Home() {
       if (!nav) return;
       if (window.scrollY > 40) nav.classList.add('scrolled');
       else nav.classList.remove('scrolled');
+      setShowStickyCta(window.scrollY > 700);
     };
     window.addEventListener('scroll', onScroll, { passive: true });
 
@@ -630,6 +745,16 @@ export default function Home() {
     <>
       <style>{HOMEPAGE_CSS}</style>
       <div dangerouslySetInnerHTML={{ __html: PART_A }} />
+
+      <section>
+        <div className="wrap">
+          <div className="section-head center reveal">
+            <div className="eyebrow" style={{ justifyContent: 'center' }}><i></i>Pick a tool. See it live.</div>
+            <h2>16 tools. Click through every one.</h2>
+          </div>
+          <ToolShowcase />
+        </div>
+      </section>
 
       <section>
         <div className="wrap">
@@ -677,6 +802,10 @@ export default function Home() {
       </section>
 
       <div dangerouslySetInnerHTML={{ __html: PART_C }} />
+
+      <div className={`sticky-cta ${showStickyCta ? 'show' : ''}`}>
+        <a href="/login">Start Trading &rarr;</a>
+      </div>
     </>
   );
 }
