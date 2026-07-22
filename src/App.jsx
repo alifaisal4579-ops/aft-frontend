@@ -1,13 +1,13 @@
 import { Routes, Route, Navigate, Link } from 'react-router-dom';
-import { useAuth } from './context/AuthContext';
-import ProtectedRoute from './components/ProtectedRoute';
-import Home from './pages/Home';
-import Login from './pages/Login';
-import Signup from './pages/Signup';
-import ModeSelect from './pages/ModeSelect';
-import SimulatedDashboard from './pages/SimulatedDashboard';
-import RealDashboard from './pages/RealDashboard';
-import ToolsSuite from './pages/ToolsSuite';
+import { useAuth } from './AuthContext';
+import ProtectedRoute from './ProtectedRoute';
+import Home from './Home';
+import Login from './Login';
+import Signup from './Signup';
+import ModeSelect from './ModeSelect';
+import SimulatedDashboard from './SimulatedDashboard';
+import RealDashboard from './RealDashboard';
+import ToolsSuite from './ToolsSuite';
 
 function Topbar() {
   const { user, logout } = useAuth();
@@ -16,6 +16,14 @@ function Topbar() {
     <div className="site-nav-outer">
       <nav className="site-nav glass">
         <span className="logo">Ali Faisal <b>Trades</b></span>
+        <div className="nav-links">
+          <a href="/volume-profile.html">Volume Profile</a>
+          <a href="/order-flow.html">Order Flow</a>
+          <a href="/fibonacci-levels.html">Fibonacci Levels</a>
+          <a href="/rsi-checker.html">RSI Checker</a>
+          <a href="/confluence-zones.html">Confluence Zones</a>
+          <Link to="/dashboard" className="nav-dashboard-btn">Dashboard</Link>
+        </div>
         {user && (
           <div className="nav-user-group">
             <span className="nav-user-name">{displayName}</span>
