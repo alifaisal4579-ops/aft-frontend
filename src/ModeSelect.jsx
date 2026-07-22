@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useAuth } from './AuthContext';
 import GainersLosers from './GainersLosers';
+import FundingExtremes from './FundingExtremes';
 import TradingFacts from './TradingFacts';
 
 const TOP5 = [
@@ -108,6 +109,9 @@ export default function ModeSelect() {
         <div className="pulse-grid">
           <div className="pulse-col glass">
             <GainersLosers />
+          </div>
+          <div className="pulse-col glass">
+            <FundingExtremes />
           </div>
           <div className="pulse-col glass">
             <TradingFacts />
