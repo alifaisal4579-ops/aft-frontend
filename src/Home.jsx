@@ -350,10 +350,14 @@ const HOMEPAGE_CSS = `
 
   @media (max-width:820px){
     .showcase{grid-template-columns:1fr;}
-    .showcase-tabs{flex-direction:row;flex-wrap:wrap;max-height:none;overflow-y:visible;}
+    .showcase-tabs{
+      flex-direction:row;flex-wrap:nowrap;max-height:none;overflow-y:visible;
+      overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px;gap:8px;
+    }
+    .showcase-tab{flex-shrink:0;white-space:nowrap;padding:9px 14px;}
     .showcase-panel{grid-template-columns:1fr;}
-    .showcase-panel-main{flex-direction:column;padding:24px;}
-    .showcase-panel-demo{border-left:none;border-top:1px solid rgba(255,255,255,.06);padding:24px;}
+    .showcase-panel-main{flex-direction:column;padding:20px;}
+    .showcase-panel-demo{border-left:none;border-top:1px solid rgba(255,255,255,.06);padding:20px;}
   }
 
   /* Sticky floating CTA */
@@ -371,6 +375,10 @@ const HOMEPAGE_CSS = `
   }
   @keyframes stickyCtaPulse{0%,100%{box-shadow:0 10px 32px -8px rgba(232,166,60,.7);}50%{box-shadow:0 10px 40px -4px rgba(232,166,60,.9);}}
   @media (max-width:600px){ .sticky-cta{bottom:16px;right:16px;} .sticky-cta a{padding:12px 18px;font-size:12px;} }
+  @media (max-width:420px){
+    .sticky-cta a{width:52px;height:52px;padding:0;border-radius:50%;justify-content:center;}
+    .sticky-cta a span{display:none;}
+  }
 
   .sticky-telegram{
     position:fixed;bottom:24px;left:24px;z-index:80;
@@ -389,6 +397,10 @@ const HOMEPAGE_CSS = `
   .sticky-telegram a:hover{filter:brightness(1.15);transform:translateY(-1px);}
   .sticky-telegram svg{width:16px;height:16px;flex-shrink:0;}
   @media (max-width:600px){ .sticky-telegram{bottom:16px;left:16px;} .sticky-telegram a{padding:12px 18px;font-size:12px;} }
+  @media (max-width:420px){
+    .sticky-telegram a{width:52px;height:52px;padding:0;border-radius:50%;justify-content:center;}
+    .sticky-telegram a span{display:none;}
+  }
 
   .tool-card h3{font-family:var(--display);font-size:16px;font-weight:600;margin-bottom:8px;}
   .tool-card p{font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:12px;}
@@ -915,12 +927,15 @@ export default function Home() {
       <div dangerouslySetInnerHTML={{ __html: PART_C }} />
 
       <div className={`sticky-cta ${showStickyCta ? 'show' : ''}`}>
-        <a href="/login">Start Trading &rarr;</a>
+        <a href="/login">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+          <span>Start Trading</span>
+        </a>
       </div>
       <div className={`sticky-telegram ${showStickyCta ? 'show' : ''}`}>
         <a href="https://t.me/alifaisaltrades" target="_blank" rel="noopener">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71l-4.14-3.05-2 1.92c-.23.23-.42.42-.82.42z" /></svg>
-          Join Telegram
+          <span>Join Telegram</span>
         </a>
       </div>
     </>
