@@ -9,6 +9,10 @@ import ModeSelect from './ModeSelect';
 import SimulatedDashboard from './SimulatedDashboard';
 import RealDashboard from './RealDashboard';
 import ToolsSuite from './ToolsSuite';
+import Disclaimer from './Disclaimer';
+import About from './About';
+import PrivacyPolicy from './PrivacyPolicy';
+import Contact from './Contact';
 
 function Topbar() {
   const { user, logout } = useAuth();
@@ -50,6 +54,10 @@ export default function App() {
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/disclaimer" element={<Disclaimer />} />
+      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+      <Route path="/contact" element={<Contact />} />
 
       {/* Tools also render full-screen (it's an embedded iframe of the real
           site, which has its own nav/chrome) -- but still behind login. */}
