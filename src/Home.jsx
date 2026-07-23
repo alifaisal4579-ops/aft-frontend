@@ -73,7 +73,7 @@ const HOMEPAGE_CSS = `
   .nav-outer{position:sticky;top:0;z-index:60;background:var(--bg);border-bottom:1px solid var(--border);}
   nav{
     max-width:1400px;margin:0 auto;width:100%;display:flex;align-items:center;justify-content:space-between;
-    gap:24px;padding:16px 32px;position:relative;flex-wrap:nowrap;
+    gap:24px;padding:16px 32px;position:relative;
   }
   .logo{font-family:var(--display);font-weight:700;font-size:15px;white-space:nowrap;color:var(--text);}
   .logo b{color:var(--tape);}
@@ -84,38 +84,36 @@ const HOMEPAGE_CSS = `
     box-shadow:0 0 0 3px rgba(232,166,60,.14),0 2px 10px rgba(0,0,0,.45);
     backdrop-filter:blur(6px) saturate(140%);-webkit-backdrop-filter:blur(6px) saturate(140%);
   }
-  .nav-links{display:flex;align-items:center;justify-content:flex-end;gap:28px;flex:1;flex-wrap:nowrap;font-size:14px;color:var(--muted);}
-  .nav-links a{font-family:var(--display);transition:color .15s ease;position:relative;white-space:nowrap;flex-shrink:0;text-decoration:none;color:var(--muted);}
+  .nav-links{display:flex;align-items:center;justify-content:flex-end;gap:28px;flex:1;flex-wrap:wrap;}
+  .nav-links a{font-family:var(--display);font-size:14px;color:var(--muted);text-decoration:none;white-space:nowrap;transition:color .15s ease;}
   .nav-links a:hover{color:var(--text);}
-  .nav-links a::after{display:none;}
-  .nav-cta-group{display:flex;align-items:center;gap:10px;margin-left:24px;flex-shrink:0;}
+  .nav-cta-group{display:flex;align-items:center;gap:16px;flex-shrink:0;}
   .nav-telegram{
-    font-family:var(--display);font-size:13px;font-weight:600;color:var(--muted);
-    border:1px solid var(--border);padding:8px 16px;border-radius:6px;
-    display:flex;align-items:center;gap:6px;transition:all .2s ease;white-space:nowrap;text-decoration:none;
+    font-family:var(--display);font-size:13.5px;font-weight:600;color:#8fd4f5;
+    border:1px solid rgba(94,196,240,.3);padding:8px 16px;border-radius:6px;
+    background:rgba(94,196,240,.06);display:flex;align-items:center;gap:6px;
+    text-decoration:none;white-space:nowrap;transition:all .2s ease;
   }
-  .nav-telegram:hover{border-color:rgba(94,196,240,.5);color:#8fd4f5;background:rgba(94,196,240,.06);}
-  .nav-telegram svg{width:13px;height:13px;flex-shrink:0;}
+  .nav-telegram:hover{border-color:rgba(94,196,240,.6);background:rgba(94,196,240,.12);}
+  .nav-telegram svg{width:14px;height:14px;flex-shrink:0;}
   .nav-cta{
     font-family:var(--display);font-size:13px;font-weight:700;letter-spacing:.01em;text-decoration:none;
     background:linear-gradient(135deg,#F2BE5E,var(--tape));color:#241a05;padding:9px 18px;border-radius:6px;
     white-space:nowrap;transition:filter .2s ease,transform .2s ease;box-shadow:0 6px 20px -8px rgba(232,166,60,.6);
   }
   .nav-cta:hover{filter:brightness(1.08);transform:translateY(-1px);}
-  .nav-mobile-menu{display:flex;align-items:center;gap:28px;flex:1;justify-content:flex-end;}
   .nav-toggle{display:none;background:transparent;border:1px solid var(--border);color:var(--text);border-radius:6px;padding:8px 10px;cursor:pointer;align-items:center;justify-content:center;}
-  @media (max-width:900px){
+  @media (max-width:860px){
     .nav-toggle{display:flex;}
-    .nav-mobile-menu{display:none;}
-    .nav-mobile-menu.open{
-      display:flex;position:absolute;top:100%;left:16px;right:16px;z-index:70;margin-top:8px;
-      flex-direction:column;align-items:stretch;gap:4px;
-      background:var(--bg);border:1px solid var(--border);border-radius:16px;padding:14px 18px;
+    .nav-links{
+      display:none;position:absolute;top:100%;left:0;right:0;z-index:70;
+      flex-direction:column;align-items:stretch;gap:0;
+      background:var(--bg);border-bottom:1px solid var(--border);
+      padding:8px 20px 16px;
     }
-    .nav-mobile-menu.open .nav-links{display:flex;flex-direction:column;gap:0;}
-    .nav-mobile-menu.open .nav-links a{padding:10px 0;border-bottom:1px solid var(--border);}
-    .nav-mobile-menu.open .nav-cta-group{display:flex;flex-direction:column;align-items:stretch;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
-    .nav-mobile-menu.open .nav-telegram,.nav-mobile-menu.open .nav-cta{justify-content:center;}
+    .nav-links.open{display:flex;}
+    .nav-links a{padding:12px 0;border-bottom:1px solid var(--border);}
+    .nav-links a:last-child{border-bottom:none;}
     nav{padding:14px 16px;}
   }
 
@@ -424,8 +422,7 @@ const PART_A = `
     <button class="nav-toggle" id="navToggle" aria-label="Menu">
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
     </button>
-    <div class="nav-mobile-menu" id="navMobileMenu">
-    <div class="nav-links">
+    <div class="nav-links" id="navLinks">
       <a href="/sector-screener.html">Sector Screener</a>
       <a href="/confluence-dashboard.html">Confluence Dashboard</a>
       <a href="/position-size-calculator.html">Position Size Calculator</a>
@@ -436,7 +433,6 @@ const PART_A = `
         <span>Join Telegram</span>
       </a>
       <a class="nav-cta" href="/login">Open Terminal &rarr;</a>
-    </div>
     </div>
   </nav>
 </div>
@@ -805,7 +801,7 @@ export default function Home() {
     window.addEventListener('scroll', onScroll, { passive: true });
 
     const navToggle = document.getElementById('navToggle');
-    const navMobileMenu = document.getElementById('navMobileMenu');
+    const navMobileMenu = document.getElementById('navLinks');
     const onToggleClick = () => { if (navMobileMenu) navMobileMenu.classList.toggle('open'); };
     if (navToggle) navToggle.addEventListener('click', onToggleClick);
 
