@@ -19,6 +19,7 @@ function fmtTime(iso) {
 export default function BotCard({ bot, onChanged }) {
   const [busy, setBusy] = useState(false);
   const [showTrades, setShowTrades] = useState(false);
+  const [showLastCheck, setShowLastCheck] = useState(false);
 
   async function toggleStatus() {
     setBusy(true);
@@ -37,6 +38,10 @@ export default function BotCard({ bot, onChanged }) {
   }
 
   const isReal = bot.mode === 'real';
+  const maxPerDay = bot.max_trades_per_day || bot.symbols.length;
+  const lastCheck = bot.last_check_results
+    ? (typeof bot.last_check_results === 'string' ? JSON.parse(bot.last_check_results) : bot.last_check_results)
+    : null;
 
   return (
     <div className="bot-card">
@@ -59,6 +64,12 @@ export default function BotCard({ bot, onChanged }) {
         <div className="bot-card-stat">
           <span className="bot-card-stat-label">Last check</span>
           <span className="bot-card-stat-value">{fmtTime(bot.last_check_at)}</span>
+        </div>
+        <div className="bot-card-stat">
+          <span className="bot-card-stat-label">Max trades/day</span>
+          <span className="bot-card-stat-value">
+            {maxPerDay}{!bot.max_trades_per_day && ' (auto = symbol count)'}
+          </span>
         </div>
         <div className="bot-card-stat full">
           <span className="bot-card-stat-label">Risk per trade</span>
@@ -83,10 +94,37 @@ export default function BotCard({ bot, onChanged }) {
         <button className="btn-ghost" onClick={() => setShowTrades((v) => !v)}>
           {showTrades ? 'Hide trades' : 'View trades'}
         </button>
+        {lastCheck && (
+          <button className="btn-ghost" onClick={() => setShowLastCheck((v) => !v)}>
+            {showLastCheck ? 'Hide last check' : 'Why no trade?'}
+          </button>
+        )}
         <button className="btn-ghost danger" onClick={handleDelete} disabled={busy} aria-label="Delete bot">
           Delete
         </button>
       </div>
+
+      {showLastCheck && lastCheck && (
+        <div className="bot-card-lastcheck">
+          <div className="bot-card-lastcheck-head">
+            {lastCheck.session} session &middot; {fmtTime(lastCheck.time)}
+          </div>
+          <table className="last-check-table">
+            <thead>
+              <tr><th>Symbol</th><th>Result</th><th>Detail</th></tr>
+            </thead>
+            <tbody>
+              {(lastCheck.results || []).map((r) => (
+                <tr key={r.symbol}>
+                  <td>{r.symbol}</td>
+                  <td><span className={`badge ${r.status}`}>{r.status}</span></td>
+                  <td className="wrap">{r.detail}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {showTrades && (
         <div className="bot-card-trades">
