@@ -371,6 +371,25 @@ const HOMEPAGE_CSS = `
   }
   @keyframes stickyCtaPulse{0%,100%{box-shadow:0 10px 32px -8px rgba(232,166,60,.7);}50%{box-shadow:0 10px 40px -4px rgba(232,166,60,.9);}}
   @media (max-width:600px){ .sticky-cta{bottom:16px;right:16px;} .sticky-cta a{padding:12px 18px;font-size:12px;} }
+
+  .sticky-telegram{
+    position:fixed;bottom:24px;left:24px;z-index:80;
+    opacity:0;transform:translateY(20px) scale(.9);pointer-events:none;
+    transition:opacity .25s ease,transform .25s ease;
+  }
+  .sticky-telegram.show{opacity:1;transform:translateY(0) scale(1);pointer-events:auto;}
+  .sticky-telegram a{
+    display:flex;align-items:center;gap:8px;font-family:var(--mono);font-weight:700;font-size:13px;
+    background:rgba(10,12,18,.9);color:#8fd4f5;padding:14px 22px;border-radius:999px;
+    border:1px solid rgba(94,196,240,.4);
+    text-decoration:none;white-space:nowrap;box-shadow:0 10px 32px -8px rgba(94,196,240,.5);
+    backdrop-filter:blur(12px) saturate(160%);-webkit-backdrop-filter:blur(12px) saturate(160%);
+    transition:filter .2s ease,transform .2s ease;
+  }
+  .sticky-telegram a:hover{filter:brightness(1.15);transform:translateY(-1px);}
+  .sticky-telegram svg{width:16px;height:16px;flex-shrink:0;}
+  @media (max-width:600px){ .sticky-telegram{bottom:16px;left:16px;} .sticky-telegram a{padding:12px 18px;font-size:12px;} }
+
   .tool-card h3{font-family:var(--display);font-size:16px;font-weight:600;margin-bottom:8px;}
   .tool-card p{font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:12px;}
   .tool-tag{font-family:var(--mono);font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted-2);}
@@ -897,6 +916,12 @@ export default function Home() {
 
       <div className={`sticky-cta ${showStickyCta ? 'show' : ''}`}>
         <a href="/login">Start Trading &rarr;</a>
+      </div>
+      <div className={`sticky-telegram ${showStickyCta ? 'show' : ''}`}>
+        <a href="https://t.me/alifaisaltrades" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71l-4.14-3.05-2 1.92c-.23.23-.42.42-.82.42z" /></svg>
+          Join Telegram
+        </a>
       </div>
     </>
   );
