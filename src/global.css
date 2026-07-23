@@ -632,13 +632,26 @@ td.confluences {
   cursor: pointer;
   color: var(--text);
   font-family: var(--display);
+  position: relative;
+  overflow: hidden;
   transition: border-color .15s ease, transform .15s ease;
 }
+.mode-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+.mode-card-sim::before { background: linear-gradient(90deg, var(--bull), #59f0c2); }
+.mode-card-real::before { background: linear-gradient(90deg, var(--tape), #F2BE5E); }
+.mode-card-sim { background: linear-gradient(160deg, rgba(47,216,166,.05), var(--surface) 55%); }
+.mode-card-real { background: linear-gradient(160deg, rgba(232,166,60,.06), var(--surface) 55%); }
 .mode-card:hover { border-color: var(--tape); transform: translateY(-2px); }
+.mode-card-sim:hover { border-color: var(--bull); }
 .mode-card h3 { margin: 14px 0 8px; font-size: 18px; }
 .mode-card p { margin: 0 0 18px; color: var(--muted); font-size: 13.5px; line-height: 1.5; }
 .mode-card-cta { color: var(--tape); font-family: var(--mono); font-size: 12.5px; font-weight: 700; }
-.mode-card-icon { display: flex; align-items: center; }
+.mode-card-icon {
+  display: flex; align-items: center; justify-content: center;
+  width: 52px; height: 52px; border-radius: 14px;
+}
+.mode-card-icon-sim { background: rgba(47,216,166,.14); color: var(--bull); }
+.mode-card-icon-real { background: rgba(232,166,60,.14); color: var(--tape); }
 .mode-card-real .mode-card-cta { color: var(--bear); }
 .mode-card-real:hover { border-color: var(--bear); }
 .mode-card-badge {
