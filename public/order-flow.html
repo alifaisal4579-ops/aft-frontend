@@ -3,6 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <title>Order Flow — Ali Faisal Trades</title>
 <meta name="theme-color" content="#080B10">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -218,7 +223,7 @@
     gap:24px;padding:16px 32px;position:relative;
   }
   .nav-toggle{display:none;background:transparent;border:1px solid var(--border);color:var(--text);border-radius:6px;padding:8px 10px;cursor:pointer;align-items:center;justify-content:center;}
-  .nav-brand{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+  .nav-brand{display:flex;align-items:center;gap:10px;flex-shrink:0;text-decoration:none;}
   .nav-avatar{
     width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;
     border:1.5px solid rgba(255,255,255,.2);
@@ -267,10 +272,10 @@
 
 <div class="site-nav-outer">
   <nav class="site-nav">
-    <div class="nav-brand">
+    <a href="/" class="nav-brand">
       <img src="/logo.jpg" alt="Ali Faisal Trades" class="nav-avatar">
       <span class="logo">Ali Faisal Trades</span>
-    </div>
+    </a>
     <button class="nav-toggle" id="navToggle" aria-label="Menu">
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
     </button>
@@ -2461,7 +2466,7 @@
       })
       .then(function(r){ return r.ok ? r.json() : Promise.reject(); })
       .then(function(data){
-        if (nameEl) { nameEl.textContent = (data.user.full_name || data.user.email); nameEl.style.display = 'inline'; }
+        if (nameEl && data.user.full_name) { nameEl.textContent = data.user.full_name; nameEl.style.display = 'inline'; }
         if (logoutBtn) logoutBtn.style.display = 'inline-block';
       })
       .catch(function(){
