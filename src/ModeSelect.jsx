@@ -73,11 +73,21 @@ function fmtPrice(v) {
   return v.toLocaleString(undefined, { maximumFractionDigits: v < 1 ? 6 : 2 });
 }
 
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 5) return 'Good night';
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  if (hour < 21) return 'Good evening';
+  return 'Good night';
+}
+
 export default function ModeSelect() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { prices, error } = useTop5Prices();
   const displayName = (user && user.full_name) || '';
+  const greeting = getGreeting();
 
   return (
     <div className="ms-page">
@@ -101,7 +111,7 @@ export default function ModeSelect() {
         )}
       </div>
 
-      <h2 className="mode-select-greeting">{displayName ? `Welcome, ${displayName}` : 'Welcome'}</h2>
+      <h2 className="mode-select-greeting">{displayName ? `${greeting}, ${displayName}` : greeting}</h2>
       <p className="mode-select-sub">16 tools, one login. Pick a tool below, or manage your bots.</p>
 
       <section className="ms-section">
@@ -140,8 +150,11 @@ export default function ModeSelect() {
         <div className="ms-section-label"><span>Trading Bots</span></div>
         <div className="mode-cards">
           <button className="mode-card mode-card-sim glass" onClick={() => navigate('/dashboard/simulated')}>
-            <div className="mode-card-icon">
-              <span className="status-dot running" />
+            <div className="mode-card-icon mode-card-icon-sim">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 3h6M10 3v5.5L4.5 18a1.5 1.5 0 0 0 1.3 2.2h12.4a1.5 1.5 0 0 0 1.3-2.2L14 8.5V3" />
+                <path d="M7 15h10" />
+              </svg>
             </div>
             <h3>Simulated Bot Trading</h3>
             <p>
@@ -153,8 +166,10 @@ export default function ModeSelect() {
           </button>
 
           <button className="mode-card mode-card-real glass" onClick={() => navigate('/dashboard/real')}>
-            <div className="mode-card-icon">
-              <span className="mode-card-badge">Real</span>
+            <div className="mode-card-icon mode-card-icon-real">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z" />
+              </svg>
             </div>
             <h3>Real Bot Trading</h3>
             <p>
