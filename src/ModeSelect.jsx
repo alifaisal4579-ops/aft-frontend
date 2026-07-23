@@ -1,9 +1,44 @@
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useAuth } from './AuthContext';
+import * as api from './client';
 import GainersLosers from './GainersLosers';
 import FundingExtremes from './FundingExtremes';
 import TradingFacts from './TradingFacts';
+
+// Session labels are fixed clock hours in Pakistan Time (PKT, UTC+5, no DST).
+const SESSION_HOURS_PKT = { '12AM': 0, '5AM': 5, '12PM': 12, '7PM': 19 };
+
+function getPktNow() {
+  // en-US locale with the Asia/Karachi timezone gives us the current
+  // wall-clock time in PKT regardless of what timezone the browser is in.
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Karachi', hour12: false,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+  }).formatToParts(new Date());
+  const get = (t) => parts.find((p) => p.type === t).value;
+  return new Date(`${get('year')}-${get('month')}-${get('day')}T${get('hour')}:${get('minute')}:${get('second')}`);
+}
+
+function nextSessionCountdown(sessionLabels) {
+  if (!sessionLabels || !sessionLabels.length) return null;
+  const now = getPktNow();
+  let best = null;
+  for (const label of sessionLabels) {
+    const hour = SESSION_HOURS_PKT[label];
+    if (hour === undefined) continue;
+    const candidate = new Date(now);
+    candidate.setHours(hour, 0, 0, 0);
+    if (candidate <= now) candidate.setDate(candidate.getDate() + 1);
+    if (!best || candidate < best.time) best = { label, time: candidate };
+  }
+  if (!best) return null;
+  const msLeft = best.time - now;
+  const h = Math.floor(msLeft / 3600000);
+  const m = Math.floor((msLeft % 3600000) / 60000);
+  return { label: best.label, hours: h, minutes: m };
+}
 
 const TOP5 = [
   { symbol: 'BTCUSDT', label: 'BTC' },
@@ -89,6 +124,35 @@ export default function ModeSelect() {
   const displayName = (user && user.full_name) || '';
   const greeting = getGreeting();
 
+  const [bots, setBots] = useState(null);
+  const [hasExchangeKey, setHasExchangeKey] = useState(null);
+  const [countdown, setCountdown] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      const [botsRes, keysRes] = await Promise.all([api.listBots(), api.listExchangeKeys()]);
+      if (cancelled) return;
+      if (botsRes.ok) setBots(botsRes.body.bots || []);
+      if (keysRes.ok) setHasExchangeKey((keysRes.body.keys || []).length > 0);
+    }
+    load();
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    if (!bots) return;
+    const runningSessions = [...new Set(
+      bots.filter((b) => b.status === 'running').flatMap((b) => b.sessions || [])
+    )];
+    function tick() { setCountdown(nextSessionCountdown(runningSessions)); }
+    tick();
+    const interval = setInterval(tick, 30000);
+    return () => clearInterval(interval);
+  }, [bots]);
+
+  const showGettingStarted = bots !== null && bots.length === 0;
+
   return (
     <div className="ms-page">
       <div className="ms-mesh"><i></i></div>
@@ -113,6 +177,47 @@ export default function ModeSelect() {
 
       <h2 className="mode-select-greeting">{displayName ? `${greeting}, ${displayName}` : greeting}</h2>
       <p className="mode-select-sub">16 tools, one login. Pick a tool below, or manage your bots.</p>
+
+      {countdown && (
+        <div className="session-countdown">
+          <i></i>Next session ({countdown.label}) in {countdown.hours}h {countdown.minutes}m
+        </div>
+      )}
+
+      {showGettingStarted && (
+        <section className="ms-section">
+          <div className="getting-started glass">
+            <div className="getting-started-head">
+              <span className="getting-started-eyebrow">Getting started</span>
+              <h3>Three steps to your first automated trade</h3>
+            </div>
+            <div className="getting-started-steps">
+              <div className={`gs-step ${hasExchangeKey ? 'done' : ''}`}>
+                <span className="gs-step-num">{hasExchangeKey ? '\u2713' : '1'}</span>
+                <div>
+                  <b>Connect your exchange</b>
+                  <p>Add a BloFin API key with Trade permission only (no withdrawal access needed).</p>
+                </div>
+              </div>
+              <div className="gs-step">
+                <span className="gs-step-num">2</span>
+                <div>
+                  <b>Create your first bot</b>
+                  <p>Start with Simulated mode -- paper trading against real market data, zero risk.</p>
+                </div>
+              </div>
+              <div className="gs-step">
+                <span className="gs-step-num">3</span>
+                <div>
+                  <b>Explore the tools</b>
+                  <p>Screeners, order flow, and the Confluence Dashboard are ready below, right now.</p>
+                </div>
+              </div>
+            </div>
+            <button className="gs-cta" onClick={() => navigate('/dashboard/simulated')}>Create your first bot &rarr;</button>
+          </div>
+        </section>
+      )}
 
       <section className="ms-section">
         <div className="ms-section-label"><span>Market Pulse</span></div>
