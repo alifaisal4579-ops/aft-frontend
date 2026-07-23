@@ -70,57 +70,52 @@ const HOMEPAGE_CSS = `
   @media (prefers-reduced-motion: reduce){ .reveal{opacity:1;transform:none;transition:none;} }
 
   /* ---- nav ---- */
-  .nav-outer{position:sticky;top:16px;z-index:60;display:flex;justify-content:center;padding:0 16px;}
+  .nav-outer{position:sticky;top:0;z-index:60;background:var(--bg);border-bottom:1px solid var(--border);}
   nav{
-    width:100%;max-width:1180px;display:flex;align-items:center;gap:24px;flex-wrap:nowrap;
-    padding:12px 20px;border-radius:999px;
-    background:rgba(10,12,18,.55);backdrop-filter:blur(18px) saturate(160%);-webkit-backdrop-filter:blur(18px) saturate(160%);
-    border:1px solid rgba(255,255,255,.08);
-    box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 12px 40px -20px rgba(0,0,0,.8);
-    transition:background .3s ease,box-shadow .3s ease;
+    max-width:1400px;margin:0 auto;width:100%;display:flex;align-items:center;justify-content:space-between;
+    gap:24px;padding:16px 32px;position:relative;flex-wrap:nowrap;
   }
-  nav.scrolled{background:rgba(8,10,16,.78);box-shadow:0 1px 0 rgba(255,255,255,.08) inset,0 16px 50px -18px rgba(0,0,0,.85);}
-  .logo{font-family:var(--mono);font-weight:700;font-size:13px;letter-spacing:.02em;white-space:nowrap;}
+  .logo{font-family:var(--display);font-weight:700;font-size:15px;white-space:nowrap;color:var(--text);}
   .logo b{color:var(--tape);}
-  .nav-brand{display:flex;align-items:center;gap:8px;text-decoration:none;flex-shrink:0;}
+  .nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0;}
   .nav-avatar{
-    width:26px;height:26px;border-radius:50%;object-fit:cover;flex-shrink:0;
-    border:1.5px solid rgba(255,255,255,.2);box-shadow:0 0 0 3px rgba(232,166,60,.14);
+    width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;
+    border:1.5px solid rgba(255,255,255,.2);
+    box-shadow:0 0 0 3px rgba(232,166,60,.14),0 2px 10px rgba(0,0,0,.45);
+    backdrop-filter:blur(6px) saturate(140%);-webkit-backdrop-filter:blur(6px) saturate(140%);
   }
-  .nav-links{display:flex;gap:20px;flex:1;flex-wrap:nowrap;font-size:13px;color:var(--muted);}
-  .nav-links a{transition:color .15s ease;position:relative;white-space:nowrap;flex-shrink:0;}
+  .nav-links{display:flex;align-items:center;justify-content:flex-end;gap:28px;flex:1;flex-wrap:nowrap;font-size:14px;color:var(--muted);}
+  .nav-links a{font-family:var(--display);transition:color .15s ease;position:relative;white-space:nowrap;flex-shrink:0;text-decoration:none;color:var(--muted);}
   .nav-links a:hover{color:var(--text);}
-  .nav-links a::after{content:'';position:absolute;left:0;right:0;bottom:-6px;height:1.5px;background:var(--tape);transform:scaleX(0);transform-origin:left;transition:transform .25s ease;}
-  .nav-links a:hover::after{transform:scaleX(1);}
+  .nav-links a::after{display:none;}
   .nav-cta-group{display:flex;align-items:center;gap:10px;margin-left:24px;flex-shrink:0;}
   .nav-telegram{
-    font-family:var(--mono);font-size:12px;font-weight:600;color:var(--muted);
-    border:1px solid rgba(255,255,255,.1);padding:8px 14px;border-radius:999px;
-    display:flex;align-items:center;gap:6px;transition:all .2s ease;white-space:nowrap;
+    font-family:var(--display);font-size:13px;font-weight:600;color:var(--muted);
+    border:1px solid var(--border);padding:8px 16px;border-radius:6px;
+    display:flex;align-items:center;gap:6px;transition:all .2s ease;white-space:nowrap;text-decoration:none;
   }
   .nav-telegram:hover{border-color:rgba(94,196,240,.5);color:#8fd4f5;background:rgba(94,196,240,.06);}
   .nav-telegram svg{width:13px;height:13px;flex-shrink:0;}
   .nav-cta{
-    font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.02em;
-    background:linear-gradient(135deg,#F2BE5E,var(--tape));color:#241a05;padding:9px 18px;border-radius:999px;
+    font-family:var(--display);font-size:13px;font-weight:700;letter-spacing:.01em;text-decoration:none;
+    background:linear-gradient(135deg,#F2BE5E,var(--tape));color:#241a05;padding:9px 18px;border-radius:6px;
     white-space:nowrap;transition:filter .2s ease,transform .2s ease;box-shadow:0 6px 20px -8px rgba(232,166,60,.6);
   }
   .nav-cta:hover{filter:brightness(1.08);transform:translateY(-1px);}
-  .nav-toggle{display:none;background:transparent;border:1px solid rgba(255,255,255,.14);color:var(--text);border-radius:6px;padding:8px 10px;cursor:pointer;align-items:center;justify-content:center;}
+  .nav-toggle{display:none;background:transparent;border:1px solid var(--border);color:var(--text);border-radius:6px;padding:8px 10px;cursor:pointer;align-items:center;justify-content:center;}
   @media (max-width:900px){
     .nav-toggle{display:flex;}
     .nav-mobile-menu{display:none;}
     .nav-mobile-menu.open{
       display:flex;position:absolute;top:100%;left:16px;right:16px;z-index:70;margin-top:8px;
       flex-direction:column;align-items:stretch;gap:4px;
-      background:rgba(10,12,18,.92);backdrop-filter:blur(18px) saturate(160%);-webkit-backdrop-filter:blur(18px) saturate(160%);
-      border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:14px 18px;
+      background:var(--bg);border:1px solid var(--border);border-radius:16px;padding:14px 18px;
     }
     .nav-mobile-menu.open .nav-links{display:flex;flex-direction:column;gap:0;}
-    .nav-mobile-menu.open .nav-links a{padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);}
-    .nav-mobile-menu.open .nav-cta-group{display:flex;flex-direction:column;align-items:stretch;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.08);}
+    .nav-mobile-menu.open .nav-links a{padding:10px 0;border-bottom:1px solid var(--border);}
+    .nav-mobile-menu.open .nav-cta-group{display:flex;flex-direction:column;align-items:stretch;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
     .nav-mobile-menu.open .nav-telegram,.nav-mobile-menu.open .nav-cta{justify-content:center;}
-    nav{position:relative;}
+    nav{padding:14px 16px;}
   }
 
   /* ---- hero ---- */
@@ -342,7 +337,7 @@ const PART_A = `
 <div class="mesh"><i></i></div>
 
 <div class="nav-outer">
-  <nav id="mainNav" class="glass">
+  <nav id="mainNav">
     <a href="/" class="nav-brand">
       <img src="/logo.jpg" alt="Ali Faisal Trades" class="nav-avatar">
       <span class="logo">Ali Faisal Trades</span>
