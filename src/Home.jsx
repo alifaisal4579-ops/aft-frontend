@@ -205,7 +205,8 @@ const HOMEPAGE_CSS = `
   .section-desc{color:var(--muted);font-size:15px;line-height:1.7;}
 
   /* ---- tool grid ---- */
-  .tool-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:14px;}
+  .tool-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:14px;align-items:start;}
+  @media (max-width:700px){ .tool-grid{grid-template-columns:1fr;gap:14px;} }
   .tool-card{
     padding:24px 22px;transition:transform .3s cubic-bezier(.16,1,.3,1),background .3s ease,border-color .3s ease;
     display:block;text-decoration:none;color:inherit;
