@@ -1,2 +1,6 @@
 User-agent: *
+Allow: /$
+Allow: /sector-screener.html
+Allow: /confluence-dashboard.html
+Allow: /position-size-calculator.html
 Disallow: /
