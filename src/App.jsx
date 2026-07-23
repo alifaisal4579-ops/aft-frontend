@@ -13,6 +13,7 @@ import Disclaimer from './Disclaimer';
 import About from './About';
 import PrivacyPolicy from './PrivacyPolicy';
 import Contact from './Contact';
+import AnalyticsRouteTracker from './AnalyticsRouteTracker';
 
 function Topbar() {
   const { user, logout } = useAuth();
@@ -49,7 +50,9 @@ function Topbar() {
 
 export default function App() {
   return (
-    <Routes>
+    <>
+      <AnalyticsRouteTracker />
+      <Routes>
       {/* Homepage, login and signup render full-screen, with no topbar/app-shell around them */}
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
@@ -109,5 +112,6 @@ export default function App() {
         }
       />
     </Routes>
+    </>
   );
 }
