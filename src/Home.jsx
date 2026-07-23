@@ -102,6 +102,7 @@ const HOMEPAGE_CSS = `
     white-space:nowrap;transition:filter .2s ease,transform .2s ease;box-shadow:0 6px 20px -8px rgba(232,166,60,.6);
   }
   .nav-cta:hover{filter:brightness(1.08);transform:translateY(-1px);}
+  .nav-mobile-menu{display:flex;align-items:center;gap:28px;flex:1;justify-content:flex-end;}
   .nav-toggle{display:none;background:transparent;border:1px solid var(--border);color:var(--text);border-radius:6px;padding:8px 10px;cursor:pointer;align-items:center;justify-content:center;}
   @media (max-width:900px){
     .nav-toggle{display:flex;}
@@ -675,9 +676,10 @@ const PART_C = `
     <div class="footer-inner">
       <span class="logo">Ali Faisal Trades</span>
       <div class="footer-links">
-        <a href="#suite">Suite</a>
-        <a href="#confluence">How it works</a>
-        <a href="#faq">FAQ</a>
+        <a href="/about">About</a>
+        <a href="/disclaimer">Disclaimer</a>
+        <a href="/privacy-policy">Privacy Policy</a>
+        <a href="/contact">Contact</a>
       </div>
     </div>
     <p class="footer-note">
