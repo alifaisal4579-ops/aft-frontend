@@ -5,6 +5,7 @@ export default function About() {
     <LegalPageLayout
       eyebrow="About us"
       title="About Ali Faisal Trades"
+      description="Ali Faisal Trades is a 16-tool crypto trading terminal -- screeners, order flow, volume profile, VWAP, Fibonacci levels and a confluence-scoring engine aggregated across 14 exchanges, unified behind one login."
     >
       <h2>What we are</h2>
       <p>
