@@ -5,6 +5,7 @@ export default function Contact() {
     <LegalPageLayout
       eyebrow="Get in touch"
       title="Contact Us"
+      description="Get in touch with Ali Faisal Trades via Telegram for questions about any of the 16 crypto trading tools or your account."
     >
       <h2>Telegram community</h2>
       <p>
