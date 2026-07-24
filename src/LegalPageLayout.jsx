@@ -80,16 +80,26 @@ const PAGE_CSS = `
   .footer-note{font-family:var(--mono);font-size:10.5px;color:var(--muted-2, var(--muted));max-width:560px;line-height:1.6;margin-top:18px;}
 `;
 
-export default function LegalPageLayout({ eyebrow, title, updated, children }) {
+export default function LegalPageLayout({ eyebrow, title, updated, description, children }) {
   useEffect(() => {
     document.title = `${title} \u00b7 Ali Faisal Trades`;
+
+    if (description) {
+      let tag = document.querySelector('meta[name="description"]');
+      if (!tag) {
+        tag = document.createElement('meta');
+        tag.setAttribute('name', 'description');
+        document.head.appendChild(tag);
+      }
+      tag.setAttribute('content', description);
+    }
 
     const navToggle = document.getElementById('navToggle');
     const navLinks = document.getElementById('navLinks');
     const onToggleClick = () => { if (navLinks) navLinks.classList.toggle('open'); };
     if (navToggle) navToggle.addEventListener('click', onToggleClick);
     return () => { if (navToggle) navToggle.removeEventListener('click', onToggleClick); };
-  }, [title]);
+  }, [title, description]);
 
   return (
     <>
