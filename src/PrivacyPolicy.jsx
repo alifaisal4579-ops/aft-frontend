@@ -6,6 +6,7 @@ export default function PrivacyPolicy() {
       eyebrow="Legal"
       title="Privacy Policy"
       updated="July 23, 2026"
+      description="How Ali Faisal Trades collects, encrypts, and protects your account information and exchange API credentials."
     >
       <p>
         This Privacy Policy explains what information Ali Faisal Trades ("AFT Tools," "we," "us,"
