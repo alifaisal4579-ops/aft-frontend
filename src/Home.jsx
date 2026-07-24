@@ -830,7 +830,7 @@ export default function Home() {
   const [showStickyCta, setShowStickyCta] = useState(false);
 
   useEffect(() => {
-    document.title = 'Ali Faisal Trades \u00b7 16 Institutional Trading Tools \u00b7 One Login';
+    document.title = 'Ali Faisal Trades \u2014 Crypto Confluence Trading Terminal';
 
     const io = new IntersectionObserver((entries) => {
       entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
