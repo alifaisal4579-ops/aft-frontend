@@ -8,6 +8,15 @@
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-L2Y2BX81QM"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-L2Y2BX81QM');
+</script>
 <title>RSI Screener — Ali Faisal Trades</title>
 <meta name="theme-color" content="#080B10">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -247,8 +256,7 @@
     <canvas id="rsVerifyChart" height="110"></canvas>
   </div>
 
-  <div class="rs-caption">Pulls the complete USDT-M perpetual futures symbol list from the exchange itself, filters to ≥$70M market cap (via CoinGecko's free public API, matched by ticker symbol), then fetches candles for every qualifying pair on the selected timeframe and computes RSI(14) live. "10m" and (on Bybit) "8H" aren't native exchange intervals — they're built by aggregating 5m/4H candles, same approach used elsewhere on this site for Bybit's missing 3-day candles. Click any row to see that pair's RSI history charted out for verification. Click any column header to sort. Futures only, no API key needed.</div>
-</div>
+  </div>
 </div>
 
 <script>
