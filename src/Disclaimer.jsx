@@ -6,6 +6,7 @@ export default function Disclaimer() {
       eyebrow="Legal"
       title="Disclaimer"
       updated="July 23, 2026"
+      description="Ali Faisal Trades' tools and automated bots are for educational and informational purposes only, not financial advice. Read the full risk disclaimer before trading."
     >
       <h2>1. Educational and Informational Purposes Only</h2>
       <p>
