@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "aft-frontend",
+  "name": "aft-frontend-web",
   "compatibility_date": "2026-07-16",
   "main": "worker.js",
   "assets": {
