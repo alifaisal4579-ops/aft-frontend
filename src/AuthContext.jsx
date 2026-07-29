@@ -64,8 +64,8 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
-  const signup = useCallback(async (email, password, blofinUid, fullName) => {
-    const { ok, body } = await api.signup(email, password, blofinUid, fullName);
+  const signup = useCallback(async (email, password, bitunixUid, fullName) => {
+    const { ok, body } = await api.signup(email, password, bitunixUid, fullName);
     if (ok) { setUser(body.user); setSessionMarker(); }
     return { ok, error: ok ? null : body.error };
   }, []);
