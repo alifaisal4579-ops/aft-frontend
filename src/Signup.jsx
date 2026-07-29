@@ -39,7 +39,7 @@ export default function Signup() {
         <h1>Create your account</h1>
         <p className="signup-intro">
           Want access to our premium tools that make trading easier? Create your account
-          using our official referral code below to unlock the full suite.
+          using our official referral code <b>AliFaisal</b> below to unlock the full suite.
         </p>
         <div className="partner-badge">
           <div className="partner-badge-icon">
