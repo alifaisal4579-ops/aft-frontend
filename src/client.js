@@ -59,8 +59,8 @@ async function apiFetch(path, options = {}) {
   return { ok: res.ok, status: res.status, body };
 }
 
-async function signup(email, password, blofinUid, fullName) {
-  const { ok, body } = await apiFetch('/api/auth/signup', { method: 'POST', body: JSON.stringify({ email, password, blofinUid, fullName }) });
+async function signup(email, password, bitunixUid, fullName) {
+  const { ok, body } = await apiFetch('/api/auth/signup', { method: 'POST', body: JSON.stringify({ email, password, bitunixUid, fullName }) });
   if (ok) setAccessToken(body.accessToken);
   return { ok, body };
 }
