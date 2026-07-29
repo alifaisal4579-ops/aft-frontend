@@ -8,7 +8,7 @@ export default function Signup() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [blofinUid, setBlofinUid] = useState('');
+  const [bitunixUid, setBitunixUid] = useState('');
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
 
@@ -21,7 +21,7 @@ export default function Signup() {
     }
     setBusy(true);
     try {
-      const { ok, error } = await signup(email, password, blofinUid, fullName);
+      const { ok, error } = await signup(email, password, bitunixUid, fullName);
       if (ok) navigate('/dashboard');
       else setError(error || 'Something went wrong.');
     } catch (err) {
@@ -55,13 +55,13 @@ export default function Signup() {
               value={password} onChange={(e) => setPassword(e.target.value)} />
           </div>
           <div className="field">
-            <label htmlFor="blofinUid">Your BloFin UID</label>
-            <input id="blofinUid" type="text" required
+            <label htmlFor="bitunixUid">Your Bitunix UID</label>
+            <input id="bitunixUid" type="text" required
               placeholder="e.g. 123456789"
-              value={blofinUid} onChange={(e) => setBlofinUid(e.target.value)} />
+              value={bitunixUid} onChange={(e) => setBitunixUid(e.target.value)} />
             <p className="field-hint">
-              Find this under Account &amp; Security on BloFin. Haven't signed up yet?{' '}
-              <a href="https://partner.blofin.com/d/alifaisal" target="_blank" rel="noopener noreferrer">Register with our referral link</a> first.
+              Find this under Account &amp; Security on Bitunix. Haven't signed up yet?{' '}
+              <a href="https://www.bitunix.com/register?vipCode=AliFaisal" target="_blank" rel="noopener noreferrer">Register with our referral link</a> first.
             </p>
           </div>
           <button className="btn-primary" type="submit" disabled={busy}>
