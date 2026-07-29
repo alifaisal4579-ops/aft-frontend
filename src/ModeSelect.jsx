@@ -151,7 +151,14 @@ export default function ModeSelect() {
     return () => clearInterval(interval);
   }, [bots]);
 
-  const showGettingStarted = bots !== null && bots.length === 0;
+  // Trading Bots early-access gate -- only these emails see the real bot
+  // cards for now; everyone else sees "Coming Soon". To launch bots
+  // publicly later, just delete this array (or set hasBotAccess = true)
+  // and remove the gate below.
+  const BOTS_EARLY_ACCESS_EMAILS = ['alifaisal4579@gmail.com'];
+  const hasBotAccess = user && BOTS_EARLY_ACCESS_EMAILS.includes(user.email);
+
+  const showGettingStarted = hasBotAccess && bots !== null && bots.length === 0;
 
   return (
     <div className="ms-page">
@@ -254,6 +261,7 @@ export default function ModeSelect() {
 
       <section className="ms-section">
         <div className="ms-section-label"><span>Trading Bots</span></div>
+        {hasBotAccess ? (
         <div className="mode-cards">
           <button className="mode-card mode-card-sim glass" onClick={() => navigate('/dashboard/simulated')}>
             <div className="mode-card-icon mode-card-icon-sim">
@@ -286,7 +294,20 @@ export default function ModeSelect() {
             <span className="mode-card-cta">Open &rarr;</span>
           </button>
         </div>
+        ) : (
+        <div className="bots-coming-soon glass">
+          <div className="bots-coming-soon-icon">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 7v5l3 2" />
+            </svg>
+          </div>
+          <h3>Coming Soon</h3>
+          <p>Automated Simulated and Real bot trading is on its way. We're putting on the final touches -- stay tuned!</p>
+        </div>
+        )}
       </section>
+
 
       <div className="ms-sticky-telegram">
         <a href="https://t.me/alifaisaltrades" target="_blank" rel="noopener">
