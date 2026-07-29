@@ -37,6 +37,22 @@ export default function Signup() {
       <div className="auth-card">
         <div className="auth-brand">Ali Faisal Trades</div>
         <h1>Create your account</h1>
+        <p className="signup-intro">
+          Want access to our premium tools that make trading easier? Create your account
+          using our official referral code below to unlock the full suite.
+        </p>
+        <div className="partner-badge">
+          <div className="partner-badge-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z" />
+              <path d="M9 12l2 2 4-4" />
+            </svg>
+          </div>
+          <div>
+            <div className="partner-badge-eyebrow">Official Partner</div>
+            <div className="partner-badge-name">Bitunix</div>
+          </div>
+        </div>
         {error && <div className="auth-error">{error}</div>}
         <form onSubmit={handleSubmit}>
           <div className="field">
