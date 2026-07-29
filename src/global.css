@@ -102,6 +102,10 @@ body {
   line-height: 1.6;
   margin: -14px 0 18px;
 }
+.signup-intro b {
+  color: var(--tape);
+  font-weight: 700;
+}
 
 .partner-badge {
   display: flex;
