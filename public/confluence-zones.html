@@ -606,11 +606,12 @@
 
       // Fibonacci 61.8% / 65% / 78.6% retracement, off the recent swing on
       // three timeframes -- short (1H), medium (4H), long (Daily) -- same
-      // ratios Lakhsmi Signals and the dedicated Fibonacci Levels tool use.
+      // ratios AND same 90-candle lookback the dedicated Fibonacci Levels
+      // tool uses, so both tools agree on the exact price levels.
       const fibSources = [
-        { candles: hourly, lookback: 48,  tfLabel: '1H' },
-        { candles: h4,     lookback: 60,  tfLabel: '4H' },
-        { candles: daily,  lookback: 30,  tfLabel: 'D' },
+        { candles: hourly, lookback: 90,  tfLabel: '1H' },
+        { candles: h4,     lookback: 90,  tfLabel: '4H' },
+        { candles: daily,  lookback: 90,  tfLabel: 'D' },
       ];
       fibSources.forEach(src => {
         fibLevels(src.candles, src.lookback).forEach(f => {
